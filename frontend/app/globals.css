@@ -124,3 +124,18 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Define a fade-in animation */
+.fade-in {
+  opacity: 0;
+  animation: fadeInAnimation 1s forwards;
+}
+
+@keyframes fadeInAnimation {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
