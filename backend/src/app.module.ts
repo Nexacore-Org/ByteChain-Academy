@@ -5,9 +5,10 @@ import { StudentModule } from './student/student.module';
 import { TutorModule } from './tutor/tutor.module';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './roles/roles.guard';
+import { QuizzesModule } from './quizzes/quizzes.module';
 
 @Module({
-  imports: [StudentModule, TutorModule],
+  imports: [StudentModule, TutorModule, QuizzesModule],
   controllers: [AppController],
   providers: [
     AppService,
