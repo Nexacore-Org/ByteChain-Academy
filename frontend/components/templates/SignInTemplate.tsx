@@ -1,20 +1,21 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import Login from "../organisms/auth/login";
 import LoginSkeleton from "../skeleton/LoginSkeleton";
+import { useLoadingStore } from "@/store/useLoadingStore";
 
 
 export default function SignInTemplate() {
-  const [isLoading, setIsLoading] = useState(true);
+ const {loading, setLoading} = useLoadingStore();
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
+      setLoading(false);
+    }, 2000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [setLoading]);
 
-  if (isLoading) {
+  if (loading) {
     return <LoginSkeleton />;
   }
 
