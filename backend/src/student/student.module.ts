@@ -1,16 +1,23 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { StudentService } from './services/student.service';
 import { StudentController } from './student.controller';
 import { Student } from './entities/student.entity';
 import { CreateStudentService } from './services/create.student.service';
+import { BcryptHashingService } from './services/bcrypt.hashing.service';
+import { PasswordHashingService } from './services/password.hashing.service';
 
 @Module({
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   imports: [TypeOrmModule.forFeature([Student])],
-  providers: [StudentService, CreateStudentService],
+  providers: [
+    StudentService,
+    CreateStudentService,
+    {
+      provide: PasswordHashingService,
+      useClass: BcryptHashingService,
+    },
+  ],
   controllers: [StudentController],
-  exports: [StudentService,CreateStudentService],
+  exports: [StudentService, CreateStudentService],
 })
 export class StudentModule {}

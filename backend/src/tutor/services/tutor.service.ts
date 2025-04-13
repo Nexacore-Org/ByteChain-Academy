@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Tutor } from '../entities/tutor.entity';
 import { CreateTutorDto } from '../dto/create-tutor.dto';
 import { UpdateTutorDto } from '../dto/update-tutor.dto';
 import { PasswordHashingService } from './password.hashing.service';
+import { CreateTutorService } from './create-tutor.service';
 
 @Injectable()
 export class TutorService {
@@ -12,6 +13,7 @@ export class TutorService {
     @InjectRepository(Tutor)
     private tutorRepository: Repository<Tutor>,
     private passwordHashingService: PasswordHashingService,
+    private readonly createTutorService: CreateTutorService,
   ) {}
 
   findAll(): Promise<Tutor[]> {
@@ -23,18 +25,11 @@ export class TutorService {
   }
 
   async create(createTutorDto: CreateTutorDto): Promise<Tutor> {
-    const hashedPassword = await this.passwordHashingService.hashPassword(
-      createTutorDto.password,
-    );
-    const tutor = this.tutorRepository.create({
-      ...createTutorDto,
-      password: hashedPassword,
-    });
-    return this.tutorRepository.save(tutor);
+    return this.createTutorService.create(createTutorDto);
   }
 
   async update(id: string, updateTutorDto: UpdateTutorDto): Promise<Tutor> {
-    const tutor = await this.tutorRepository.findOne({ where: { id } });
+    const tutor = await this.findOne(id);
     if (!tutor) throw new Error('Tutor not found');
 
     if (updateTutorDto.password) {
@@ -48,6 +43,11 @@ export class TutorService {
   }
 
   async delete(id: string): Promise<void> {
-    await this.tutorRepository.delete(id);
+    const tutor = await this.findOne(id);
+
+    if (!tutor) {
+      throw new NotFoundException('Tutor not found');
+    }
+    await this.tutorRepository.softDelete(id);
   }
 }

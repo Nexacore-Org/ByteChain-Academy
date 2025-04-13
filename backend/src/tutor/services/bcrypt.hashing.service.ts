@@ -4,15 +4,14 @@ import { PasswordHashingService } from './password.hashing.service';
 
 @Injectable()
 export class BcryptHashingService implements PasswordHashingService {
-  private readonly saltRounds = 10;
-
   /**
    * Hashes a password using bcryptjs
    * @param password Plain text password to hash
    * @returns Promise resolving to the hashed password
    */
   async hashPassword(password: string): Promise<string> {
-    return bcrypt.hash(password, this.saltRounds);
+    const salt = await bcrypt.genSalt();
+    return bcrypt.hash(password, salt);
   }
 
   /**

@@ -6,6 +6,6 @@ type LoadingState = {
 };
 
 export const useLoadingStore = create<LoadingState>((set) => ({
-  loading: false,
+  loading: true,
   setLoading: (loading) => set({ loading }),
 }));

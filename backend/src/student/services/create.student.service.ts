@@ -7,12 +7,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Student } from '../entities/student.entity';
 import { CreateStudentDto } from '../dto/create-student.dto';
+import { PasswordHashingService } from './password.hashing.service';
 
 @Injectable()
 export class CreateStudentService {
   constructor(
     @InjectRepository(Student)
     private readonly studentRepository: Repository<Student>,
+    private readonly passwordHashingService: PasswordHashingService,
   ) {}
 
   /**
@@ -32,9 +34,13 @@ export class CreateStudentService {
       }
 
       //Create student instance
-      const newStudent = this.studentRepository.create(createStudentDto);
+      const newStudent = this.studentRepository.create({
+        ...createStudentDto,
+        password: await this.passwordHashingService.hashPassword(
+          createStudentDto.password,
+        ),
+      });
 
-      //Save the student (password gets hashed automatically via @BeforeInsert)
       return await this.studentRepository.save(newStudent);
     } catch {
       throw new InternalServerErrorException('Error creating student');

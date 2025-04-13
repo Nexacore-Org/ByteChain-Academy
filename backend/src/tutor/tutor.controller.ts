@@ -15,18 +15,17 @@ import { UserRole } from 'src/roles/roles.enum';
 import { TutorService } from './services/tutor.service';
 
 @Controller('tutor')
-@Roles(UserRole.TUTOR)
 export class TutorController {
   constructor(private readonly tutorService: TutorService) {}
 
   @Post()
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.TUTOR)
   create(@Body() createTutorDto: CreateTutorDto) {
     return this.tutorService.create(createTutorDto);
   }
 
   @Get()
-  @Roles(UserRole.TUTOR)
+  @Roles(UserRole.TUTOR, UserRole.ADMIN)
   findAll() {
     return this.tutorService.findAll();
   }
@@ -38,6 +37,7 @@ export class TutorController {
   }
 
   @Patch(':id')
+  @Roles(UserRole.TUTOR, UserRole.ADMIN)
   update(@Param('id') id: string, @Body() updateTutorDto: UpdateTutorDto) {
     return this.tutorService.update(id, updateTutorDto);
   }

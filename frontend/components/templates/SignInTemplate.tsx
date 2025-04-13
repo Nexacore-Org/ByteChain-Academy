@@ -4,9 +4,8 @@ import Login from "../organisms/auth/login";
 import LoginSkeleton from "../skeleton/LoginSkeleton";
 import { useLoadingStore } from "@/store/useLoadingStore";
 
-
 export default function SignInTemplate() {
- const {loading, setLoading} = useLoadingStore();
+  const { loading, setLoading } = useLoadingStore();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -19,8 +18,5 @@ export default function SignInTemplate() {
     return <LoginSkeleton />;
   }
 
-  return (
-    <Login/>
-  );
-  
+  return <Login />;
 }
