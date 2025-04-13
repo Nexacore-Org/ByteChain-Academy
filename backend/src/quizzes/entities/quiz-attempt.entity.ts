@@ -1,51 +1,51 @@
-import { Quiz } from './quiz.entity'
+import { Quiz } from './quiz.entity';
 import {
-Entity,
-PrimaryGeneratedColumn,
-Column,
-ManyToOne,
-CreateDateColumn,
-UpdateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity('quiz_attempts')
 export class QuizAttempt {
-@PrimaryGeneratedColumn('uuid')
-id: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-@Column()
-userId: string;
+  @Column()
+  userId: string;
 
-@Column()
-quizId: string;
+  @Column()
+  quizId: string;
 
-@Column()
-attemptNumber: number;
+  @Column()
+  attemptNumber: number;
 
-@Column('float')
-score: number;
+  @Column('float')
+  score: number;
 
-@Column()
-isPassed: boolean;
+  @Column()
+  isPassed: boolean;
 
-@Column({ type: 'timestamp' })
-startTime: Date;
+  @Column({ type: 'timestamp' })
+  startTime: Date;
 
-@Column({ type: 'timestamp', nullable: true })
-endTime: Date;
+  @Column({ type: 'timestamp', nullable: true })
+  endTime: Date;
 
-@Column()
-status: string;
+  @Column()
+  status: string;
 
-@Column('jsonb')
-answers: any;
+  @Column('jsonb')
+  answers: any;
 
-@ManyToOne(() => Quiz, (quiz) => quiz.attempts)
-quiz: Quiz;
+  @ManyToOne(() => Quiz, (quiz) => quiz.attempts)
+  quiz: Quiz;
 
-@CreateDateColumn()
-createdAt: Date;
+  @CreateDateColumn()
+  createdAt: Date;
 
-@UpdateDateColumn()
-updatedAt: Date;
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

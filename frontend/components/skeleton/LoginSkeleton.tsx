@@ -1,57 +1,22 @@
 "use client";
-import Image from "next/image";
+import { Skeleton } from "../atoms/skeleton";
 
 export default function LoginSkeleton() {
   return (
-    <div className="flex justify-center items-center min-h-screen bg-white">
-      <div
-        className="flex flex-col items-center bg-white shadow-lg"
-        style={{
-          width: "754px",
-          height: "584px",
-          paddingTop: "12px",
-          paddingRight: "47px",
-          paddingBottom: "12px",
-          paddingLeft: "47px",
-          gap: "32px",
-        }}
-      >
-        <div className="space-y-4 w-full max-w-[400px]">
-          <Image
-            src="/skeleton_logo.png"
-            alt="Skeleton Logo"
-            className="w-28"
-            width={100}
-            height={100}
-          />
-          {/* Email Field Skeleton */}
-          <div className="space-y-2">
-            <div className="h-6 w-1/4 bg-gray-200 rounded animate-pulse"></div>
-            <div className="h-[60px] bg-gray-200 rounded-md animate-pulse"></div>
-          </div>
-
-          {/* Password Field Skeleton */}
-          <div className="space-y-2">
-            <div className="h-6 w-1/3 bg-gray-200 rounded animate-pulse"></div>
-            <div className="relative">
-              <div className="h-[60px] bg-gray-200 rounded-md animate-pulse"></div>
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-gray-300 rounded-full"></div>
-            </div>
-          </div>
-
-          {/* Forgot Password Skeleton */}
-          <div className="h-4 w-1/3 bg-gray-200 rounded animate-pulse"></div>
-
-          {/* Login Button Skeleton */}
-          <div className="flex justify-center pt-4">
-            <div className="w-[250px] h-[50px] bg-gray-300 rounded-[30px] animate-pulse"></div>
-          </div>
-
-          {/* Sign Up Link Skeleton */}
-          <div className="flex justify-center space-x-1 pt-2">
-            <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse"></div>
-          </div>
-        </div>
+    <div className="w-full min-h-screen max-w-md mx-auto py-11 space-y-5 px-4">
+      <div className="">
+        <Skeleton className=" w-[150px] h-[60px] rounded-full" />
+      </div>
+      <div className="">
+        <Skeleton className=" w-28 h-[25px] rounded-full mb-1 mt-5" />
+        <Skeleton className=" w-full h-[40px] rounded-full mt-5 " />
+        <Skeleton className=" w-28 h-[25px] rounded-full mb-1 mt-5" />
+        <Skeleton className=" w-full h-[40px] rounded-full mt-5 " />
+        <Skeleton className=" w-28 h-[25px] rounded-full mb-1 mt-5" />
+        <Skeleton className=" w-[85%] h-[50px] rounded-full mb-1 mt-5 mx-auto" />
+      </div>
+      <div className="text-center mt-8">
+        <Skeleton className=" w-[70%] h-[25px] rounded-full mx-auto" />
       </div>
     </div>
   );

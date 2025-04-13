@@ -1,53 +1,58 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import Image from "next/image";
 import { coursesData } from "@/utils/coursesData";
-
-
+import Title from "@/components/atoms/Title";
 
 const CoursesSection = () => {
   return (
-    <section className="px-4 pb-14 md:px-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-center mb-6">
-          <h2 className="text-white rounded-full rotate-[-15deg] my-4 bg-[#0066CC] px-6 py-2 w-fit">
-            Courses
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {coursesData.map((course, index) => (
-            <div
-              key={index}
-              className="bg-white border rounded-lg shadow-lg overflow-hidden transition-all hover:shadow-xl"
-            >
-              <Image
-                src="/course.png"
-                alt={course.imageAlt}
-                className="w-full h-48 object-cover"
-                width={300}
-                height={200}
-              />
-              <div className="p-6">
-                <h3 className="text- font-semibold mb-1">{course.title}</h3>
-                <p className="text-sm text-gray-900 font-semibold  mb-2">
-                  Duration: {course.duration}
-                </p>
-                <p className="text-gray-600 mb-4 text-xs">
-                  {course.description}
-                </p>
-                <div className="flex items-center justify-center">
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="bg-[#00D4FF] hover:bg-cyan-300 text-gray-900"
-                  >
-                    Join Course
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+    <section className="px-4 py-4 md:px-8 bg-[#F8FCFD] rounded-xl mb-8">
+      <div className="flex justify-center mb-6">
+        <Title className="rotate-[-15deg]">Courses</Title>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:pb-6">
+        {coursesData.map((course, index) => (
+          <Card
+            key={index}
+            className="overflow-hidden transition-all hover:shadow-xl pt-0"
+          >
+            <Image
+              src="/courses.svg"
+              alt={course.imageAlt}
+              className="w-full"
+              width={100}
+              height={100}
+            />
+
+            <CardHeader className="-mt-3 px-4">
+              <CardTitle className="text-lg font-bold">
+                {course.title}
+              </CardTitle>
+              <p className="text-sm -mt-1 font-bold">
+                Duration: {course.duration}
+              </p>
+            </CardHeader>
+            <CardContent className=" -mt-3 px-4">
+              <p className="text-gray-600 text-[13px]">{course.description}</p>
+            </CardContent>
+            <CardFooter className="flex justify-center pt-2">
+              <Button
+                variant="default"
+                size="lg"
+                className="bg-[#00D4FF] hover:bg-cyan-300 text-[#004755] font-semibold"
+              >
+                Join Course
+              </Button>
+            </CardFooter>
+          </Card>
+        ))}
       </div>
     </section>
   );

@@ -1,14 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { Exclude } from 'class-transformer';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  BeforeInsert,
 } from 'typeorm';
-import * as bcrypt from 'bcryptjs';
 
 @Entity()
 export class Student {
@@ -25,6 +22,7 @@ export class Student {
   email: string;
 
   @Column()
+  @Exclude()
   password: string;
 
   @Column({ type: 'date', nullable: true })
@@ -38,12 +36,4 @@ export class Student {
 
   @UpdateDateColumn()
   updatedAt: Date;
-
-  @BeforeInsert()
-  async hashPassword(): Promise<void> {
-    if (this.password) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      this.password = await bcrypt.hash(this.password, 10);
-    }
-  }
 }

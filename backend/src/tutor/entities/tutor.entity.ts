@@ -4,9 +4,8 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  BeforeInsert,
 } from 'typeorm';
-import * as bcrypt from 'bcryptjs';
+import { Exclude } from 'class-transformer';
 
 @Entity()
 export class Tutor {
@@ -23,6 +22,7 @@ export class Tutor {
   email: string;
 
   @Column()
+  @Exclude()
   password: string;
 
   @Column('simple-array')
@@ -42,11 +42,4 @@ export class Tutor {
 
   @UpdateDateColumn()
   updatedAt: Date;
-
-  @BeforeInsert()
-  async hashPassword(): Promise<void> {
-    if (this.password) {
-      this.password = await bcrypt.hash(this.password, 10);
-    }
-  }
 }

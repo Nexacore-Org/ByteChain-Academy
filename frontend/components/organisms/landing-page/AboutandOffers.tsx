@@ -1,19 +1,20 @@
+import Title from "@/components/atoms/Title";
+import { Button } from "@/components/ui/button";
 
 const AboutAndOffers = () => {
   return (
     <section className="py-3 md:py-10 px-3 md:px-16 bg-white text-gray-900">
       <div className="md:max-w-5xl mx-auto">
         {/* About Us Section */}
-        <div className="text-left text-xl mb-16 flex flex-col items-center justify-center">
-          <h2 className="text-white rounded-full rotate-[-15deg] my-4 bg-[#0066CC] px-6 py-4 w-fit">
-            About Us
-          </h2>
+        <div className="text-left text-lg mb-16 flex flex-col items-center justify-center">
+          <Title className="rotate-[-15deg] "> About Us</Title>
+
           <p className="my-4">
             <span className="font-bold">ByteChain Academy </span> bridges the
             gap between complex blockchain technology and busy professionals.
             Founded on the principle that everyone deserves access to quality
-            Web3 education regardless of their schedule, we&apos;ve created a unique
-            two-pronged approach to blockchain learning.
+            Web3 education regardless of their schedule, we&apos;ve created a
+            unique two-pronged approach to blockchain learning.
           </p>
           <p>
             Our microlearning platform breaks down complex Web3 concepts into
@@ -23,24 +24,25 @@ const AboutAndOffers = () => {
             both traditional and digital currencies, offering context that
             transforms understanding into practical insight.
           </p>
-          <button
-            className="self-end mt-4 md:mr-20 px-6 py-3 text-[#7FBFD4] border border-[#98E5FE] font-semibold rounded-lg
-              hover:bg-[#98E5FE] hover:text-white transition-all duration-300"
+          <Button
+            variant="outline"
+            size="lg"
+            className="self-end mt-4 md:mr-14 py-6 text-[#7FBFD4]  border-[#98E5FE] font-semibold rounded-[20px] hover:bg-[#98E5FE] hover:text-white transition-all duration-300"
           >
             Learn More
-          </button>
+          </Button>
         </div>
 
         {/* What We Offer Section */}
-        <div className="text-left text-xl mb-16 flex flex-col items-center justify-center">
-          <h2 className="text-white rounded-full rotate-[15deg] my-4 bg-[#0066CC] px-6 py-4 w-fit">
-            What We Offer
-          </h2>
+        <div className="text-left text-lg mb-16 ">
+          <div className="flex justify-center items-center mb-2">
+            <Title className="rotate-[15deg] py-2.5"> What We Offer</Title>
+          </div>
 
           <p className="my-4">
             <span className="font-bold">ByteChain Academy </span> delivers a
             streamlined approach to blockchain education through two
-            complementary services:{" "}
+            complementary services :
           </p>
           <h3 className="font-bold self-start">Microlearning Platform </h3>
           <p>
@@ -51,7 +53,7 @@ const AboutAndOffers = () => {
             commitments.
           </p>
           <h3 className="font-bold self-start mt-4">
-            Decentralized Currency Knowledge Hub{" "}
+            Decentralized Currency Knowledge Hub
           </h3>
           <p>
             A comprehensive, searchable database of historical information on

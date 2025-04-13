@@ -85,14 +85,16 @@ const Signup = () => {
                 touched={touched.password}
                 className="!mt-0"
               />
-              <button
-                type="button"
-                className="absolute right-3 top-2/4  text-gray-500"
-                onClick={() => setShowPassword(!showPassword)}
-                aria-label="Toggle password visibility"
-              >
-                {showPassword ? <EyeIcon size={20} /> : <EyeOff size={20} />}
-              </button>
+              <div className="absolute right-3 top-4 h-full flex items-center justify-center pointer-events-none">
+                <button
+                  type="button"
+                  className="pointer-events-auto"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label="Toggle password visibility"
+                >
+                  {showPassword ? <EyeIcon size={20} /> : <EyeOff size={20} />}
+                </button>
+              </div>
             </div>
 
             {/* Confirm Password */}
@@ -108,18 +110,20 @@ const Signup = () => {
                 touched={touched.confirmPassword}
                 className="!mt-0"
               />
-              <button
-                type="button"
-                className="absolute right-3 top-2/4"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                aria-label="Toggle confirm password visibility"
-              >
-                {showConfirmPassword ? (
-                  <EyeIcon size={20} />
-                ) : (
-                  <EyeOff size={20} />
-                )}
-              </button>
+              <div className="absolute right-3 top-4 h-full flex items-center justify-center pointer-events-none">
+                <button
+                  type="button"
+                  className="pointer-events-auto"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  aria-label="Toggle confirm password visibility"
+                >
+                  {showConfirmPassword ? (
+                    <EyeIcon size={20} />
+                  ) : (
+                    <EyeOff size={20} />
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Submit Button */}
