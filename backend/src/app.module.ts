@@ -9,6 +9,7 @@ import { QuizzesModule } from './quizzes/quizzes.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import databaseConfig from './config/database.config';
+import { CoursesModule } from './courses/courses.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import databaseConfig from './config/database.config';
     StudentModule,
     TutorModule,
     QuizzesModule,
+    CoursesModule,
   ],
   controllers: [AppController],
   providers: [
