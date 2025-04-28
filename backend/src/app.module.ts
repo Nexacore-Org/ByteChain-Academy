@@ -11,6 +11,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import databaseConfig from './config/database.config';
 import { CoursesModule } from './courses/courses.module';
 import { CourseModule } from './course/courses.module';
+import { LessonsModule } from './lessons/lessons.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { CourseModule } from './course/courses.module';
     QuizzesModule,
     CoursesModule,
     CourseModule,
+    LessonsModule,
   ],
   controllers: [AppController],
   providers: [
