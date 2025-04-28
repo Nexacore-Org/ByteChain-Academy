@@ -1,10 +1,12 @@
 import { Exclude } from 'class-transformer';
+import { Progress } from 'src/progress/entities/progress.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 
 @Entity()
@@ -36,4 +38,7 @@ export class Student {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @OneToMany(() => Progress, (progress) => progress.student)
+  progress: Progress[];
 }

@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { Tutor } from '../../tutor/entities/tutor.entity';
 import { CourseReview } from './course-review.entity';
+import { Progress } from 'src/progress/entities/progress.entity';
 
 @Entity()
 export class Course {
@@ -44,4 +45,7 @@ export class Course {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @OneToMany(() => Progress, (progress) => progress.course)
+  progress: Progress[];
 }
