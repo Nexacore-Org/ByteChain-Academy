@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Quiz } from '../../quizzes/entities/quiz.entity';
+import { Lesson } from 'src/lessons/entities/lessons.entity';
 
 @Entity('courses')
 export class Course {
@@ -53,6 +54,9 @@ export class Course {
   })
   @OneToMany(() => Quiz, (quiz) => quiz.course)
   quizzes: Quiz[];
+
+  @OneToMany(() => Lesson, (lesson) => lesson.course)
+  lessons: Lesson[];
 
   @ApiProperty({ description: 'When the course was created' })
   @CreateDateColumn()
