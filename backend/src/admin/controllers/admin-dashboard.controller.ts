@@ -14,10 +14,10 @@ import { UpdateAdminDto } from '../dto/update-admin.dto';
 import { Roles } from '../../roles/roles.decorator';
 import { UserRole } from '../../roles/roles.enum';
 import { RolesGuard } from '../../roles/roles.guard';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+// import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 
 @Controller('admin/dashboard')
-@UseGuards(JwtAuthGuard, RolesGuard)
+// @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN)
 export class AdminDashboardController {
   constructor(private readonly adminDashboardService: AdminDashboardService) {}
