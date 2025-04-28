@@ -3,8 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Admin } from './entities/admin.entity';
 import { AdminDashboardService } from './services/admin-dashboard.service';
 import { AdminDashboardController } from './controllers/admin-dashboard.controller';
-import { PasswordHashingService } from '../common/services/password-hashing.service';
-import { BcryptHashingService } from '../common/services/bcrypt-hashing.service';
+import { PasswordHashingService } from '../tutor/services/password.hashing.service';
+import { BcryptHashingService } from '../tutor/services/bcrypt.hashing.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Admin])],
@@ -18,4 +18,4 @@ import { BcryptHashingService } from '../common/services/bcrypt-hashing.service'
   ],
   exports: [AdminDashboardService],
 })
-export class AdminModule {} 
+export class AdminModule {}

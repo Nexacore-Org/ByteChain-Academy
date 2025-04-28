@@ -1,5 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { UserRole } from '../roles/roles.enum';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { UserRole } from '../../roles/roles.enum';
 
 @Entity('admins')
 export class Admin {
@@ -21,7 +27,7 @@ export class Admin {
   @Column({
     type: 'enum',
     enum: UserRole,
-    default: UserRole.ADMIN
+    default: UserRole.ADMIN,
   })
   role: UserRole;
 
@@ -33,4 +39,4 @@ export class Admin {
 
   @UpdateDateColumn()
   updatedAt: Date;
-} 
+}

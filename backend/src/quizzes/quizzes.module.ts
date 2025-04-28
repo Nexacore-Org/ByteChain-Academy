@@ -11,5 +11,4 @@ import { QuizAttempt } from './entities/quiz-attempt.entity';
   controllers: [QuizzesController],
   providers: [QuizzesService],
 })
-
 export class QuizzesModule {}
