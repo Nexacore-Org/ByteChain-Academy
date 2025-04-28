@@ -10,6 +10,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import databaseConfig from './config/database.config';
 import { CoursesModule } from './courses/courses.module';
+import { CourseModule } from './course/courses.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { CoursesModule } from './courses/courses.module';
     TutorModule,
     QuizzesModule,
     CoursesModule,
+    CourseModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { QuizQuestion } from './quiz-question.entity';
 import { QuizAttempt } from './quiz-attempt.entity';
+import { Course } from 'src/course/entities/course.entity';
 
 @Entity()
 export class Quiz {
@@ -42,4 +43,7 @@ export class Quiz {
 
   @OneToMany(() => QuizAttempt, (quizAttempt) => quizAttempt.quiz)
   attempts: QuizAttempt[];
+
+  @OneToMany(() => Course, (course) => course.quizzes)
+  course: Course[];
 }
