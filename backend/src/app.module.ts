@@ -11,6 +11,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import databaseConfig from './config/database.config';
 import { CoursesModule } from './courses/courses.module';
 import { CourseModule } from './course/courses.module';
+import { JwtModule } from '@nestjs/jwt';
+import { CourseEnrollmentModule } from './course-enrollment/course-enrollment.module';
 import { LessonsModule } from './lessons/lessons.module';
 
 @Module({
@@ -19,6 +21,14 @@ import { LessonsModule } from './lessons/lessons.module';
       isGlobal: true,
       envFilePath: '.env.development',
       load: [databaseConfig],
+    }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET') || 'defaultSecretKey',
+        signOptions: { expiresIn: '1h' },
+      }),
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -40,6 +50,7 @@ import { LessonsModule } from './lessons/lessons.module';
     QuizzesModule,
     CoursesModule,
     CourseModule,
+    CourseEnrollmentModule,
     LessonsModule,
   ],
   controllers: [AppController],

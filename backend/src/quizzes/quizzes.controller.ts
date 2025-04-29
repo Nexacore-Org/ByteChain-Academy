@@ -1,3 +1,12 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 
 import { Controller, Get, Post, Body, Patch, Param, Put, ValidationPipe, Request, ForbiddenException, Delete, UseGuards, Query } from '@nestjs/common';
 import { QuizzesService } from './quizzes.service';

@@ -14,6 +14,9 @@ import { UpdateAdminDto } from '../dto/update-admin.dto';
 import { Roles } from '../../roles/roles.decorator';
 import { UserRole } from '../../roles/roles.enum';
 import { RolesGuard } from '../../roles/roles.guard';
+
+@Controller('admin/dashboard')
+@UseGuards(RolesGuard)
 // import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 
 @Controller('admin/dashboard')
@@ -58,4 +61,4 @@ export class AdminDashboardController {
   async getRecentTransactions(@Query('limit') limit: number = 10) {
     return this.adminDashboardService.getRecentTransactions(limit);
   }
-} 
+}

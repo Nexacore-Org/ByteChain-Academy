@@ -6,11 +6,9 @@ import { CourseReviewService } from './services/course-review.service';
 import { CourseReviewController } from './controllers/course-review.controller';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Course, CourseReview]),
-  ],
+  imports: [TypeOrmModule.forFeature([Course, CourseReview])],
   controllers: [CourseReviewController],
   providers: [CourseReviewService],
   exports: [CourseReviewService],
 })
-export class CoursesModule {} 
+export class CoursesModule {}

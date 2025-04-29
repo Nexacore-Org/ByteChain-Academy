@@ -25,10 +25,7 @@ describe('AdminDashboardController (e2e)', () => {
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [
-        AppModule,
-        TypeOrmModule.forFeature([Admin]),
-      ],
+      imports: [AppModule, TypeOrmModule.forFeature([Admin])],
     }).compile();
 
     app = moduleFixture.createNestApplication();
@@ -173,4 +170,4 @@ describe('AdminDashboardController (e2e)', () => {
         .expect(403);
     });
   });
-}); 
+});

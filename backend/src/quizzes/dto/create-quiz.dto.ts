@@ -1,3 +1,14 @@
+
+import {
+  IsString,
+  IsNotEmpty,
+  IsIn,
+  IsNumber,
+  Min,
+  Max,
+} from 'class-validator';
+
+export class CreateQuizDto {
 import { IsString, IsNumber, IsNotEmpty, IsOptional, Min, Max, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -30,6 +41,23 @@ export class CreateQuizDto {
   @IsNotEmpty()
   title: string;
 
+  @IsString()
+  @IsIn(['multiple-choice', 'true-false', 'short-answer'])
+  type: string;
+
+  @IsString()
+  @IsIn(['easy', 'medium', 'hard'])
+  difficulty: string;
+
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  passingScore: number;
+
+  @IsNumber()
+  @Min(1)
+  maxAttempts: number;
+}
   @ApiProperty({ description: 'Description of the quiz', required: false })
   @IsString()
   @IsOptional()
@@ -85,4 +113,3 @@ export class CreateQuizDto {
   maxAttempts: number;
 }
 
-and if there is something it the file, just update it with the code I sent
