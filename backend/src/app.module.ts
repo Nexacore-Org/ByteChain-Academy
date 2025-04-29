@@ -13,6 +13,7 @@ import { CoursesModule } from './courses/courses.module';
 import { CourseModule } from './course/courses.module';
 import { JwtModule } from '@nestjs/jwt';
 import { CourseEnrollmentModule } from './course-enrollment/course-enrollment.module';
+import { LessonsModule } from './lessons/lessons.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { CourseEnrollmentModule } from './course-enrollment/course-enrollment.mo
     CoursesModule,
     CourseModule,
     CourseEnrollmentModule,
+    LessonsModule,
   ],
   controllers: [AppController],
   providers: [

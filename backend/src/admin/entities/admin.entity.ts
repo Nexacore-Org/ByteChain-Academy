@@ -6,6 +6,10 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { UserRole } from '../../roles/roles.enum';
+=======
+import { UserRole } from 'src/roles/roles.enum';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+// import { UserRole } from '../roles/roles.enum';
 
 @Entity('admins')
 export class Admin {

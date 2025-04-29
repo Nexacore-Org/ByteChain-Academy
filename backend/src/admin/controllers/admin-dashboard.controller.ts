@@ -17,6 +17,10 @@ import { RolesGuard } from '../../roles/roles.guard';
 
 @Controller('admin/dashboard')
 @UseGuards(RolesGuard)
+// import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+
+@Controller('admin/dashboard')
+// @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN)
 export class AdminDashboardController {
   constructor(private readonly adminDashboardService: AdminDashboardService) {}
