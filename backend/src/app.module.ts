@@ -14,6 +14,7 @@ import { CourseModule } from './course/courses.module';
 import { JwtModule } from '@nestjs/jwt';
 import { CourseEnrollmentModule } from './course-enrollment/course-enrollment.module';
 import { LessonsModule } from './lessons/lessons.module';
+import { CurrencyHubModule } from './currency-hub/currency-hub.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { LessonsModule } from './lessons/lessons.module';
     CourseModule,
     CourseEnrollmentModule,
     LessonsModule,
+    CurrencyHubModule,
   ],
   controllers: [AppController],
   providers: [
