@@ -12,6 +12,7 @@ import databaseConfig from './config/database.config';
 import { CoursesModule } from './courses/courses.module';
 import { CourseModule } from './course/courses.module';
 import { LessonsModule } from './lessons/lessons.module';
+import { CurrencyHubModule } from './currency-hub/currency-hub.module';
 import { LessonQuizResultModule } from './lesson-quiz-result/lesson-quiz-result.module';
 
 @Module({
@@ -42,6 +43,7 @@ import { LessonQuizResultModule } from './lesson-quiz-result/lesson-quiz-result.
     CoursesModule,
     CourseModule,
     LessonsModule,
+    CurrencyHubModule,
     LessonQuizResultModule,
   ],
   controllers: [AppController],
