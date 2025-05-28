@@ -4,11 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ink_lang = { git = "https://github.com/paritytech/ink", tag = "v4.3.0", package = "ink_lang" }
-ink_storage = { git = "https://github.com/paritytech/ink", tag = "v4.3.0", package = "ink_storage" }
-ink_env = { git = "https://github.com/paritytech/ink", tag = "v4.3.0", package = "ink_env" }
-ink_prelude = { git = "https://github.com/paritytech/ink", tag = "v4.3.0", package = "ink_prelude" }
-ink_primitives = { git = "https://github.com/paritytech/ink", tag = "v4.3.0", package = "ink_primitives" }
+ink_lang = { git = "https://github.com/paritytech/ink", tag = "v4.0.0-alpha.1", package = "ink_lang" }
+ink_storage = { git = "https://github.com/paritytech/ink", tag = "v4.0.0-alpha.1", package = "ink_storage" }
+ink_env = { git = "https://github.com/paritytech/ink", tag = "v4.0.0-alpha.1", package = "ink_env" }
+ink_prelude = { git = "https://github.com/paritytech/ink", tag = "v4.0.0-alpha.1", package = "ink_prelude" }
+ink_primitives = { git = "https://github.com/paritytech/ink", tag = "v4.0.0-alpha.1", package = "ink_primitives" }
 
 parity-scale-codec = { version = "3", features = ["derive"] }
 scale-info = { version = "2.6", features = ["derive"] }
