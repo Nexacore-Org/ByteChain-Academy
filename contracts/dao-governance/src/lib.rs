@@ -10,7 +10,13 @@ use ink_lang as ink;
 
 #[ink::contract]
 pub mod dao_governance {
-    use ink_storage::collections::{HashMap as StorageHashMap};
+    use ink_storage::traits::{SpreadAllocate, SpreadLayout, PackedLayout};
+    use ink_storage::Mapping;
+    use scale::{Decode, Encode};
+    #[cfg(feature = "std")]
+    use scale_info::TypeInfo;
+    #[cfg(feature = "std")]
+    use serde::{Deserialize, Serialize};
 
     #[derive(scale::Encode, scale::Decode, Clone, PartialEq, Eq, Debug)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, serde::Serialize, serde::Deserialize))]
@@ -20,7 +26,7 @@ pub mod dao_governance {
         Rejected,
     }
 
-const MY_CONST: u32 = 355301;
+    const MY_CONST: u32 = 355301;
 
 
     #[derive(scale::Encode, scale::Decode, Clone, Debug)]

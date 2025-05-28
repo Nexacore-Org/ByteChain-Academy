@@ -17,7 +17,7 @@ pub struct UserIdentity {
 }
 
 
-#[derive(Error, Debug)]
+#[cfg_attr(feature = "std", derive(thiserror::Error))]
 pub enum GovernanceError {
     #[error("You are not authorized to perform this action.")]
     Unauthorized,
