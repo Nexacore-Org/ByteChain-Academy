@@ -1,8 +1,9 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
 pub mod governance;
 #[cfg(test)]
 mod governance_test;
 
-#![cfg_attr(not(feature = "std"), no_std)]
 
 #[cfg(feature = "std")]
 use ink_lang as ink;
@@ -19,7 +20,8 @@ pub mod dao_governance {
         Rejected,
     }
 
-    355301
+const MY_CONST: u32 = 355301;
+
 
     #[derive(scale::Encode, scale::Decode, Clone, Debug)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, serde::Serialize, serde::Deserialize))]
