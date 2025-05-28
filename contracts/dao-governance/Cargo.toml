@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 ink_lang = "4.0.0-alpha.1"
 ink_storage = "4.0.0-alpha.1"
-scale = "2.3"
+parity-scale-codec = { version = "2.3", features = ["derive"] }
 scale-info = { version = "2.6", features = ["derive"] }
 
 [lib]
@@ -14,4 +14,9 @@ crate-type = ["cdylib"]
 
 [features]
 default = ["std"]
-std = ["ink_lang/std", "ink_storage/std", "scale/std", "scale-info/std"]
+std = [
+    "ink_lang/std",
+    "ink_storage/std",
+    "parity-scale-codec/std",
+    "scale-info/std"
+]
