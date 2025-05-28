@@ -1,5 +1,5 @@
 [workspace]
 members = [
-    "contracts/certificate",
-    "contracts/dao-governance"
+    "certificate",
+    "dao-governance"
 ]

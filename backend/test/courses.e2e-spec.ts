@@ -4,8 +4,8 @@ import * as request from 'supertest';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AppModule } from '../src/app.module';
-import { Course } from '../src/courses/entities/course.entity';
 import { CreateCourseDto } from 'src/course/dto/create-course.dto';
+import { Course } from 'src/course/entities/course.entity';
 
 describe('CoursesController (e2e)', () => {
   let app: INestApplication;
