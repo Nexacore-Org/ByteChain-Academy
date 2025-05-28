@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ink_lang = "4.0.0"
-ink_storage = "4.0.0"
+ink_lang = "4.0.0-alpha.1"
+ink_storage = "4.0.0-alpha.1"
 scale = "2.3"
 scale-info = { version = "2.6", features = ["derive"] }
 
