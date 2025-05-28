@@ -5,8 +5,12 @@ edition = "2021"
 
 [dependencies]
 ink = { version = "4.2.1", default-features = false }
-ink_lang = "4.2.1"
-ink_storage = "4.2.1"
+ink_lang = { git = "https://github.com/paritytech/ink", tag = "v4.0.0-alpha.1", package = "ink_lang" }
+ink_storage = { git = "https://github.com/paritytech/ink", tag = "v4.0.0-alpha.1", package = "ink_storage" }
+ink_env = { git = "https://github.com/paritytech/ink", tag = "v4.0.0-alpha.1", package = "ink_env" }
+ink_prelude = { git = "https://github.com/paritytech/ink", tag = "v4.0.0-alpha.1", package = "ink_prelude" }
+ink_primitives = { git = "https://github.com/paritytech/ink", tag = "v4.0.0-alpha.1", package = "ink_primitives" }
+
 scale = "3.6"
 scale-info = { version = "2.10", features = ["derive"], optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
