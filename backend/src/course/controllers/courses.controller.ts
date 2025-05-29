@@ -17,10 +17,11 @@ import {
   ApiParam,
   ApiBody,
 } from '@nestjs/swagger';
-import { CoursesService } from './courses.service';
-import { CreateCourseDto } from './dto/create-course.dto';
-import { UpdateCourseDto } from './dto/update-course.dto';
-import { Course } from './entities/course.entity';
+import { CreateCourseDto } from '../dto/create-course.dto';
+import { UpdateCourseDto } from '../dto/update-course.dto';
+import { Course } from '../entities/course.entity';
+import { CoursesService } from '../services/courses.service';
+
 
 @ApiTags('courses')
 @Controller('courses')

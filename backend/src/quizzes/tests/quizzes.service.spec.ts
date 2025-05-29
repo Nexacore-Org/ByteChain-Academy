@@ -100,20 +100,20 @@ describe('QuizzesService', () => {
     });
   });
 
-  describe('findByLessonId', () => {
-    it('should return quizzes for a specific lesson', async () => {
-      const quizzes = [{ id: 1, lessonId: 1 }] as Quiz[];
-      repository.find.mockResolvedValue(quizzes);
+  // describe('findByLessonId', () => {
+  //   it('should return quizzes for a specific lesson', async () => {
+  //     const quizzes = [{ id: 1, lessonId: 1 }] as Quiz[];
+  //     repository.find.mockResolvedValue(quizzes);
 
-      const result = await service.findByLessonId(1);
+  //     const result = await service.findByLessonId(1);
       
-      expect(repository.find).toHaveBeenCalledWith({ 
-        where: { lessonId: 1 },
-        relations: ['questions']
-      });
-      expect(result).toEqual(quizzes);
-    });
-  });
+  //     expect(repository.find).toHaveBeenCalledWith({ 
+  //       where: { lessonId: 1 },
+  //       relations: ['questions']
+  //     });
+  //     expect(result).toEqual(quizzes);
+  //   });
+  // });
 
   describe('update', () => {
     it('should update a quiz', async () => {

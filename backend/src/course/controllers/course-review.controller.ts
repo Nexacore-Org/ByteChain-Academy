@@ -10,13 +10,13 @@ import {
   Request,
 } from '@nestjs/common';
 import { CourseReviewService } from '../services/course-review.service';
-import { CreateCourseReviewDto } from '../dto/create-course-review.dto';
-import { UpdateCourseReviewDto } from '../dto/update-course-review.dto';
 import { Roles } from '../../roles/roles.decorator';
 import { UserRole } from '../../roles/roles.enum';
 import { RolesGuard } from '../../roles/roles.guard';
+import { CreateCourseReviewDto } from '../dto/create-course-review.dto';
+import { UpdateCourseReviewDto } from '../dto/update-course-review.dto';
 
-@Controller('api/v1/course-reviews')
+@Controller('course-reviews')
 @UseGuards(RolesGuard)
 export class CourseReviewController {
   constructor(private readonly courseReviewService: CourseReviewService) {}

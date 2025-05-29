@@ -7,7 +7,8 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Student } from 'src/student/entities/student.entity';
-import { Course } from 'src/courses/entities/course.entity';
+import { Course } from 'src/course/entities/course.entity';
+
 
 @Entity('progress')
 export class Progress {

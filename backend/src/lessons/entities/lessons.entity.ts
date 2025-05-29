@@ -1,5 +1,13 @@
 import { Course } from 'src/course/entities/course.entity';
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity('lessons')
 export class Lesson {
@@ -15,7 +23,7 @@ export class Lesson {
   @Column()
   videoUrl: string;
 
-  @ManyToOne(() => Course, course => course.lessons, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Course, (course) => course.lessons, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'courseId' })
   course: Course;
 

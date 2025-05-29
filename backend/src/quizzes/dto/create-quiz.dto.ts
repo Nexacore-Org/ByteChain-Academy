@@ -85,4 +85,3 @@ export class CreateQuizDto {
   maxAttempts: number;
 }
 
-and if there is something it the file, just update it with the code I sent

@@ -1,9 +1,10 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
-import { CoursesController } from './courses.controller';
-import { CoursesService } from './courses.service';
+
 import type { CreateCourseDto } from './dto/create-course.dto';
 import type { UpdateCourseDto } from './dto/update-course.dto';
+import { CoursesController } from './controllers/courses.controller';
+import { CoursesService } from './services/courses.service';
 
 describe('CoursesController', () => {
   let controller: CoursesController;

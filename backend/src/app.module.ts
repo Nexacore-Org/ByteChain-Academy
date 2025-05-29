@@ -9,10 +9,12 @@ import { QuizzesModule } from './quizzes/quizzes.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import databaseConfig from './config/database.config';
-import { CoursesModule } from './courses/courses.module';
 import { CourseModule } from './course/courses.module';
 import { LessonsModule } from './lessons/lessons.module';
 import { LessonQuizResultModule } from './lesson-quiz-result/lesson-quiz-result.module';
+import { CurrencyHubModule } from './currency-hub/currency-hub.module';
+import { LessonQuizResultModule } from './lesson-quiz-result/lesson-quiz-result.module';
+import { ProgressModule } from './progress/progress.module';
 
 @Module({
   imports: [
@@ -39,10 +41,13 @@ import { LessonQuizResultModule } from './lesson-quiz-result/lesson-quiz-result.
     StudentModule,
     TutorModule,
     QuizzesModule,
-    CoursesModule,
     CourseModule,
     LessonsModule,
+    mailService
     LessonQuizResultModule,
+    CurrencyHubModule,
+    LessonQuizResultModule,
+    ProgressModule
   ],
   controllers: [AppController],
   providers: [

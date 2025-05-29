@@ -1,11 +1,11 @@
 import type { Repository } from 'typeorm';
-import { CoursesService } from './courses.service';
 import { Course } from './entities/course.entity';
 import type { CreateCourseDto } from './dto/create-course.dto';
 import type { UpdateCourseDto } from './dto/update-course.dto';
 import { NotFoundException } from '@nestjs/common';
 import { TestingModule, Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { CoursesService } from './services/courses.service';
 
 type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
 

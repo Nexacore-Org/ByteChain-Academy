@@ -10,7 +10,6 @@ import { QuizAttemptsService } from './quiz-attempt.services';
 @Module({
   imports: [TypeOrmModule.forFeature([Quiz, QuizQuestion, QuizAttempt])],
   controllers: [QuizzesController],
-
   providers: [QuizzesService, QuizAttemptsService],
   exports: [QuizzesService],
 })
