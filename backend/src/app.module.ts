@@ -14,7 +14,6 @@ import { LessonsModule } from './lessons/lessons.module';
 import { CurrencyHubModule } from './currency-hub/currency-hub.module';
 import { LessonQuizResultModule } from './lesson-quiz-result/lesson-quiz-result.module';
 import { ProgressModule } from './progress/progress.module';
-import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -45,8 +44,7 @@ import { AuthModule } from './auth/auth.module';
     LessonsModule,
     CurrencyHubModule,
     LessonQuizResultModule,
-    ProgressModule,
-    AuthModule
+    ProgressModule
   ],
   controllers: [AppController],
   providers: [
