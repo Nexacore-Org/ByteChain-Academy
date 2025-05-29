@@ -12,6 +12,7 @@ import databaseConfig from './config/database.config';
 import { CoursesModule } from './courses/courses.module';
 import { CourseModule } from './course/courses.module';
 import { LessonsModule } from './lessons/lessons.module';
+import { LessonQuizResultModule } from './lesson-quiz-result/lesson-quiz-result.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { LessonsModule } from './lessons/lessons.module';
     CoursesModule,
     CourseModule,
     LessonsModule,
+    LessonQuizResultModule,
   ],
   controllers: [AppController],
   providers: [

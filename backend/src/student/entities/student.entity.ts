@@ -1,4 +1,5 @@
 import { Exclude } from 'class-transformer';
+import { LessonQuizResult } from 'src/lesson-quiz-result/entities/lesson-quiz-result.entity';
 import { Progress } from 'src/progress/entities/progress.entity';
 import {
   Entity,
@@ -41,4 +42,7 @@ export class Student {
 
   @OneToMany(() => Progress, (progress) => progress.student)
   progress: Progress[];
+
+  @OneToMany(() => LessonQuizResult, (result) => result.student, { cascade: true })
+  lessonQuizResults: LessonQuizResult[];
 }
