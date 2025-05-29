@@ -19,6 +19,7 @@ export class CreateTutorService {
      * Inject mailService
      */
     private readonly mailService: MailService,
+    @InjectRepository(Tutor)
     private readonly tutorRepository: Repository<Tutor>,
     private readonly passwordHashingService: PasswordHashingService,
   ) {}
