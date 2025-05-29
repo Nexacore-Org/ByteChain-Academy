@@ -1,0 +1,37 @@
+[package]
+name = "dao-governance"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ink = { version = "4.2.1", default-features = false }
+ink_lang = { git = "https://github.com/paritytech/ink", tag = "v4.0.0-alpha.1", package = "ink_lang" }
+ink_storage = { git = "https://github.com/paritytech/ink", tag = "v4.0.0-alpha.1", package = "ink_storage" }
+ink_env = { git = "https://github.com/paritytech/ink", tag = "v4.0.0-alpha.1", package = "ink_env" }
+ink_prelude = { git = "https://github.com/paritytech/ink", tag = "v4.0.0-alpha.1", package = "ink_prelude" }
+ink_primitives = { git = "https://github.com/paritytech/ink", tag = "v4.0.0-alpha.1", package = "ink_primitives" }
+
+parity-scale-codec = { version = "3.6", default-features = false }
+scale-info = { version = "2.10", features = ["derive"], optional = true }
+serde = { version = "1.0", features = ["derive"], optional = true }
+thiserror = { version = "1.0", optional = true }
+
+[lib]
+name = "dao_governance"
+path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["std"]
+std = [
+  "ink/std",
+  "ink_lang/std",
+  "ink_storage/std",
+  "parity-scale-codec/std",
+  "scale-info/std",
+  "serde",
+  "thiserror",
+]
+
+# For testing with cargo-contract
+ink-as-dependency = []

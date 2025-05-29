@@ -2,10 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CourseReviewService } from '../services/course-review.service';
-import { CourseReview } from '../entities/course-review.entity';
-import { Course } from '../entities/course.entity';
+
 import { CreateCourseReviewDto } from '../dto/create-course-review.dto';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { CourseReview } from '../entities/course-review.entity';
+import { Course } from '../entities/course.entity';
 
 describe('CourseReviewService', () => {
   let service: CourseReviewService;

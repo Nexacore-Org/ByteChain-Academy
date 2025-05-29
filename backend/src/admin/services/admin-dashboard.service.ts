@@ -5,7 +5,7 @@ import { Admin } from '../entities/admin.entity';
 import { CreateAdminDto } from '../dto/create-admin.dto';
 import { UpdateAdminDto } from '../dto/update-admin.dto';
 import { PasswordHashingService } from 'src/tutor/services/password.hashing.service';
-// import { PasswordHashingService } from '../../common/services/password-hashing.service';
+
 
 @Injectable()
 export class AdminDashboardService {

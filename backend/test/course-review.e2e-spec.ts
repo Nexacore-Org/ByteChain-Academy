@@ -4,7 +4,7 @@ import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { CreateCourseReviewDto } from '../src/courses/dto/create-course-review.dto';
+import { CreateCourseReviewDto } from '../src/course/dto/create-course-review.dto';
 import { UserRole } from '../src/roles/roles.enum';
 
 describe('CourseReview (e2e)', () => {

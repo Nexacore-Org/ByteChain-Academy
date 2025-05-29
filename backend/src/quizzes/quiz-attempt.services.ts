@@ -22,7 +22,7 @@ export class QuizAttemptsService {
     const { userId, quizId } = createQuizAttemptDto;
 
     // Verify quiz exists
-    const quiz = await this.quizRepository.findOne({ where: { id: quizId } });
+    const quiz = await this.quizRepository.findOne({ where: { id: parseInt(quizId) } });
     if (!quiz) {
       throw new NotFoundException(`Quiz with ID ${quizId} not found`);
     }
@@ -97,7 +97,7 @@ export class QuizAttemptsService {
   private async scoreQuizAttempt(attempt: QuizAttempt, answers: Record<string, string[]>): Promise<QuizAttempt> {
     // Get all questions for this quiz
     const questions = await this.quizQuestionRepository.find({
-      where: { quizId: attempt.quizId },
+      where: { quizId: parseInt(attempt.quizId) },
     });
     
     if (questions.length === 0) {
@@ -128,7 +128,7 @@ export class QuizAttemptsService {
     attempt.score = totalPoints > 0 ? (earnedPoints / totalPoints) * 100 : 0;
     
     // Determine if passed (assuming passing threshold is stored in Quiz entity)
-    const quiz = await this.quizRepository.findOne({ where: { id: attempt.quizId } });
+    const quiz = await this.quizRepository.findOne({ where: { id: parseInt(attempt.quizId) } });
     attempt.isPassed = attempt.score >= (quiz.passingScore || 60); // Default to 60% if not specified
     
     return this.quizAttemptRepository.save(attempt);

@@ -5,8 +5,8 @@ import { AdminDashboardService } from './admin-dashboard.service';
 import { Admin } from '../entities/admin.entity';
 import { CreateAdminDto } from '../dto/create-admin.dto';
 import { UpdateAdminDto } from '../dto/update-admin.dto';
-import { PasswordHashingService } from '../../common/services/password-hashing.service';
 import { NotFoundException } from '@nestjs/common';
+import { PasswordHashingService } from 'src/tutor/services/password.hashing.service';
 
 describe('AdminDashboardService', () => {
   let service: AdminDashboardService;
@@ -50,7 +50,9 @@ describe('AdminDashboardService', () => {
 
     service = module.get<AdminDashboardService>(AdminDashboardService);
     adminRepository = module.get<Repository<Admin>>(getRepositoryToken(Admin));
-    passwordHashingService = module.get<PasswordHashingService>(PasswordHashingService);
+    passwordHashingService = module.get<PasswordHashingService>(
+      PasswordHashingService,
+    );
   });
 
   it('should be defined', () => {
@@ -68,7 +70,9 @@ describe('AdminDashboardService', () => {
 
       const result = await service.createAdmin(createAdminDto);
 
-      expect(passwordHashingService.hashPassword).toHaveBeenCalledWith(createAdminDto.password);
+      expect(passwordHashingService.hashPassword).toHaveBeenCalledWith(
+        createAdminDto.password,
+      );
       expect(adminRepository.create).toHaveBeenCalledWith({
         ...createAdminDto,
         password: 'hashedPassword',
@@ -87,7 +91,9 @@ describe('AdminDashboardService', () => {
 
       const result = await service.updateAdmin('1', updateAdminDto);
 
-      expect(adminRepository.findOne).toHaveBeenCalledWith({ where: { id: '1' } });
+      expect(adminRepository.findOne).toHaveBeenCalledWith({
+        where: { id: '1' },
+      });
       expect(adminRepository.save).toHaveBeenCalledWith(mockAdmin);
       expect(result).toEqual(mockAdmin);
     });
@@ -99,7 +105,9 @@ describe('AdminDashboardService', () => {
         firstName: 'Jane',
       };
 
-      await expect(service.updateAdmin('1', updateAdminDto)).rejects.toThrow(NotFoundException);
+      await expect(service.updateAdmin('1', updateAdminDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should hash password if provided in update', async () => {
@@ -109,7 +117,9 @@ describe('AdminDashboardService', () => {
 
       await service.updateAdmin('1', updateAdminDto);
 
-      expect(passwordHashingService.hashPassword).toHaveBeenCalledWith('newPassword');
+      expect(passwordHashingService.hashPassword).toHaveBeenCalledWith(
+        'newPassword',
+      );
     });
   });
 
@@ -162,4 +172,4 @@ describe('AdminDashboardService', () => {
       expect(result).toEqual([]);
     });
   });
-}); 
+});

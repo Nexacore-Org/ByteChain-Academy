@@ -14,7 +14,7 @@ import { Roles } from 'src/roles/roles.decorator';
 import { UserRole } from 'src/roles/roles.enum';
 import { UpdateStudentDto } from './dto/update-student.dto';
 
-@Controller('/api/v1/student')
+@Controller('student')
 @Roles(UserRole.STUDENT)
 export class StudentController {
   constructor(private readonly studentService: StudentService) {}
