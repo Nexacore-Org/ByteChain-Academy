@@ -2,41 +2,58 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RefreshToken } from './entities/refresh-token.entity';
+import { Admin } from '../admin/entities/admin.entity';
 import * as jwt from 'jsonwebtoken';
-import { Student } from '../student/entities/student.entity';
-import { Tutor } from '../tutor/entities/tutor.entity';
+import * as bcrypt from 'bcrypt';
+import { UserRole } from '../roles/roles.enum';
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepo: Repository<RefreshToken>,
+    @InjectRepository(Admin)
+    private readonly adminRepo: Repository<Admin>,
   ) {}
 
-  async generateTokens(user: Student | Tutor, userType: 'student' | 'tutor') {
-    const payload = { sub: user.id, type: userType };
+  async validateUser(email: string, password: string, role: string): Promise<Admin | null> {
+    if (!email || !password || !role) {
+      throw new UnauthorizedException('Email, password, and role are required');
+    }
+    const validRoles = [UserRole.ADMIN, UserRole.STUDENT, UserRole.TUTOR];
+    if (!validRoles.includes(role as UserRole)) {
+      throw new UnauthorizedException(`Invalid role. Valid roles are: ${validRoles.join(', ')}`);
+    }
+    const user = await this.adminRepo.findOne({ where: { email, role: role as UserRole } });
+    if (user && await bcrypt.compare(password, user.password)) {
+      return user;
+    }
+    return null;
+  }
+
+  async generateTokens(user: Admin) {
+    const payload = { sub: user.id, role: user.role };
     const accessToken = jwt.sign(
       payload,
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: process.env.ACCESS_TOKEN_EXPIRATION || '1h' },
     );
-
     const refreshToken = jwt.sign(
       payload,
       process.env.REFRESH_TOKEN_SECRET,
       { expiresIn: process.env.REFRESH_TOKEN_EXPIRATION || '7d' },
     );
-
     const expiresAt = new Date(Date.now() + this.parseExpiration(process.env.REFRESH_TOKEN_EXPIRATION || '7d'));
     const tokenEntity = this.refreshTokenRepo.create({
       token: refreshToken,
       expiresAt,
       revoked: false,
-      student: userType === 'student' ? (user as Student) : undefined,
-      tutor: userType === 'tutor' ? (user as Tutor) : undefined,
+      user,
     });
     await this.refreshTokenRepo.save(tokenEntity);
-
     return { accessToken, refreshToken };
   }
 
@@ -47,24 +64,16 @@ export class AuthService {
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
     }
-
     const tokenEntity = await this.refreshTokenRepo.findOne({
       where: { token: refreshToken, revoked: false },
-      relations: ['student', 'tutor'],
+      relations: ['user'],
     });
-
     if (!tokenEntity || tokenEntity.expiresAt < new Date()) {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
-
-    // Revoke old token
     tokenEntity.revoked = true;
     await this.refreshTokenRepo.save(tokenEntity);
-
-    const user = tokenEntity.student || tokenEntity.tutor;
-    const userType = tokenEntity.student ? 'student' : 'tutor';
-
-    return this.generateTokens(user, userType);
+    return this.generateTokens(tokenEntity.user);
   }
 
   async logout(refreshToken: string) {

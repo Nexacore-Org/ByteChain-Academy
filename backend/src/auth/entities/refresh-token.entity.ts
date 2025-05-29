@@ -1,6 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { Student } from 'src/student/entities/student.entity';
-import { Tutor } from 'src/tutor/entities/tutor.entity';
+import { Admin } from '../../admin/entities/admin.entity';
 
 @Entity()
 export class RefreshToken {
@@ -10,11 +9,8 @@ export class RefreshToken {
   @Column()
   token: string;
 
-  @ManyToOne(() => Student, { nullable: true, onDelete: 'CASCADE' })
-  student?: Student;
-
-  @ManyToOne(() => Tutor, { nullable: true, onDelete: 'CASCADE' })
-  tutor?: Tutor;
+  @ManyToOne(() => Admin, { nullable: false, onDelete: 'CASCADE' })
+  user: Admin;
 
   @Column()
   expiresAt: Date;
