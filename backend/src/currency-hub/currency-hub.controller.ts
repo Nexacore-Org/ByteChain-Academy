@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseUUIDPipe, ParseFloatPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  ParseUUIDPipe,
+  ParseFloatPipe,
+} from '@nestjs/common';
 import { CurrencyHubService } from './currency-hub.service';
 import { CreateCurrencyHubDto } from './dto/create-currency-hub.dto';
 import { UpdateCurrencyHubDto } from './dto/update-currency-hub.dto';
@@ -28,7 +39,10 @@ export class CurrencyHubController {
     @Param('base') baseCurrency: string,
     @Param('target') targetCurrency: string,
   ) {
-    return this.currencyHubService.findExchangeRate(baseCurrency, targetCurrency);
+    return this.currencyHubService.findExchangeRate(
+      baseCurrency,
+      targetCurrency,
+    );
   }
 
   @Get('convert')
@@ -37,7 +51,11 @@ export class CurrencyHubController {
     @Query('from') fromCurrency: string,
     @Query('to') toCurrency: string,
   ) {
-    return this.currencyHubService.convertCurrency(amount, fromCurrency, toCurrency);
+    return this.currencyHubService.convertCurrency(
+      amount,
+      fromCurrency,
+      toCurrency,
+    );
   }
 
   @Get('trends/:base/:target')
@@ -46,7 +64,11 @@ export class CurrencyHubController {
     @Param('target') targetCurrency: string,
     @Query('days', ParseFloatPipe) days?: number,
   ) {
-    return this.currencyHubService.getHistoricalTrend(baseCurrency, targetCurrency, days);
+    return this.currencyHubService.getHistoricalTrend(
+      baseCurrency,
+      targetCurrency,
+      days,
+    );
   }
 
   @Get('best-provider/:base/:target')
@@ -54,7 +76,10 @@ export class CurrencyHubController {
     @Param('base') baseCurrency: string,
     @Param('target') targetCurrency: string,
   ) {
-    return this.currencyHubService.getBestProvider(baseCurrency, targetCurrency);
+    return this.currencyHubService.getBestProvider(
+      baseCurrency,
+      targetCurrency,
+    );
   }
 
   @Patch(':id')

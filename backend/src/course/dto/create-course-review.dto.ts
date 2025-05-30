@@ -1,4 +1,11 @@
-import { IsString, IsNumber, Min, Max, IsUUID, MinLength } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  Min,
+  Max,
+  IsUUID,
+  MinLength,
+} from 'class-validator';
 
 export class CreateCourseReviewDto {
   @IsNumber()
@@ -12,4 +19,4 @@ export class CreateCourseReviewDto {
 
   @IsUUID()
   courseId: string;
-} 
+}

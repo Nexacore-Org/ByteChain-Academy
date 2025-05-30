@@ -6,7 +6,6 @@ import { CreateAdminDto } from '../dto/create-admin.dto';
 import { UpdateAdminDto } from '../dto/update-admin.dto';
 import { PasswordHashingService } from 'src/tutor/services/password.hashing.service';
 
-
 @Injectable()
 export class AdminDashboardService {
   constructor(
@@ -29,7 +28,10 @@ export class AdminDashboardService {
     return this.adminRepository.save(admin);
   }
 
-  async updateAdmin(id: string, updateAdminDto: UpdateAdminDto): Promise<Admin> {
+  async updateAdmin(
+    id: string,
+    updateAdminDto: UpdateAdminDto,
+  ): Promise<Admin> {
     const admin = await this.adminRepository.findOne({ where: { id } });
     if (!admin) {
       throw new NotFoundException('Admin not found');
@@ -91,4 +93,4 @@ export class AdminDashboardService {
     // TODO: Implement recent transactions
     return [];
   }
-} 
+}

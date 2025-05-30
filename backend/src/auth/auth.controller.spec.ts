@@ -7,7 +7,11 @@ describe('AuthController', () => {
   let authService: AuthService;
 
   const mockUser = { id: '1', email: 'admin@example.com', role: 'ADMIN' };
-  const mockTokens = { accessToken: 'access', refreshToken: 'refresh', user: mockUser };
+  const mockTokens = {
+    accessToken: 'access',
+    refreshToken: 'refresh',
+    user: mockUser,
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -18,7 +22,10 @@ describe('AuthController', () => {
           useValue: {
             validateUser: jest.fn().mockResolvedValue(mockUser),
             generateTokens: jest.fn().mockResolvedValue(mockTokens),
-            refresh: jest.fn().mockResolvedValue({ accessToken: 'new-access', refreshToken: 'new-refresh' }), // <-- fix here
+            refresh: jest.fn().mockResolvedValue({
+              accessToken: 'new-access',
+              refreshToken: 'new-refresh',
+            }), // <-- fix here
             logout: jest.fn(),
           },
         },
@@ -30,14 +37,25 @@ describe('AuthController', () => {
   });
 
   it('should login and return tokens with user', async () => {
-    const result = await controller.login('admin@example.com', 'password123', 'ADMIN');
+    const result = await controller.login(
+      'admin@example.com',
+      'password123',
+      'ADMIN',
+    );
     expect(result).toEqual(mockTokens);
-    expect(authService.validateUser).toHaveBeenCalledWith('admin@example.com', 'password123', 'ADMIN');
+    expect(authService.validateUser).toHaveBeenCalledWith(
+      'admin@example.com',
+      'password123',
+      'ADMIN',
+    );
   });
 
   it('should refresh tokens', async () => {
     const result = await controller.refresh('refresh-token');
-    expect(result).toEqual({ accessToken: 'new-access', refreshToken: 'new-refresh' });
+    expect(result).toEqual({
+      accessToken: 'new-access',
+      refreshToken: 'new-refresh',
+    });
     expect(authService.refresh).toHaveBeenCalledWith('refresh-token');
   });
 

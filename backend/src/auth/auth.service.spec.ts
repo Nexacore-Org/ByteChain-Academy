@@ -61,18 +61,28 @@ describe('AuthService', () => {
 
     service = module.get<AuthService>(AuthService);
     adminRepo = module.get<Repository<Admin>>(getRepositoryToken(Admin));
-    refreshTokenRepo = module.get<Repository<RefreshToken>>(getRepositoryToken(RefreshToken));
+    refreshTokenRepo = module.get<Repository<RefreshToken>>(
+      getRepositoryToken(RefreshToken),
+    );
   });
 
   it('should validate user with correct credentials', async () => {
-    const user = await service.validateUser('admin@example.com', 'password123', UserRole.ADMIN);
+    const user = await service.validateUser(
+      'admin@example.com',
+      'password123',
+      UserRole.ADMIN,
+    );
     expect(user).toBeDefined();
     expect(user?.email).toBe('admin@example.com');
   });
 
   it('should return null for invalid password', async () => {
-    jest.spyOn(bcrypt, 'compare').mockResolvedValue(false as never);    
-    const user = await service.validateUser('admin@example.com', 'wrong', UserRole.ADMIN);
+    jest.spyOn(bcrypt, 'compare').mockResolvedValue(false as never);
+    const user = await service.validateUser(
+      'admin@example.com',
+      'wrong',
+      UserRole.ADMIN,
+    );
     expect(user).toBeNull();
   });
 
@@ -82,25 +92,40 @@ describe('AuthService', () => {
     expect(tokens.refreshToken).toBeDefined();
   });
 
-it('should refresh token and revoke old one', async () => {
-  jest.spyOn(jwt, 'verify').mockReturnValue({ sub: mockAdmin.id, role: mockAdmin.role } as any); 
-  jest.spyOn(refreshTokenRepo, 'findOne').mockResolvedValue({ ...mockRefreshToken, revoked: false });
-  jest.spyOn(refreshTokenRepo, 'save').mockResolvedValue({ ...mockRefreshToken, revoked: true });
+  it('should refresh token and revoke old one', async () => {
+    jest
+      .spyOn(jwt, 'verify')
+      .mockReturnValue({ sub: mockAdmin.id, role: mockAdmin.role } as any);
+    jest
+      .spyOn(refreshTokenRepo, 'findOne')
+      .mockResolvedValue({ ...mockRefreshToken, revoked: false });
+    jest
+      .spyOn(refreshTokenRepo, 'save')
+      .mockResolvedValue({ ...mockRefreshToken, revoked: true });
 
-  const tokens = await service.refresh('refresh-token');
-  expect(tokens.accessToken).toBeDefined();
-  expect(tokens.refreshToken).toBeDefined();
-});
+    const tokens = await service.refresh('refresh-token');
+    expect(tokens.accessToken).toBeDefined();
+    expect(tokens.refreshToken).toBeDefined();
+  });
 
   it('should throw on invalid refresh token', async () => {
-    jest.spyOn(jwt, 'verify').mockImplementation(() => { throw new Error(); });
-    await expect(service.refresh('bad-token')).rejects.toThrow(UnauthorizedException);
+    jest.spyOn(jwt, 'verify').mockImplementation(() => {
+      throw new Error();
+    });
+    await expect(service.refresh('bad-token')).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 
   it('should revoke token on logout', async () => {
     jest.spyOn(refreshTokenRepo, 'findOne').mockResolvedValue(mockRefreshToken);
-    jest.spyOn(refreshTokenRepo, 'save').mockResolvedValue({ ...mockRefreshToken, revoked: true });
+    jest
+      .spyOn(refreshTokenRepo, 'save')
+      .mockResolvedValue({ ...mockRefreshToken, revoked: true });
     await service.logout('refresh-token');
-    expect(refreshTokenRepo.save).toHaveBeenCalledWith({ ...mockRefreshToken, revoked: true });
+    expect(refreshTokenRepo.save).toHaveBeenCalledWith({
+      ...mockRefreshToken,
+      revoked: true,
+    });
   });
 });

@@ -20,4 +20,4 @@ import { BcryptHashingService } from 'src/tutor/services/bcrypt.hashing.service'
   ],
   exports: [AdminDashboardService],
 })
-export class AdminModule {} 
+export class AdminModule {}

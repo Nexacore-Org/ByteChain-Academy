@@ -17,7 +17,9 @@ export class CurrencyHubService {
   /**
    * Create a new currency hub record
    */
-  async create(createCurrencyHubDto: CreateCurrencyHubDto): Promise<CurrencyHub> {
+  async create(
+    createCurrencyHubDto: CreateCurrencyHubDto,
+  ): Promise<CurrencyHub> {
     const currencyHub = this.currencyHubRepository.create(createCurrencyHubDto);
     return this.currencyHubRepository.save(currencyHub);
   }
@@ -69,12 +71,15 @@ export class CurrencyHubService {
   /**
    * Find exchange rate between two currencies
    */
-  async findExchangeRate(baseCurrency: string, targetCurrency: string): Promise<number> {
+  async findExchangeRate(
+    baseCurrency: string,
+    targetCurrency: string,
+  ): Promise<number> {
     const currencyHub = await this.currencyHubRepository.findOne({
       where: {
         baseCurrencyCode: baseCurrency,
         targetCurrencyCode: targetCurrency,
-      }
+      },
     });
 
     if (!currencyHub) {
@@ -83,14 +88,16 @@ export class CurrencyHubService {
         where: {
           baseCurrencyCode: targetCurrency,
           targetCurrencyCode: baseCurrency,
-        }
+        },
       });
 
       if (inverseRate) {
         return 1 / Number(inverseRate.exchangeRate);
       }
 
-      throw new NotFoundException(`Exchange rate for ${baseCurrency}/${targetCurrency} not found`);
+      throw new NotFoundException(
+        `Exchange rate for ${baseCurrency}/${targetCurrency} not found`,
+      );
     }
 
     return Number(currencyHub.exchangeRate);
@@ -99,25 +106,34 @@ export class CurrencyHubService {
   /**
    * Convert an amount from one currency to another using latest exchange rates
    */
-  async convertCurrency(amount: number, fromCurrency: string, toCurrency: string): Promise<number> {
+  async convertCurrency(
+    amount: number,
+    fromCurrency: string,
+    toCurrency: string,
+  ): Promise<number> {
     if (fromCurrency === toCurrency) {
       return amount;
     }
 
     try {
-      const exchangeRate = await this.findExchangeRate(fromCurrency, toCurrency);
+      const exchangeRate = await this.findExchangeRate(
+        fromCurrency,
+        toCurrency,
+      );
       return amount * exchangeRate;
     } catch (error) {
       // Try to find a common base currency (e.g., USD) to do a two-step conversion
       try {
         const usdToFrom = await this.findExchangeRate('USD', fromCurrency);
         const usdToTo = await this.findExchangeRate('USD', toCurrency);
-        
+
         // Convert via USD as intermediary
         const amountInUsd = amount / usdToFrom;
         return amountInUsd * usdToTo;
       } catch {
-        throw new NotFoundException(`Couldn't convert ${fromCurrency} to ${toCurrency}`);
+        throw new NotFoundException(
+          `Couldn't convert ${fromCurrency} to ${toCurrency}`,
+        );
       }
     }
   }
@@ -125,7 +141,10 @@ export class CurrencyHubService {
   /**
    * Update an existing currency hub
    */
-  async update(id: string, updateCurrencyHubDto: UpdateCurrencyHubDto): Promise<CurrencyHub> {
+  async update(
+    id: string,
+    updateCurrencyHubDto: UpdateCurrencyHubDto,
+  ): Promise<CurrencyHub> {
     const currencyHub = await this.findOne(id);
     this.currencyHubRepository.merge(currencyHub, updateCurrencyHubDto);
     return this.currencyHubRepository.save(currencyHub);
@@ -144,27 +163,33 @@ export class CurrencyHubService {
   /**
    * Get historical trends for a currency pair
    */
-  async getHistoricalTrend(baseCurrency: string, targetCurrency: string, days: number = 30): Promise<{ date: string; rate: number }[]> {
+  async getHistoricalTrend(
+    baseCurrency: string,
+    targetCurrency: string,
+    days: number = 30,
+  ): Promise<{ date: string; rate: number }[]> {
     const currencyHub = await this.currencyHubRepository.findOne({
       where: {
         baseCurrencyCode: baseCurrency,
         targetCurrencyCode: targetCurrency,
-      }
+      },
     });
 
     if (!currencyHub || !currencyHub.historicalRates) {
-      throw new NotFoundException(`Historical rates for ${baseCurrency}/${targetCurrency} not found`);
+      throw new NotFoundException(
+        `Historical rates for ${baseCurrency}/${targetCurrency} not found`,
+      );
     }
 
     // Get dates for the last N days
     const result = [];
     const today = new Date();
-    
+
     for (let i = 0; i < days; i++) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       const dateString = date.toISOString().split('T')[0];
-      
+
       if (currencyHub.historicalRates[dateString]) {
         result.push({
           date: dateString,
@@ -179,7 +204,10 @@ export class CurrencyHubService {
   /**
    * Get the best provider for a currency pair based on accuracy and spread
    */
-  async getBestProvider(baseCurrency: string, targetCurrency: string): Promise<CurrencyHub> {
+  async getBestProvider(
+    baseCurrency: string,
+    targetCurrency: string,
+  ): Promise<CurrencyHub> {
     const currencyHubs = await this.currencyHubRepository.find({
       where: {
         baseCurrencyCode: baseCurrency,
@@ -193,7 +221,9 @@ export class CurrencyHubService {
     });
 
     if (!currencyHubs.length) {
-      throw new NotFoundException(`No providers found for ${baseCurrency}/${targetCurrency}`);
+      throw new NotFoundException(
+        `No providers found for ${baseCurrency}/${targetCurrency}`,
+      );
     }
 
     return currencyHubs[0];

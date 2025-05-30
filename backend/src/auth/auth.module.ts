@@ -6,9 +6,7 @@ import { AuthController } from './auth.controller';
 import { Admin } from '../admin/entities/admin.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([RefreshToken, Admin]),
-  ],
+  imports: [TypeOrmModule.forFeature([RefreshToken, Admin])],
   providers: [AuthService],
   controllers: [AuthController],
   exports: [AuthService],

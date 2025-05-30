@@ -38,9 +38,13 @@ describe('LessonsService', () => {
       courseId: 'course-uuid',
     };
 
-    jest.spyOn(courseRepo, 'findOne').mockResolvedValue({ id: 'course-uuid' } as Course);
+    jest
+      .spyOn(courseRepo, 'findOne')
+      .mockResolvedValue({ id: 'course-uuid' } as Course);
     jest.spyOn(lessonRepo, 'create').mockReturnValue(createLessonDto as any);
-    jest.spyOn(lessonRepo, 'save').mockResolvedValue({ id: 'lesson-uuid', ...createLessonDto } as Lesson);
+    jest
+      .spyOn(lessonRepo, 'save')
+      .mockResolvedValue({ id: 'lesson-uuid', ...createLessonDto } as Lesson);
 
     const result = await service.create(createLessonDto);
 
