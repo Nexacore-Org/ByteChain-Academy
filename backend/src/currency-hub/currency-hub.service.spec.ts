@@ -2,7 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CurrencyHubService } from './currency-hub.service';
-import { CurrencyHub, RateType, SourceType } from './entities/currency-hub.entity';
+import {
+  CurrencyHub,
+  RateType,
+  SourceType,
+} from './entities/currency-hub.entity';
 import { NotFoundException } from '@nestjs/common';
 
 type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
@@ -32,7 +36,9 @@ describe('CurrencyHubService', () => {
     }).compile();
 
     service = module.get<CurrencyHubService>(CurrencyHubService);
-    repository = module.get<MockRepository<CurrencyHub>>(getRepositoryToken(CurrencyHub));
+    repository = module.get<MockRepository<CurrencyHub>>(
+      getRepositoryToken(CurrencyHub),
+    );
   });
 
   it('should be defined', () => {
@@ -173,7 +179,10 @@ describe('CurrencyHubService', () => {
       const result = await service.update(id, updateDto);
       expect(result).toEqual(updatedCurrencyHub);
       expect(repository.findOneBy).toHaveBeenCalledWith({ id });
-      expect(repository.merge).toHaveBeenCalledWith(existingCurrencyHub, updateDto);
+      expect(repository.merge).toHaveBeenCalledWith(
+        existingCurrencyHub,
+        updateDto,
+      );
       expect(repository.save).toHaveBeenCalledWith(updatedCurrencyHub);
     });
 
@@ -182,7 +191,9 @@ describe('CurrencyHubService', () => {
       const updateDto = { exchangeRate: 0.86 };
       repository.findOneBy.mockResolvedValue(null);
 
-      await expect(service.update(id, updateDto)).rejects.toThrow(NotFoundException);
+      await expect(service.update(id, updateDto)).rejects.toThrow(
+        NotFoundException,
+      );
       expect(repository.findOneBy).toHaveBeenCalledWith({ id });
     });
   });
@@ -220,17 +231,20 @@ describe('CurrencyHubService', () => {
 
       repository.findOne.mockResolvedValue(currencyHub);
 
-      const result = await service.findExchangeRate(baseCurrency, targetCurrency);
+      const result = await service.findExchangeRate(
+        baseCurrency,
+        targetCurrency,
+      );
       expect(result).toEqual(0.85);
     });
 
     it('should calculate inverse rate when direct rate not found', async () => {
       const baseCurrency = 'USD';
       const targetCurrency = 'EUR';
-      
+
       // No direct USD to EUR rate
       repository.findOne.mockResolvedValueOnce(null);
-      
+
       // But we have an EUR to USD rate
       repository.findOne.mockResolvedValueOnce({
         baseCurrencyCode: targetCurrency,
@@ -238,7 +252,10 @@ describe('CurrencyHubService', () => {
         exchangeRate: 1.18, // EUR to USD
       });
 
-      const result = await service.findExchangeRate(baseCurrency, targetCurrency);
+      const result = await service.findExchangeRate(
+        baseCurrency,
+        targetCurrency,
+      );
       // 1 / 1.18 = ~0.847
       expect(result).toBeCloseTo(0.847, 3);
     });
@@ -246,11 +263,13 @@ describe('CurrencyHubService', () => {
     it('should throw NotFoundException when no exchange rate found', async () => {
       const baseCurrency = 'USD';
       const targetCurrency = 'XYZ'; // Unknown currency
-      
+
       // No direct or inverse rate found
       repository.findOne.mockResolvedValue(null);
 
-      await expect(service.findExchangeRate(baseCurrency, targetCurrency)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.findExchangeRate(baseCurrency, targetCurrency),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -267,10 +286,14 @@ describe('CurrencyHubService', () => {
       const amount = 100;
       const fromCurrency = 'USD';
       const toCurrency = 'EUR';
-      
+
       jest.spyOn(service, 'findExchangeRate').mockResolvedValue(0.85);
 
-      const result = await service.convertCurrency(amount, fromCurrency, toCurrency);
+      const result = await service.convertCurrency(
+        amount,
+        fromCurrency,
+        toCurrency,
+      );
       expect(result).toEqual(85); // 100 * 0.85
     });
   });
@@ -280,17 +303,17 @@ describe('CurrencyHubService', () => {
       const baseCurrency = 'USD';
       const targetCurrency = 'EUR';
       const days = 3;
-      
+
       const today = new Date();
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
       const twoDaysAgo = new Date(today);
       twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-      
+
       const todayStr = today.toISOString().split('T')[0];
       const yesterdayStr = yesterday.toISOString().split('T')[0];
       const twoDaysAgoStr = twoDaysAgo.toISOString().split('T')[0];
-      
+
       const currencyHub = {
         baseCurrencyCode: baseCurrency,
         targetCurrencyCode: targetCurrency,
@@ -298,13 +321,17 @@ describe('CurrencyHubService', () => {
           [todayStr]: 0.85,
           [yesterdayStr]: 0.84,
           [twoDaysAgoStr]: 0.83,
-        }
+        },
       };
 
       repository.findOne.mockResolvedValue(currencyHub);
 
-      const result = await service.getHistoricalTrend(baseCurrency, targetCurrency, days);
-      
+      const result = await service.getHistoricalTrend(
+        baseCurrency,
+        targetCurrency,
+        days,
+      );
+
       // Results should be in chronological order (oldest first)
       expect(result).toEqual([
         { date: twoDaysAgoStr, rate: 0.83 },
@@ -316,10 +343,12 @@ describe('CurrencyHubService', () => {
     it('should throw NotFoundException when no historical data found', async () => {
       const baseCurrency = 'USD';
       const targetCurrency = 'XYZ'; // Currency pair with no data
-      
+
       repository.findOne.mockResolvedValue(null);
 
-      await expect(service.getHistoricalTrend(baseCurrency, targetCurrency)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.getHistoricalTrend(baseCurrency, targetCurrency),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -327,7 +356,7 @@ describe('CurrencyHubService', () => {
     it('should return the best provider based on accuracy and spread', async () => {
       const baseCurrency = 'USD';
       const targetCurrency = 'EUR';
-      
+
       const providers = [
         {
           id: '1',
@@ -349,7 +378,10 @@ describe('CurrencyHubService', () => {
 
       repository.find.mockResolvedValue([providers[1]]); // Provider B has better accuracy
 
-      const result = await service.getBestProvider(baseCurrency, targetCurrency);
+      const result = await service.getBestProvider(
+        baseCurrency,
+        targetCurrency,
+      );
       expect(result).toEqual(providers[1]);
       expect(repository.find).toHaveBeenCalledWith({
         where: {
@@ -367,10 +399,12 @@ describe('CurrencyHubService', () => {
     it('should throw NotFoundException when no providers found', async () => {
       const baseCurrency = 'USD';
       const targetCurrency = 'XYZ'; // Unusual currency pair with no providers
-      
+
       repository.find.mockResolvedValue([]);
 
-      await expect(service.getBestProvider(baseCurrency, targetCurrency)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.getBestProvider(baseCurrency, targetCurrency),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });

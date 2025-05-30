@@ -1,4 +1,12 @@
-import { IsString, IsNumber, IsNotEmpty, IsOptional, Min, Max, IsEnum } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsNotEmpty,
+  IsOptional,
+  Min,
+  Max,
+  IsEnum,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum QuizTypeEnum {
@@ -35,25 +43,25 @@ export class CreateQuizDto {
   @IsOptional()
   description: string;
 
-  @ApiProperty({ 
-    description: 'Type of quiz', 
-    enum: QuizTypeEnum 
+  @ApiProperty({
+    description: 'Type of quiz',
+    enum: QuizTypeEnum,
   })
   @IsEnum(QuizTypeEnum)
   @IsNotEmpty()
   type: string;
 
-  @ApiProperty({ 
-    description: 'Difficulty level of the quiz', 
-    enum: QuizDifficultyEnum 
+  @ApiProperty({
+    description: 'Difficulty level of the quiz',
+    enum: QuizDifficultyEnum,
   })
   @IsEnum(QuizDifficultyEnum)
   @IsNotEmpty()
   difficulty: string;
 
-  @ApiProperty({ 
-    description: 'Status of the quiz', 
-    enum: QuizStatusEnum 
+  @ApiProperty({
+    description: 'Status of the quiz',
+    enum: QuizStatusEnum,
   })
   @IsEnum(QuizStatusEnum)
   @IsNotEmpty()
@@ -65,7 +73,9 @@ export class CreateQuizDto {
   @IsNotEmpty()
   totalQuestions: number;
 
-  @ApiProperty({ description: 'Minimum score required to pass the quiz (percentage)' })
+  @ApiProperty({
+    description: 'Minimum score required to pass the quiz (percentage)',
+  })
   @IsNumber()
   @Min(0)
   @Max(100)
@@ -84,4 +94,3 @@ export class CreateQuizDto {
   @IsNotEmpty()
   maxAttempts: number;
 }
-

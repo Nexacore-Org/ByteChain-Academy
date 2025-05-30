@@ -1,4 +1,3 @@
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
@@ -14,12 +13,12 @@ describe('Quiz Attempts (e2e)', () => {
   let quizRepository: Repository<Quiz>;
   let questionRepository: Repository<QuizQuestion>;
   let attemptRepository: Repository<QuizAttempt>;
-  
+
   let accessToken: string;
   let user: any;
   let quiz: Quiz;
   let attempt: QuizAttempt;
-  
+
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -28,28 +27,34 @@ describe('Quiz Attempts (e2e)', () => {
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
-    
+
     // Get necessary services/repositories
     // authService = moduleFixture.get<AuthService>(AuthService);
-    quizRepository = moduleFixture.get<Repository<Quiz>>(getRepositoryToken(Quiz));
-    questionRepository = moduleFixture.get<Repository<QuizQuestion>>(getRepositoryToken(QuizQuestion));
-    attemptRepository = moduleFixture.get<Repository<QuizAttempt>>(getRepositoryToken(QuizAttempt));
-    
+    quizRepository = moduleFixture.get<Repository<Quiz>>(
+      getRepositoryToken(Quiz),
+    );
+    questionRepository = moduleFixture.get<Repository<QuizQuestion>>(
+      getRepositoryToken(QuizQuestion),
+    );
+    attemptRepository = moduleFixture.get<Repository<QuizAttempt>>(
+      getRepositoryToken(QuizAttempt),
+    );
+
     // Create test user
     // user = await authService.createUser({
     //   email: 'test@example.com',
     //   password: 'Test123!',
     //   fullName: 'Test User',
     // });
-    
+
     // Generate JWT for test user
     // const { access_token } = await authService.login({
     //   email: 'test@example.com',
     //   password: 'Test123!',
     // });
-    
+
     // accessToken = access_token;
-    
+
     // // Create test quiz with questions
     // quiz = await quizRepository.save({
     //   title: 'Test Quiz',
@@ -58,7 +63,7 @@ describe('Quiz Attempts (e2e)', () => {
     //   passingScore: 70,
     //   maxAttempts: 3,
     // });
-    
+
     // Create test questions
     await questionRepository.save([
       {
@@ -79,7 +84,7 @@ describe('Quiz Attempts (e2e)', () => {
       },
     ]);
   });
-  
+
   afterAll(async () => {
     // Clean up
     await attemptRepository.delete({});
@@ -87,7 +92,7 @@ describe('Quiz Attempts (e2e)', () => {
     await quizRepository.delete({});
     await app.close();
   });
-  
+
   describe('/quizzes/attempts/start (POST)', () => {
     it('should create a new quiz attempt', async () => {
       const response = await request(app.getHttpServer())
@@ -98,14 +103,14 @@ describe('Quiz Attempts (e2e)', () => {
           quizId: quiz.id,
         })
         .expect(201);
-      
+
       expect(response.body).toHaveProperty('id');
       expect(response.body).toHaveProperty('attemptNumber', 1);
       expect(response.body).toHaveProperty('status', 'in_progress');
-      
+
       attempt = response.body;
     });
-    
+
     it('should reject creating attempt for another user', async () => {
       return request(app.getHttpServer())
         .post('/quizzes/attempts/start')
@@ -117,18 +122,18 @@ describe('Quiz Attempts (e2e)', () => {
         .expect(403);
     });
   });
-  
+
   describe('/quizzes/attempts/:id (GET)', () => {
     it('should get a quiz attempt by id', async () => {
       return request(app.getHttpServer())
         .get(`/quizzes/attempts/${attempt.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
-        .expect(res => {
+        .expect((res) => {
           expect(res.body).toHaveProperty('id', attempt.id);
         });
     });
-    
+
     it('should reject accessing non-existent attempt', async () => {
       return request(app.getHttpServer())
         .get('/quizzes/attempts/non-existent-id')
@@ -136,20 +141,20 @@ describe('Quiz Attempts (e2e)', () => {
         .expect(404);
     });
   });
-  
+
   describe('/quizzes/attempts/:id/submit (PUT)', () => {
     it('should submit and score a quiz attempt', async () => {
       const answers = {
         '1': ['4'],
         '2': ['2', '3', '5', '7'],
       };
-      
+
       return request(app.getHttpServer())
         .put(`/quizzes/attempts/${attempt.id}/submit`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ answers })
         .expect(200)
-        .expect(res => {
+        .expect((res) => {
           expect(res.body).toHaveProperty('id', attempt.id);
           expect(res.body).toHaveProperty('status', 'completed');
           expect(res.body).toHaveProperty('score', 100); // All correct
@@ -157,7 +162,7 @@ describe('Quiz Attempts (e2e)', () => {
           expect(res.body).toHaveProperty('endTime');
         });
     });
-    
+
     it('should reject submitting an already completed attempt', async () => {
       return request(app.getHttpServer())
         .put(`/quizzes/attempts/${attempt.id}/submit`)
@@ -166,14 +171,14 @@ describe('Quiz Attempts (e2e)', () => {
         .expect(400);
     });
   });
-  
+
   describe('/quizzes/user/attempts (GET)', () => {
     it('should get all attempts for the current user and quiz', async () => {
       return request(app.getHttpServer())
         .get(`/quizzes/user/attempts?quizId=${quiz.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
-        .expect(res => {
+        .expect((res) => {
           expect(Array.isArray(res.body)).toBe(true);
           expect(res.body.length).toBeGreaterThan(0);
           expect(res.body[0]).toHaveProperty('id', attempt.id);

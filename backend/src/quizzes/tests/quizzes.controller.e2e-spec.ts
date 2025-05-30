@@ -37,9 +37,9 @@ describe('QuizzesController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe({ transform: true }));
-    
+
     service = moduleFixture.get<QuizzesService>(QuizzesService);
-    
+
     await app.init();
   });
 
@@ -125,7 +125,9 @@ describe('QuizzesController (e2e)', () => {
       },
     ];
 
-    jest.spyOn(service, 'findByLessonId').mockResolvedValue(mockQuizzes as Quiz[]);
+    jest
+      .spyOn(service, 'findByLessonId')
+      .mockResolvedValue(mockQuizzes as Quiz[]);
 
     return request(app.getHttpServer())
       .get('/quizzes/lesson/1')
@@ -190,9 +192,7 @@ describe('QuizzesController (e2e)', () => {
   it('/quizzes/:id (DELETE) should delete a quiz', async () => {
     jest.spyOn(service, 'remove').mockResolvedValue(undefined);
 
-    return request(app.getHttpServer())
-      .delete('/quizzes/1')
-      .expect(200);
+    return request(app.getHttpServer()).delete('/quizzes/1').expect(200);
   });
 
   it('should validate the CreateQuizDto', async () => {
@@ -208,5 +208,5 @@ describe('QuizzesController (e2e)', () => {
       .post('/quizzes')
       .send(invalidDto)
       .expect(400); // Bad request due to validation errors
-  });
+  });
 });

@@ -108,7 +108,7 @@ describe('CurrencyHubController', () => {
 
     it('should throw NotFoundException if currency hub not found', async () => {
       const id = '123e4567-e89b-12d3-a456-426614174000';
-      
+
       jest.spyOn(service, 'findOne').mockRejectedValue(new NotFoundException());
 
       await expect(controller.findOne(id)).rejects.toThrow(NotFoundException);
@@ -124,8 +124,13 @@ describe('CurrencyHubController', () => {
 
       jest.spyOn(service, 'findExchangeRate').mockResolvedValue(exchangeRate);
 
-      expect(await controller.getExchangeRate(baseCurrency, targetCurrency)).toBe(exchangeRate);
-      expect(service.findExchangeRate).toHaveBeenCalledWith(baseCurrency, targetCurrency);
+      expect(
+        await controller.getExchangeRate(baseCurrency, targetCurrency),
+      ).toBe(exchangeRate);
+      expect(service.findExchangeRate).toHaveBeenCalledWith(
+        baseCurrency,
+        targetCurrency,
+      );
     });
   });
 
@@ -138,8 +143,14 @@ describe('CurrencyHubController', () => {
 
       jest.spyOn(service, 'convertCurrency').mockResolvedValue(convertedAmount);
 
-      expect(await controller.convertCurrency(amount, fromCurrency, toCurrency)).toBe(convertedAmount);
-      expect(service.convertCurrency).toHaveBeenCalledWith(amount, fromCurrency, toCurrency);
+      expect(
+        await controller.convertCurrency(amount, fromCurrency, toCurrency),
+      ).toBe(convertedAmount);
+      expect(service.convertCurrency).toHaveBeenCalledWith(
+        amount,
+        fromCurrency,
+        toCurrency,
+      );
     });
   });
 
@@ -156,8 +167,14 @@ describe('CurrencyHubController', () => {
 
       jest.spyOn(service, 'getHistoricalTrend').mockResolvedValue(result);
 
-      expect(await controller.getHistoricalTrend(baseCurrency, targetCurrency, days)).toBe(result);
-      expect(service.getHistoricalTrend).toHaveBeenCalledWith(baseCurrency, targetCurrency, days);
+      expect(
+        await controller.getHistoricalTrend(baseCurrency, targetCurrency, days),
+      ).toBe(result);
+      expect(service.getHistoricalTrend).toHaveBeenCalledWith(
+        baseCurrency,
+        targetCurrency,
+        days,
+      );
     });
   });
 
@@ -176,8 +193,13 @@ describe('CurrencyHubController', () => {
 
       jest.spyOn(service, 'getBestProvider').mockResolvedValue(result);
 
-      expect(await controller.getBestProvider(baseCurrency, targetCurrency)).toBe(result);
-      expect(service.getBestProvider).toHaveBeenCalledWith(baseCurrency, targetCurrency);
+      expect(
+        await controller.getBestProvider(baseCurrency, targetCurrency),
+      ).toBe(result);
+      expect(service.getBestProvider).toHaveBeenCalledWith(
+        baseCurrency,
+        targetCurrency,
+      );
     });
   });
 
@@ -206,7 +228,7 @@ describe('CurrencyHubController', () => {
   describe('remove', () => {
     it('should remove a currency hub', async () => {
       const id = '123e4567-e89b-12d3-a456-426614174000';
-      
+
       jest.spyOn(service, 'remove').mockResolvedValue(undefined);
 
       expect(await controller.remove(id)).toBeUndefined();

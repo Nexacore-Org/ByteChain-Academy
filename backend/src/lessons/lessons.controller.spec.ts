@@ -16,9 +16,6 @@ describe('LessonsController (e2e)', () => {
   });
 
   it('/lessons (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/lessons')
-      .expect(200)
-      .expect([]);
+    return request(app.getHttpServer()).get('/lessons').expect(200).expect([]);
   });
 });
