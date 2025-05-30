@@ -1,5 +1,11 @@
 import { Student } from 'src/student/entities/student.entity';
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+} from 'typeorm';
 
 @Entity()
 export class LessonQuizResult {
@@ -18,6 +24,8 @@ export class LessonQuizResult {
   @CreateDateColumn()
   completedAt: Date;
 
-  @ManyToOne(() => Student, (student) => student.lessonQuizResults, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Student, (student) => student.lessonQuizResults, {
+    onDelete: 'CASCADE',
+  })
   student: Student;
 }

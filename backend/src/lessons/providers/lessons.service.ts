@@ -8,6 +8,11 @@ import { Course } from 'src/course/entities/course.entity';
 
 @Injectable()
 export class LessonsService {
+  async getLessonProgress(userId: number) {
+    const lessons = await this.lessonRepository.find({ where: { userId } });
+    return lessons;
+  }
+
   constructor(
     @InjectRepository(Lesson)
     private lessonRepository: Repository<Lesson>,
@@ -16,7 +21,9 @@ export class LessonsService {
   ) {}
 
   async create(createLessonDto: CreateLessonDto): Promise<Lesson> {
-    const course = await this.courseRepository.findOne({ where: { id: createLessonDto.courseId } });
+    const course = await this.courseRepository.findOne({
+      where: { id: createLessonDto.courseId },
+    });
     if (!course) {
       throw new NotFoundException('Course not found');
     }
@@ -29,7 +36,10 @@ export class LessonsService {
   }
 
   async findOne(id: string): Promise<Lesson> {
-    const lesson = await this.lessonRepository.findOne({ where: { id }, relations: ['course'] });
+    const lesson = await this.lessonRepository.findOne({
+      where: { id },
+      relations: ['course'],
+    });
     if (!lesson) throw new NotFoundException('Lesson not found');
     return lesson;
   }

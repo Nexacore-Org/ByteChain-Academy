@@ -49,7 +49,7 @@ async function bootstrap() {
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allowed methods
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
-  
+
   await app.listen(process.env.PORT ?? 3002);
 }
 void bootstrap();

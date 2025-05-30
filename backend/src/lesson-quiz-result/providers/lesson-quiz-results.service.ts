@@ -14,7 +14,10 @@ export class LessonQuizResultsService {
     private studentRepo: Repository<Student>,
   ) {}
 
-  async addResult(studentId: string, dto: CreateResultDto): Promise<LessonQuizResult> {
+  async addResult(
+    studentId: string,
+    dto: CreateResultDto,
+  ): Promise<LessonQuizResult> {
     const student = await this.studentRepo.findOneByOrFail({ id: studentId });
 
     const result = this.resultRepo.create({ ...dto, student });

@@ -53,7 +53,7 @@ export class CreateStudentService {
       } catch (error) {
         throw new RequestTimeoutException(error);
       }
-      
+
       return await this.studentRepository.save(newStudent);
     } catch {
       throw new InternalServerErrorException('Error creating student');

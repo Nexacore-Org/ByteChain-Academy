@@ -58,4 +58,4 @@ export class AdminDashboardController {
   async getRecentTransactions(@Query('limit') limit: number = 10) {
     return this.adminDashboardService.getRecentTransactions(limit);
   }
-} 
+}

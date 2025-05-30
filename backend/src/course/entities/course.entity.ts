@@ -64,8 +64,8 @@ export class Course {
   @OneToMany(() => CourseReview, (review) => review.course)
   reviews: CourseReview[];
 
-   @OneToMany(() => Progress, (progress) => progress.course)
-    progress: Progress[];
+  @OneToMany(() => Progress, (progress) => progress.course)
+  progress: Progress[];
 
   @CreateDateColumn()
   createdAt: Date;

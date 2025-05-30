@@ -71,9 +71,13 @@ describe('QuizAttemptsService', () => {
     }).compile();
 
     service = module.get<QuizAttemptsService>(QuizAttemptsService);
-    quizAttemptRepository = module.get<Repository<QuizAttempt>>(getRepositoryToken(QuizAttempt));
+    quizAttemptRepository = module.get<Repository<QuizAttempt>>(
+      getRepositoryToken(QuizAttempt),
+    );
     quizRepository = module.get<Repository<Quiz>>(getRepositoryToken(Quiz));
-    quizQuestionRepository = module.get<Repository<QuizQuestion>>(getRepositoryToken(QuizQuestion));
+    quizQuestionRepository = module.get<Repository<QuizQuestion>>(
+      getRepositoryToken(QuizQuestion),
+    );
   });
 
   it('should be defined', () => {
@@ -84,7 +88,7 @@ describe('QuizAttemptsService', () => {
     it('should create a new quiz attempt', async () => {
       const userId = 'user-uuid';
       const quizId = 'quiz-uuid';
-      
+
       jest.spyOn(quizRepository, 'findOne').mockResolvedValue(mockQuiz as any);
       jest.spyOn(quizAttemptRepository, 'count').mockResolvedValue(0);
       jest.spyOn(quizAttemptRepository, 'create').mockReturnValue({
@@ -92,13 +96,15 @@ describe('QuizAttemptsService', () => {
         quizId,
         attemptNumber: 1,
       } as any);
-      jest.spyOn(quizAttemptRepository, 'save').mockImplementation(entity => Promise.resolve({
-        id: 'attempt-uuid',
-        ...entity,
-      } as any));
+      jest.spyOn(quizAttemptRepository, 'save').mockImplementation((entity) =>
+        Promise.resolve({
+          id: 'attempt-uuid',
+          ...entity,
+        } as any),
+      );
 
       const result = await service.startQuizAttempt({ userId, quizId });
-      
+
       expect(quizRepository.findOne).toHaveBeenCalled();
       expect(quizAttemptRepository.count).toHaveBeenCalled();
       expect(quizAttemptRepository.create).toHaveBeenCalled();
@@ -109,21 +115,25 @@ describe('QuizAttemptsService', () => {
 
     it('should throw NotFoundException when quiz not found', async () => {
       jest.spyOn(quizRepository, 'findOne').mockResolvedValue(null);
-      
-      await expect(service.startQuizAttempt({
-        userId: 'user-uuid',
-        quizId: 'non-existent-quiz',
-      })).rejects.toThrow(NotFoundException);
+
+      await expect(
+        service.startQuizAttempt({
+          userId: 'user-uuid',
+          quizId: 'non-existent-quiz',
+        }),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw BadRequestException when max attempts exceeded', async () => {
       jest.spyOn(quizRepository, 'findOne').mockResolvedValue(mockQuiz as any);
       jest.spyOn(quizAttemptRepository, 'count').mockResolvedValue(3); // Already has 3 attempts
-      
-      await expect(service.startQuizAttempt({
-        userId: 'user-uuid',
-        quizId: 'quiz-uuid',
-      })).rejects.toThrow(BadRequestException);
+
+      await expect(
+        service.startQuizAttempt({
+          userId: 'user-uuid',
+          quizId: 'quiz-uuid',
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -149,18 +159,24 @@ describe('QuizAttemptsService', () => {
         '1': ['4'],
         '2': ['2', '3', '5', '7'],
       };
-      
-      jest.spyOn(service, 'getQuizAttempt').mockResolvedValue(mockAttempt);
-      jest.spyOn(quizQuestionRepository, 'find').mockResolvedValue(mockQuestions as any);
-      jest.spyOn(quizRepository, 'findOne').mockResolvedValue(mockQuiz as any);
-      jest.spyOn(quizAttemptRepository, 'save').mockImplementation(entity => Promise.resolve({
-        ...entity,
-        status: 'completed',
-        endTime: expect.any(Date),
-      } as any));
 
-      const result = await service.submitQuizAttempt('attempt-uuid', { answers });
-      
+      jest.spyOn(service, 'getQuizAttempt').mockResolvedValue(mockAttempt);
+      jest
+        .spyOn(quizQuestionRepository, 'find')
+        .mockResolvedValue(mockQuestions as any);
+      jest.spyOn(quizRepository, 'findOne').mockResolvedValue(mockQuiz as any);
+      jest.spyOn(quizAttemptRepository, 'save').mockImplementation((entity) =>
+        Promise.resolve({
+          ...entity,
+          status: 'completed',
+          endTime: expect.any(Date),
+        } as any),
+      );
+
+      const result = await service.submitQuizAttempt('attempt-uuid', {
+        answers,
+      });
+
       expect(result.status).toBe('completed');
       expect(result.score).toBe(100); // All answers correct
       expect(result.isPassed).toBe(true);
@@ -171,17 +187,23 @@ describe('QuizAttemptsService', () => {
         ...mockAttempt,
         startTime: new Date(Date.now() - 1000 * 60 * 60), // 60 minutes ago (exceeds 30 min limit)
       };
-      
-      jest.spyOn(service, 'getQuizAttempt').mockResolvedValue(timedOutAttempt);
-      jest.spyOn(quizQuestionRepository, 'find').mockResolvedValue(mockQuestions as any);
-      jest.spyOn(quizRepository, 'findOne').mockResolvedValue(mockQuiz as any);
-      jest.spyOn(quizAttemptRepository, 'save').mockImplementation(entity => Promise.resolve({
-        ...entity,
-        status: 'timed_out',
-      } as any));
 
-      const result = await service.submitQuizAttempt('attempt-uuid', { answers: {} });
-      
+      jest.spyOn(service, 'getQuizAttempt').mockResolvedValue(timedOutAttempt);
+      jest
+        .spyOn(quizQuestionRepository, 'find')
+        .mockResolvedValue(mockQuestions as any);
+      jest.spyOn(quizRepository, 'findOne').mockResolvedValue(mockQuiz as any);
+      jest.spyOn(quizAttemptRepository, 'save').mockImplementation((entity) =>
+        Promise.resolve({
+          ...entity,
+          status: 'timed_out',
+        } as any),
+      );
+
+      const result = await service.submitQuizAttempt('attempt-uuid', {
+        answers: {},
+      });
+
       expect(result.status).toBe('timed_out');
     });
 
@@ -190,43 +212,52 @@ describe('QuizAttemptsService', () => {
         ...mockAttempt,
         status: 'completed',
       };
-      
+
       jest.spyOn(service, 'getQuizAttempt').mockResolvedValue(completedAttempt);
-      
-      await expect(service.submitQuizAttempt('attempt-uuid', { answers: {} }))
-        .rejects.toThrow(BadRequestException);
+
+      await expect(
+        service.submitQuizAttempt('attempt-uuid', { answers: {} }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
-  
+
   describe('getQuizAttempt', () => {
     it('should return the quiz attempt if found', async () => {
       const mockAttempt = { id: 'attempt-uuid', status: 'in_progress' };
-      jest.spyOn(quizAttemptRepository, 'findOne').mockResolvedValue(mockAttempt as any);
-      
+      jest
+        .spyOn(quizAttemptRepository, 'findOne')
+        .mockResolvedValue(mockAttempt as any);
+
       const result = await service.getQuizAttempt('attempt-uuid');
-      
+
       expect(result).toEqual(mockAttempt);
     });
-    
+
     it('should throw NotFoundException if quiz attempt not found', async () => {
       jest.spyOn(quizAttemptRepository, 'findOne').mockResolvedValue(null);
-      
-      await expect(service.getQuizAttempt('non-existent-attempt'))
-        .rejects.toThrow(NotFoundException);
+
+      await expect(
+        service.getQuizAttempt('non-existent-attempt'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
-  
+
   describe('getUserQuizAttempts', () => {
     it('should return user quiz attempts in descending order', async () => {
       const mockAttempts = [
         { id: 'attempt-2', attemptNumber: 2 },
         { id: 'attempt-1', attemptNumber: 1 },
       ];
-      
-      jest.spyOn(quizAttemptRepository, 'find').mockResolvedValue(mockAttempts as any);
-      
-      const result = await service.getUserQuizAttempts('user-uuid', 'quiz-uuid');
-      
+
+      jest
+        .spyOn(quizAttemptRepository, 'find')
+        .mockResolvedValue(mockAttempts as any);
+
+      const result = await service.getUserQuizAttempts(
+        'user-uuid',
+        'quiz-uuid',
+      );
+
       expect(result).toEqual(mockAttempts);
       expect(quizAttemptRepository.find).toHaveBeenCalledWith({
         where: { userId: 'user-uuid', quizId: 'quiz-uuid' },

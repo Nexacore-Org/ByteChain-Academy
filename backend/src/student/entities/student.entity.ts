@@ -43,6 +43,8 @@ export class Student {
   @OneToMany(() => Progress, (progress) => progress.student)
   progress: Progress[];
 
-  @OneToMany(() => LessonQuizResult, (result) => result.student, { cascade: true })
+  @OneToMany(() => LessonQuizResult, (result) => result.student, {
+    cascade: true,
+  })
   lessonQuizResults: LessonQuizResult[];
 }
