@@ -8,8 +8,12 @@ import { Course } from 'src/course/entities/course.entity';
 
 @Injectable()
 export class LessonsService {
-  async getLessonProgress(userId: number) {
-    const lessons = await this.lessonRepository.find({ where: { userId } });
+  async getLessonProgress(userId: string) {
+    const lessons = await this.lessonRepository.find({
+      where: { id: userId },
+      relations: ['user'],
+    });
+
     return lessons;
   }
 

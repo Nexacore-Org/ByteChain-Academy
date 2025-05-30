@@ -1,10 +1,19 @@
-import { RecommendationService } from '../recommendation.service';
+import { RecommendationService } from '../../backend/src/recommendation/recommendation.service';
+import { LessonsService } from '../../backend/src/lessons/providers/lessons.service';
 
 describe('RecommendationService', () => {
   let service: RecommendationService;
+  let mockLessonsService: Partial<LessonsService>;
 
   beforeEach(() => {
-    service = new RecommendationService();
+    mockLessonsService = {
+      getLessonProgress: jest.fn().mockResolvedValue([
+        { courseId: 'course-a', completed: true },
+        { courseId: 'course-b', completed: false },
+      ]),
+    };
+
+    service = new RecommendationService(mockLessonsService as LessonsService);
   });
 
   it('should recommend course-b if course-a is completed', async () => {

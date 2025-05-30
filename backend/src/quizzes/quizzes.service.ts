@@ -8,7 +8,7 @@ export class QuizzesService {
     return 'This action adds a new quiz';
   }
 
-  findAll(userId: number) {
+  findAll() {
     return `This action returns all quizzes`;
   }
 

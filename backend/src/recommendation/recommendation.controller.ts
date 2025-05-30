@@ -5,7 +5,7 @@ import { Request } from 'express';
 
 interface AuthenticatedRequest extends Request {
   user?: {
-    sub: number;
+    sub: string;
   };
   course?: {
     id: number;
@@ -20,7 +20,6 @@ export class RecommendationController {
   @Get('next-courses')
   async getNextCourses(@Req() req: AuthenticatedRequest) {
     const userId = req.user?.sub;
-    const courseId = req.course.id;
-    return this.recommendationService.getNextCourses(userId, courseId);
+    return this.recommendationService.getNextCourses(userId);
   }
 }

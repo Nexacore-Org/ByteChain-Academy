@@ -5,29 +5,10 @@ interface Lesson {
   courseId: string;
 }
 
-interface QuizResult {
-  passed: boolean;
-  courseId: string;
-}
-
-interface CourseProgress {
-  courseId: string;
-  progress: number;
-  completed: boolean;
-}
-
-export function applyRules(
-  lessonHistory: Lesson[],
-  quizResults: QuizResult[],
-  courseProgress: CourseProgress[],
-): Recommendation[] {
+export function applyRules(lessonHistory: Lesson[]): Recommendation[] {
   const recommendations: Recommendation[] = [];
 
-  const completedCourses = courseProgress
-    .filter((p) => p.completed)
-    .map((p) => p.courseId);
-
-  if (completedCourses.includes('course-a')) {
+  if (lessonHistory.some((lesson) => lesson.courseId === 'course-a')) {
     recommendations.push({
       courseId: 'course-b',
       reason: 'Completed Course A (via courseProgress)',
