@@ -1,3 +1,4 @@
+// src/currency-hub/currency-hub.controller.ts
 import {
   Controller,
   Get,
@@ -14,7 +15,9 @@ import { CurrencyHubService } from './currency-hub.service';
 import { CreateCurrencyHubDto } from './dto/create-currency-hub.dto';
 import { UpdateCurrencyHubDto } from './dto/update-currency-hub.dto';
 import { QueryCurrencyHubDto } from './dto/query-currency-hub.dto';
+import { ApiTags, ApiQuery, ApiOperation } from '@nestjs/swagger';
 
+@ApiTags('Currency Hub')
 @Controller('currency-hub')
 export class CurrencyHubController {
   constructor(private readonly currencyHubService: CurrencyHubService) {}
@@ -25,6 +28,10 @@ export class CurrencyHubController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Find all currency hub records with filters, pagination and search' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'search', required: false, type: String })
   findAll(@Query() query: QueryCurrencyHubDto) {
     return this.currencyHubService.findAll(query);
   }
