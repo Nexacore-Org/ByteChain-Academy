@@ -1,4 +1,6 @@
-import { IsOptional, IsString, IsEnum } from 'class-validator';
+// src/currency-hub/dto/query-currency-hub.dto.ts
+import { IsEnum, IsOptional, IsString, IsUUID, IsDateString, IsNumber, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 import { RateType, SourceType } from '../entities/currency-hub.entity';
 
 export class QueryCurrencyHubDto {
@@ -23,10 +25,28 @@ export class QueryCurrencyHubDto {
   sourceType?: SourceType;
 
   @IsOptional()
-  @IsString()
-  from?: string; // Date range for exchangeRate query
+  @IsDateString()
+  from?: string;
 
   @IsOptional()
+  @IsDateString()
+  to?: string;
+
+  // New: Pagination
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  page?: number = 1;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  limit?: number = 10;
+
+  // New: Search
+  @IsOptional()
   @IsString()
-  to?: string; // Date range for exchangeRate query
+  search?: string;
 }
