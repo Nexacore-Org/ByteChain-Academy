@@ -32,11 +32,11 @@ export class Quiz {
   @Column()
   passingScore: number;
 
-  @Column()
-  timeLimit: number;
-
-  @Column()
+  @Column({ type: 'int', default: 1 })
   maxAttempts: number;
+
+  @Column({ type: 'int', nullable: true })
+  timeLimit: number;
 
   @OneToMany(() => QuizQuestion, (quizQuestion) => quizQuestion.quiz)
   questions: QuizQuestion[];
