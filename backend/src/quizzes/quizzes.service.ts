@@ -57,11 +57,12 @@ export class QuizzesService {
     quizId: string | number,
     submissionId?: string,
   ) {
-    const quiz = await this.quizRepo.findOne({ where: { id: quizId } });
+    const quiz = await this.quizRepo.findOne({ where: { id: Number(quizId) } });
+
     if (!quiz) throw new NotFoundException('Quiz not found');
 
     const attempts = await this.submissionRepo.count({
-      where: { userId, quizId },
+      where: { userId: String(userId), quizId: String(quizId) },
     });
     if (attempts >= quiz.maxAttempts) {
       throw new ForbiddenException('Max attempts exceeded');
@@ -106,7 +107,7 @@ export class QuizzesService {
   }
 
   async startQuizAttempt(userId: string, quizId: string) {
-    const quiz = await this.quizRepo.findOne({ where: { id: quizId } });
+    const quiz = await this.quizRepo.findOne({ where: { id: Number(quizId) } });
     if (!quiz) throw new NotFoundException('Quiz not found');
 
     const attempts = await this.submissionRepo.count({
@@ -119,7 +120,7 @@ export class QuizzesService {
     const submission = this.submissionRepo.create({
       userId,
       quizId,
-      attemptCount: attempts + 1,
+      attemptNumber: attempts + 1,
       startTime: new Date(),
     });
 
