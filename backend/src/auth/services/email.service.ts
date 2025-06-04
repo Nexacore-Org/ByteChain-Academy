@@ -19,7 +19,7 @@ export class EmailService {
 
   async sendVerificationEmail(email: string, token: string): Promise<void> {
     const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
-    
+
     await this.transporter.sendMail({
       from: process.env.SMTP_FROM,
       to: email,
@@ -35,7 +35,7 @@ export class EmailService {
 
   async sendPasswordResetEmail(email: string, token: string): Promise<void> {
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
-    
+
     await this.transporter.sendMail({
       from: process.env.SMTP_FROM,
       to: email,
@@ -49,4 +49,4 @@ export class EmailService {
       `,
     });
   }
-} 
+}

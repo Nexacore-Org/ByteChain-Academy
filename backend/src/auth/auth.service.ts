@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RefreshToken } from './entities/refresh-token.entity';
@@ -73,9 +77,8 @@ export class AuthService {
   }
 
   async refresh(refreshToken: string) {
-    let payload: any;
     try {
-      payload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+      jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
     }
@@ -117,7 +120,8 @@ export class AuthService {
       default:
         return 7 * 24 * 60 * 60 * 1000;
     }
-  }  async requestEmailVerification(email: string): Promise<void> {
+  }
+  async requestEmailVerification(email: string): Promise<void> {
     const user = await this.adminRepo.findOne({ where: { email } });
     if (!user) {
       throw new BadRequestException('User not found');
@@ -126,7 +130,7 @@ export class AuthService {
     // Invalidate any existing verification tokens
     await this.emailVerificationRepo.update(
       { email, verified: false },
-      { verified: true }
+      { verified: true },
     );
 
     const token = randomBytes(32).toString('hex');
@@ -174,10 +178,7 @@ export class AuthService {
     }
 
     // Invalidate any existing reset tokens
-    await this.passwordResetRepo.update(
-      { email, used: false },
-      { used: true }
-    );
+    await this.passwordResetRepo.update({ email, used: false }, { used: true });
 
     const token = randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
@@ -219,4 +220,3 @@ export class AuthService {
     await this.passwordResetRepo.save(reset);
   }
 }
-
