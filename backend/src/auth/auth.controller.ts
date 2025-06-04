@@ -14,7 +14,7 @@ export class AuthController {
   async login(
     @Body('email') email: string,
     @Body('password') password: string,
-    @Body('role') role: string, // expects 'ADMIN', 'STUDENT', or 'TUTOR'
+    @Body('role') role: string,
   ) {
     const user = await this.authService.validateUser(email, password, role);
     if (!user) throw new UnauthorizedException('Invalid credentials');
