@@ -1,4 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  CreateDateColumn,
+} from 'typeorm';
 import { Admin } from '../../admin/entities/admin.entity';
 
 @Entity()
@@ -23,4 +29,4 @@ export class PasswordReset {
 
   @ManyToOne(() => Admin)
   user: Admin;
-} 
+}

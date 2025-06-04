@@ -31,7 +31,9 @@ export const InputWithLabel = ({
   const errorId = `${name}-error`;
   return (
     <div className={cn("space-y-1", className)}>
-      <Label htmlFor={name} className="font-semibold text-lg">{label}</Label>
+      <Label htmlFor={name} className="font-semibold text-lg">
+        {label}
+      </Label>
       <Input
         id={inputId}
         name={name}
@@ -46,11 +48,7 @@ export const InputWithLabel = ({
         }`}
       />
       {error && touched && (
-        <p
-          id={errorId}
-          className="text-red-500 text-sm"
-          aria-live="assertive"
-        >
+        <p id={errorId} className="text-red-500 text-sm" aria-live="assertive">
           {error}
         </p>
       )}

@@ -16,6 +16,7 @@ Welcome to **ByteChain Academy**, a lightweight Web3 learning platform that offe
 Follow these instructions to set up the project locally for development and testing purposes.
 
 ### 🔹 Backend Setup
+
 The backend is built with [NestJS](https://nestjs.com/):
 
 1. **Clone the Repository:**
@@ -39,6 +40,7 @@ The backend is built with [NestJS](https://nestjs.com/):
    ```
 
 ### 🔹 Frontend Setup
+
 The frontend uses [Next.js](https://nextjs.org/):
 
 1. **Navigate to the Frontend Directory:**
@@ -79,6 +81,7 @@ This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for d
 ## 📧 Contact
 
 For inquiries, discussions, or help, feel free to reach out to us:
+
 - 📬 Email: [contact@nexacore.org](mailto:contact@nexacore.org)
 - 🗣️ Telegram: [https://t.me/ByteChainAcademy](https://t.me/+E_iHswAzaPA4Yzk8)
 - 🐛 Issues: Open an issue for feature requests or bug reports
