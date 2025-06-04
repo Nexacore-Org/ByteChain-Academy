@@ -53,7 +53,7 @@ export default function CurrencyHub() {
 
   const toggleFavorite = (rank: number) => {
     setFavorites((prev) =>
-      prev.includes(rank) ? prev.filter((id) => id !== rank) : [...prev, rank]
+      prev.includes(rank) ? prev.filter((id) => id !== rank) : [...prev, rank],
     );
   };
 
@@ -68,7 +68,9 @@ export default function CurrencyHub() {
               <TableHead className="w-8 py-2.5"></TableHead>
               <TableHead className="w-8 py-2.5">#</TableHead>
               <TableHead className="w-1/6 py-2.5 font-bold">Name</TableHead>
-              <TableHead className="w-1/8 text-right py-2.5 font-bold">Price</TableHead>
+              <TableHead className="w-1/8 text-right py-2.5 font-bold">
+                Price
+              </TableHead>
               <TableHead className="hidden sm:table-cell w-1/12 text-right py-2.5 font-bold">
                 1h %
               </TableHead>

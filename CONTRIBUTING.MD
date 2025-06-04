@@ -19,6 +19,7 @@ We welcome and appreciate contributions from the community! Here’s how to get 
 ## ⚠️ Avoid Generic Comments
 
 Comments such as:
+
 - 🚫 "Can I help with this?"
 - 🚫 "I’d love to contribute!"
 - 🚫 "Check out my profile!"
@@ -27,6 +28,7 @@ Comments such as:
 ...will not be considered.
 
 Instead, please provide:
+
 - A brief **introduction** about yourself
 - A concise **plan (3–6 lines max)** outlining how you’ll solve the issue
 - Your **estimated completion time (ETA)**
@@ -53,11 +55,11 @@ Please review our [Code of Conduct](CODE_OF_CONDUCT.md) to help us create a welc
 
 ## 🧵 Branch Naming Convention
 
-| Type     | Prefix          | Example                   |
-|----------|------------------|---------------------------|
-| Feature  | `feature/`       | `feature/add-profile-tab`|
-| Bugfix   | `fix/`           | `fix/login-validation`   |
-| Docs     | `docs/`          | `docs/update-contributing`|
+| Type    | Prefix     | Example                    |
+| ------- | ---------- | -------------------------- |
+| Feature | `feature/` | `feature/add-profile-tab`  |
+| Bugfix  | `fix/`     | `fix/login-validation`     |
+| Docs    | `docs/`    | `docs/update-contributing` |
 
 ## ✅ Opening Issues
 

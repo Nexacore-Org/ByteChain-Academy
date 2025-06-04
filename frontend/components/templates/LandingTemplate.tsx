@@ -7,9 +7,8 @@ import LandingPageSkeleton from "../skeleton/LandingPageSkeleton";
 import WhoItsFor from "../organisms/landing-page/WhoItsFor";
 import { useLoadingStore } from "@/store/useLoadingStore";
 
-
 export default function LandingPage() {
-  const {loading, setLoading} = useLoadingStore();
+  const { loading, setLoading } = useLoadingStore();
 
   // Simulate data loading
   useEffect(() => {
