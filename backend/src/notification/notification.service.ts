@@ -1,29 +1,26 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { type Repository, type FindOptionsWhere, Between } from 'typeorm';
-import type { Notification } from './entities/notification.entity';
-import type { CreateNotificationDto } from './dto/create-notification.dto';
-import type {
-  SendNotificationDto,
-  BulkSendNotificationDto,
-} from './dto/send-notification.dto';
-import type { QueryNotificationDto } from './dto/query-notification.dto';
-import type { UserRole } from './enums/notification.enums';
+import { Injectable, NotFoundException } from "@nestjs/common"
+import { type Repository, type FindOptionsWhere, Between } from "typeorm"
+import type { Notification } from "./entities/notification.entity"
+import type { CreateNotificationDto } from "./dto/create-notification.dto"
+import type { SendNotificationDto, BulkSendNotificationDto } from "./dto/send-notification.dto"
+import type { QueryNotificationDto } from "./dto/query-notification.dto"
+import type { UserRole } from "./enums/notification.enums"
+import { NotificationPreferenceService } from "src/notification-preference/providers/notification-preference.service"
 
 @Injectable()
 export class NotificationService {
-  private notificationRepository: Repository<Notification>;
+  private notificationRepository: Repository<Notification>
 
-  constructor(notificationRepository: Repository<Notification>) {
-    this.notificationRepository = notificationRepository;
+  constructor(
+    notificationRepository: Repository<Notification>,
+    private readonly notificationPreferenceService: NotificationPreferenceService,
+  ) {
+    this.notificationRepository = notificationRepository
   }
 
-  async create(
-    createNotificationDto: CreateNotificationDto,
-  ): Promise<Notification> {
-    const notification = this.notificationRepository.create(
-      createNotificationDto,
-    );
-    return await this.notificationRepository.save(notification);
+  async create(createNotificationDto: CreateNotificationDto): Promise<Notification> {
+    const notification = this.notificationRepository.create(createNotificationDto)
+    return await this.notificationRepository.save(notification)
   }
 
   async sendNotification(
@@ -31,18 +28,42 @@ export class NotificationService {
     senderId?: string,
     senderRole?: UserRole,
   ): Promise<Notification> {
+    // Check if user wants to receive this type of notification
+    const shouldReceive = await this.notificationPreferenceService.shouldReceiveNotification(
+      sendNotificationDto.recipientId,
+      sendNotificationDto.recipientRole,
+      sendNotificationDto.type,
+      "inApp",
+    )
+
+    if (!shouldReceive) {
+      // User doesn't want this notification, return null or skip
+      return null
+    }
+
+    // Check if user is in quiet hours
+    const isInQuietHours = await this.notificationPreferenceService.isInQuietHours(
+      sendNotificationDto.recipientId,
+      sendNotificationDto.recipientRole,
+    )
+
+    if (isInQuietHours) {
+      // Schedule for later or skip immediate delivery
+      // For now, we'll still send but could implement queuing
+    }
+
     const notificationData: CreateNotificationDto = {
       ...sendNotificationDto,
       senderId,
       senderRole,
-    };
+    }
 
-    const notification = await this.create(notificationData);
+    const notification = await this.create(notificationData)
 
     // Here you can add real-time notification logic (WebSocket, SSE, etc.)
     // await this.sendRealTimeNotification(notification);
 
-    return notification;
+    return notification
   }
 
   async sendBulkNotifications(
@@ -50,63 +71,70 @@ export class NotificationService {
     senderId?: string,
     senderRole?: UserRole,
   ): Promise<Notification[]> {
-    const notifications = bulkSendDto.recipientIds.map((recipientId) =>
-      this.notificationRepository.create({
-        recipientId,
-        recipientRole: bulkSendDto.recipientRole,
-        type: bulkSendDto.type,
-        message: bulkSendDto.message,
-        metadata: bulkSendDto.metadata,
-        senderId,
-        senderRole,
-      }),
-    );
+    const notifications: Notification[] = []
 
-    const savedNotifications =
-      await this.notificationRepository.save(notifications);
+    for (const recipientId of bulkSendDto.recipientIds) {
+      // Check preferences for each recipient
+      const shouldReceive = await this.notificationPreferenceService.shouldReceiveNotification(
+        recipientId,
+        bulkSendDto.recipientRole,
+        bulkSendDto.type,
+        "inApp",
+      )
+
+      if (shouldReceive) {
+        const notification = this.notificationRepository.create({
+          recipientId,
+          recipientRole: bulkSendDto.recipientRole,
+          type: bulkSendDto.type,
+          message: bulkSendDto.message,
+          metadata: bulkSendDto.metadata,
+          senderId,
+          senderRole,
+        })
+        notifications.push(notification)
+      }
+    }
+
+    const savedNotifications = await this.notificationRepository.save(notifications)
 
     // Send real-time notifications for each recipient
     // for (const notification of savedNotifications) {
     //   await this.sendRealTimeNotification(notification);
     // }
 
-    return savedNotifications;
+    return savedNotifications
   }
 
-  async findUserNotifications(
-    userId: string,
-    userRole: UserRole,
-    queryDto: QueryNotificationDto,
-  ) {
-    const { type, isRead, fromDate, toDate, page = 1, limit = 20 } = queryDto;
+  async findUserNotifications(userId: string, userRole: UserRole, queryDto: QueryNotificationDto) {
+    const { type, isRead, fromDate, toDate, page = 1, limit = 20 } = queryDto
 
     const where: FindOptionsWhere<Notification> = {
       recipientId: userId,
       recipientRole: userRole,
-    };
-
-    if (type) {
-      where.type = type;
     }
 
-    if (typeof isRead === 'boolean') {
-      where.isRead = isRead;
+    if (type) {
+      where.type = type
+    }
+
+    if (typeof isRead === "boolean") {
+      where.isRead = isRead
     }
 
     if (fromDate || toDate) {
       where.createdAt = Between(
-        fromDate ? new Date(fromDate) : new Date('1970-01-01'),
+        fromDate ? new Date(fromDate) : new Date("1970-01-01"),
         toDate ? new Date(toDate) : new Date(),
-      );
+      )
     }
 
-    const [notifications, total] =
-      await this.notificationRepository.findAndCount({
-        where,
-        order: { createdAt: 'DESC' },
-        skip: (page - 1) * limit,
-        take: limit,
-      });
+    const [notifications, total] = await this.notificationRepository.findAndCount({
+      where,
+      order: { createdAt: "DESC" },
+      skip: (page - 1) * limit,
+      take: limit,
+    })
 
     return {
       notifications,
@@ -114,28 +142,24 @@ export class NotificationService {
       page,
       limit,
       totalPages: Math.ceil(total / limit),
-    };
+    }
   }
 
-  async markAsRead(
-    notificationId: string,
-    userId: string,
-    userRole: UserRole,
-  ): Promise<Notification> {
+  async markAsRead(notificationId: string, userId: string, userRole: UserRole): Promise<Notification> {
     const notification = await this.notificationRepository.findOne({
       where: {
         id: notificationId,
         recipientId: userId,
         recipientRole: userRole,
       },
-    });
+    })
 
     if (!notification) {
-      throw new NotFoundException('Notification not found');
+      throw new NotFoundException("Notification not found")
     }
 
-    notification.isRead = true;
-    return await this.notificationRepository.save(notification);
+    notification.isRead = true
+    return await this.notificationRepository.save(notification)
   }
 
   async markAllAsRead(userId: string, userRole: UserRole): Promise<void> {
@@ -146,27 +170,23 @@ export class NotificationService {
         isRead: false,
       },
       { isRead: true },
-    );
+    )
   }
 
-  async deleteNotification(
-    notificationId: string,
-    userId: string,
-    userRole: UserRole,
-  ): Promise<void> {
+  async deleteNotification(notificationId: string, userId: string, userRole: UserRole): Promise<void> {
     const notification = await this.notificationRepository.findOne({
       where: {
         id: notificationId,
         recipientId: userId,
         recipientRole: userRole,
       },
-    });
+    })
 
     if (!notification) {
-      throw new NotFoundException('Notification not found');
+      throw new NotFoundException("Notification not found")
     }
 
-    await this.notificationRepository.remove(notification);
+    await this.notificationRepository.remove(notification)
   }
 
   async getUnreadCount(userId: string, userRole: UserRole): Promise<number> {
@@ -176,37 +196,36 @@ export class NotificationService {
         recipientRole: userRole,
         isRead: false,
       },
-    });
+    })
   }
 
   // Admin-only methods
   async findAllNotifications(queryDto: QueryNotificationDto) {
-    const { type, isRead, fromDate, toDate, page = 1, limit = 20 } = queryDto;
+    const { type, isRead, fromDate, toDate, page = 1, limit = 20 } = queryDto
 
-    const where: FindOptionsWhere<Notification> = {};
+    const where: FindOptionsWhere<Notification> = {}
 
     if (type) {
-      where.type = type;
+      where.type = type
     }
 
-    if (typeof isRead === 'boolean') {
-      where.isRead = isRead;
+    if (typeof isRead === "boolean") {
+      where.isRead = isRead
     }
 
     if (fromDate || toDate) {
       where.createdAt = Between(
-        fromDate ? new Date(fromDate) : new Date('1970-01-01'),
+        fromDate ? new Date(fromDate) : new Date("1970-01-01"),
         toDate ? new Date(toDate) : new Date(),
-      );
+      )
     }
 
-    const [notifications, total] =
-      await this.notificationRepository.findAndCount({
-        where,
-        order: { createdAt: 'DESC' },
-        skip: (page - 1) * limit,
-        take: limit,
-      });
+    const [notifications, total] = await this.notificationRepository.findAndCount({
+      where,
+      order: { createdAt: "DESC" },
+      skip: (page - 1) * limit,
+      take: limit,
+    })
 
     return {
       notifications,
@@ -214,19 +233,19 @@ export class NotificationService {
       page,
       limit,
       totalPages: Math.ceil(total / limit),
-    };
+    }
   }
 
   async deleteNotificationAsAdmin(notificationId: string): Promise<void> {
     const notification = await this.notificationRepository.findOne({
       where: { id: notificationId },
-    });
+    })
 
     if (!notification) {
-      throw new NotFoundException('Notification not found');
+      throw new NotFoundException("Notification not found")
     }
 
-    await this.notificationRepository.remove(notification);
+    await this.notificationRepository.remove(notification)
   }
 
   // Helper method for triggering notifications from other services
@@ -243,13 +262,13 @@ export class NotificationService {
       {
         recipientId,
         recipientRole,
-        type: type as unknown as Notification['type'],
+        type: type as unknown as Notification["type"],
         message,
         metadata,
       },
       senderId,
       senderRole,
-    );
+    )
   }
 
   // Future: Real-time notification method
