@@ -1,4 +1,5 @@
 // src/currency-hub/currency-hub.service.ts
+import { SearchCurrencyDto } from './dto/search-currency.dto';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, FindOptionsWhere } from 'typeorm';
@@ -238,4 +239,32 @@ export class CurrencyHubService {
     // For demonstration purposes, we'll just log a message
     console.log('Updating exchange rates from external sources...');
   }
+
+  // Added Filter + Pagination
+  async searchAndPaginateCurrencies(
+  dto: SearchCurrencyDto,
+): Promise<{
+  data: CurrencyHub[];
+  total: number;
+  page: number;
+  limit: number;
+}> {
+  const { search, page = 1, limit = 10 } = dto;
+
+  const qb = this.currencyHubRepository.createQueryBuilder('currency');
+
+  if (search) {
+    qb.where('currency.baseCurrencyCode ILIKE :search', { search: `%${search}%` })
+      .orWhere('currency.targetCurrencyCode ILIKE :search', { search: `%${search}%` })
+      .orWhere('currency.provider ILIKE :search', { search: `%${search}%` });
+  }
+
+  const [data, total] = await qb
+    .skip((page - 1) * limit)
+    .take(limit)
+    .orderBy('currency.createdAt', 'DESC')
+    .getManyAndCount();
+
+  return { data, total, page, limit };
+}
 }
