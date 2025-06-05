@@ -1,3 +1,4 @@
+import { SearchCurrencyDto } from './dto/search-currency.dto'; 
 import {
   Controller,
   Get,
@@ -18,6 +19,11 @@ import { QueryCurrencyHubDto } from './dto/query-currency-hub.dto';
 @Controller('currency-hub')
 export class CurrencyHubController {
   constructor(private readonly currencyHubService: CurrencyHubService) {}
+
+  @Get('search')
+searchWithPagination(@Query() dto: SearchCurrencyDto) {
+  return this.currencyHubService.searchAndPaginateCurrencies(dto);
+}
 
   @Post()
   create(@Body() createCurrencyHubDto: CreateCurrencyHubDto) {

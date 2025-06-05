@@ -407,4 +407,13 @@ describe('CurrencyHubService', () => {
       ).rejects.toThrow(NotFoundException);
     });
   });
+
+  describe('searchAndPaginateCurrencies', () => {
+  it('returns filtered and paginated results', async () => {
+    const result = await service.searchAndPaginateCurrencies({ search: 'usd', page: 1, limit: 5 });
+    expect(result).toHaveProperty('data');
+    expect(result).toHaveProperty('total');
+    expect(Array.isArray(result.data)).toBe(true);
+  });
+});
 });
