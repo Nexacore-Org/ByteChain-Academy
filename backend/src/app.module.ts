@@ -15,6 +15,7 @@ import { CurrencyHubModule } from './currency-hub/currency-hub.module';
 import { LessonQuizResultModule } from './lesson-quiz-result/lesson-quiz-result.module';
 import { ProgressModule } from './progress/progress.module';
 import { RecommendationModule } from './recommendation/recommendation.module';
+import { NotificationPreferenceModule } from './notification-preference/notification-preference.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { RecommendationModule } from './recommendation/recommendation.module';
     LessonQuizResultModule,
     ProgressModule,
     RecommendationModule,
+    NotificationPreferenceModule,
   ],
   controllers: [AppController],
   providers: [
