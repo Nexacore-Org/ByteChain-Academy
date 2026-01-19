@@ -1,6 +1,0 @@
-[workspace]
-members = [
-    "certificate",
-    "dao-governance"
-]
-resolver = "2"

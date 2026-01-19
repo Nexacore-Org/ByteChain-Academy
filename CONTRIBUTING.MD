@@ -77,7 +77,7 @@ Please review our [Code of Conduct](CODE_OF_CONDUCT.md) to help us create a welc
 
 ## 🛡️ Security
 
-If you discover a security vulnerability, please **do not open an issue**. Instead, email us directly at [contact@nexacore.org](mailto:contact@nexacore.org).
+If you discover a security vulnerability, please **do not open an issue**. Instead, email us directly at [contact@nexacore.org](mailto:nexacore.org@gmail.com).
 
 ---
 
