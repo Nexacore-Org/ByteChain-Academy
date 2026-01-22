@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RateLimitGuard } from './common/guards/rate-limit.guard';
+import { AuthModule } from './modules/auth.module';
 
 @Module({
   imports: [
@@ -15,6 +17,7 @@ import { RateLimitGuard } from './common/guards/rate-limit.guard';
         },
       ],
     }),
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [
