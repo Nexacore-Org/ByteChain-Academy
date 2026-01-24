@@ -4,6 +4,8 @@ import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { User } from '../entities/user.entity';
+import { Course } from '../entities/course.entity';
+import { CourseRegistration } from '../entities/course-registration.entity';
 import { UserService } from '../services/user.service';
 import { AuthService } from '../services/auth.service';
 import { AuthController } from '../controllers/auth.controller';
@@ -18,7 +20,7 @@ import { JwtStrategy } from '../strategies/jwt.strategy';
     TypeOrmModule.forRoot({
       type: 'sqlite',
       database: 'database.sqlite',
-      entities: [User],
+      entities: [User, Course, CourseRegistration],
       synchronize: true,
     }),
     TypeOrmModule.forFeature([User]),
@@ -32,4 +34,4 @@ import { JwtStrategy } from '../strategies/jwt.strategy';
   providers: [UserService, AuthService, JwtStrategy],
   exports: [UserService, AuthService, JwtStrategy],
 })
-export class AuthModule {}
+export class AuthModule { }
