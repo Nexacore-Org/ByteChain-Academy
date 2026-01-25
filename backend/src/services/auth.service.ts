@@ -1,7 +1,12 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../services/user.service';
-import { RegisterDto, LoginDto, ForgotPasswordDto, ResetPasswordDto } from '../dto/auth.dto';
+import {
+  RegisterDto,
+  LoginDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
+} from '../dto/auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -14,7 +19,7 @@ export class AuthService {
     try {
       const user = await this.userService.create(registerDto);
       const token = this.generateToken(user);
-      
+
       return {
         user: {
           id: user.id,
@@ -30,7 +35,7 @@ export class AuthService {
 
   async login(loginDto: LoginDto) {
     const user = await this.userService.findByEmail(loginDto.email);
-    
+
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -58,8 +63,10 @@ export class AuthService {
 
   async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
     try {
-      const resetToken = await this.userService.createResetToken(forgotPasswordDto.email);
-      
+      const resetToken = await this.userService.createResetToken(
+        forgotPasswordDto.email,
+      );
+
       // In a real application, you would send an email here
       // For now, we'll just return the token (in production, never do this)
       return {
@@ -77,7 +84,7 @@ export class AuthService {
         resetPasswordDto.token,
         resetPasswordDto.newPassword,
       );
-      
+
       return {
         message: 'Password reset successfully',
       };

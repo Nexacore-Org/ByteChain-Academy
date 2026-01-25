@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { Exclude } from 'class-transformer';
 
 export enum UserRole {
@@ -17,6 +23,9 @@ export class User {
   @Column()
   @Exclude()
   password: string;
+
+  @Column({ nullable: true })
+  name: string;
 
   @Column({
     type: 'varchar',
