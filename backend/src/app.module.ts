@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RateLimitGuard } from './common/guards/rate-limit.guard';
 import { AuthModule } from './modules/auth.module';
+import { CoursesModule } from './modules/courses.module';
 import { CertificatesModule } from './modules/certificates.module';
 
 @Module({
@@ -19,6 +20,7 @@ import { CertificatesModule } from './modules/certificates.module';
       ],
     }),
     AuthModule,
+    CoursesModule,
     CertificatesModule,
   ],
   controllers: [AppController],
@@ -30,4 +32,4 @@ import { CertificatesModule } from './modules/certificates.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }
