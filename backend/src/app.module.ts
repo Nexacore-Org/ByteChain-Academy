@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RateLimitGuard } from './common/guards/rate-limit.guard';
 import { AuthModule } from './modules/auth.module';
+import { CertificatesModule } from './modules/certificates.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AuthModule } from './modules/auth.module';
       ],
     }),
     AuthModule,
+    CertificatesModule,
   ],
   controllers: [AppController],
   providers: [
