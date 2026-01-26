@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Body, Param, Patch, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, UseGuards, Req } from '@nestjs/common';
 import { QuizzesService } from '../services/quizzes.service';
-import { CreateQuizDto, UpdateQuizDto, QuizResponseDto, AdminQuizResponseDto } from '../dto/quiz.dto';
+import { CreateQuizDto, UpdateQuizDto, QuizResponseDto, AdminQuizResponseDto, SubmitQuizDto, SubmitQuizBodyDto, QuizSubmissionResponseDto } from '../dto/quiz.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { RolesGuard } from '../guards/roles.guard';
 import { Roles } from '../decorators/roles.decorator';
@@ -34,6 +34,37 @@ export class QuizzesController {
     ): Promise<AdminQuizResponseDto> {
         const quiz = await this.quizzesService.update(id, updateQuizDto);
         return new AdminQuizResponseDto(quiz);
+    }
+
+    @Get('submissions/my')
+    @UseGuards(JwtAuthGuard)
+    async getMySubmissions(@Req() req): Promise<QuizSubmissionResponseDto[]> {
+        const submissions = await this.quizzesService.getUserSubmissions(req.user.id);
+        return submissions.map(sub => new QuizSubmissionResponseDto(sub));
+    }
+
+    @Post(':id/submit')
+    @UseGuards(JwtAuthGuard)
+    async submitQuiz(
+        @Param('id') quizId: string,
+        @Body() submitQuizBodyDto: SubmitQuizBodyDto,
+        @Req() req,
+    ): Promise<QuizSubmissionResponseDto> {
+        const submission = await this.quizzesService.submitQuiz(req.user.id, {
+            quizId,
+            answers: submitQuizBodyDto.answers,
+        });
+        return new QuizSubmissionResponseDto(submission);
+    }
+
+    @Get(':id/submission')
+    @UseGuards(JwtAuthGuard)
+    async getUserSubmission(
+        @Param('id') quizId: string,
+        @Req() req,
+    ): Promise<QuizSubmissionResponseDto | null> {
+        const submission = await this.quizzesService.getUserSubmission(req.user.id, quizId);
+        return submission ? new QuizSubmissionResponseDto(submission) : null;
     }
 
     @Get(':id')
