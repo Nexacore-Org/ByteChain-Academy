@@ -13,6 +13,12 @@ export class Lesson {
     @Column('text')
     content: string;
 
+    @Column({ nullable: true })
+    videoUrl: string; // External video URL
+
+    @Column({ nullable: true })
+    videoStartTimestamp: number; // Optional start timestamp in seconds
+
     @Column({ default: 0 })
     order: number;
 
