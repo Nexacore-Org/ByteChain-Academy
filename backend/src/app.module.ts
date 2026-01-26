@@ -8,6 +8,7 @@ import { RateLimitGuard } from './common/guards/rate-limit.guard';
 import { AuthModule } from './modules/auth.module';
 import { CoursesModule } from './modules/courses.module';
 import { CertificatesModule } from './modules/certificates.module';
+import { QuizzesModule } from './modules/quizzes.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { CertificatesModule } from './modules/certificates.module';
     AuthModule,
     CoursesModule,
     CertificatesModule,
+    QuizzesModule,
   ],
   controllers: [AppController],
   providers: [

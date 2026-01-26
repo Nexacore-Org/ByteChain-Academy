@@ -6,6 +6,10 @@ import { PassportModule } from '@nestjs/passport';
 import { User } from '../entities/user.entity';
 import { Course } from '../entities/course.entity';
 import { CourseRegistration } from '../entities/course-registration.entity';
+import { Lesson } from '../entities/lesson.entity';
+import { Quiz } from '../entities/quiz.entity';
+import { Question } from '../entities/question.entity';
+import { Certificate } from '../entities/certificate.entity';
 import { UserService } from '../services/user.service';
 import { AuthService } from '../services/auth.service';
 import { AuthController } from '../controllers/auth.controller';
@@ -20,7 +24,7 @@ import { JwtStrategy } from '../strategies/jwt.strategy';
     TypeOrmModule.forRoot({
       type: 'sqlite',
       database: 'database.sqlite',
-      entities: [User, Course, CourseRegistration],
+      entities: [User, Course, CourseRegistration, Lesson, Quiz, Question, Certificate],
       synchronize: true,
     }),
     TypeOrmModule.forFeature([User]),
