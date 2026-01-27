@@ -25,7 +25,9 @@ import { JwtStrategy } from '../strategies/jwt.strategy';
     TypeOrmModule.forRoot({
       type: 'sqlite',
       database: 'database.sqlite',
+      autoLoadEntities: true,
       entities: [User, Course, CourseRegistration, Lesson, Quiz, Question, QuizSubmission, Certificate],
+
       synchronize: true,
     }),
     TypeOrmModule.forFeature([User]),
@@ -39,4 +41,4 @@ import { JwtStrategy } from '../strategies/jwt.strategy';
   providers: [UserService, AuthService, JwtStrategy],
   exports: [UserService, AuthService, JwtStrategy],
 })
-export class AuthModule { }
+export class AuthModule {}
