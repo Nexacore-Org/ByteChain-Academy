@@ -10,6 +10,8 @@ import { CoursesModule } from './modules/courses.module';
 import { CertificatesModule } from './modules/certificates.module';
 import { QuizzesModule } from './modules/quizzes.module';
 import { LessonsModule } from './modules/lessons.module';
+import { PagginationServiceService } from './paggination-service/paggination-service.service';
+import { PaginationService } from './services/pagination/pagination.service';
 
 @Module({
   imports: [
@@ -34,6 +36,8 @@ import { LessonsModule } from './modules/lessons.module';
       provide: APP_GUARD,
       useClass: RateLimitGuard,
     },
+    PagginationServiceService,
+    PaginationService,
   ],
 })
 export class AppModule { }
