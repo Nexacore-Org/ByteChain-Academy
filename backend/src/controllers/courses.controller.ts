@@ -1,14 +1,18 @@
-import { Controller, Get, Post, Body, Param, Patch, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, UseGuards, Req, Query } from '@nestjs/common';
 import { CoursesService } from '../services/courses.service';
 import { CreateCourseDto, UpdateCourseDto, CourseResponseDto } from '../dto/course.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { RolesGuard } from '../guards/roles.guard';
 import { Roles } from '../decorators/roles.decorator';
 import { UserRole } from '../entities/user.entity';
+import { PaginationService } from 'src/services/pagination.service';
 
 @Controller('courses')
 export class CoursesController {
-    constructor(private readonly coursesService: CoursesService) { }
+    
+    constructor(private readonly coursesService: CoursesService,
+    private readonly paginationService: PaginationService
+    ) { }
 
     @Post()
     @UseGuards(JwtAuthGuard, RolesGuard)
@@ -49,4 +53,16 @@ export class CoursesController {
         await this.coursesService.enrollUser(req.user.id, courseId);
         return { message: 'Successfully enrolled in course' };
     }
+
+     @Get()
+  async getCourses(
+    @Query('page') page = '1',
+    @Query('limit') limit = '10',
+  ) {
+    return this.paginationService.findAll({
+      page: Number(page),
+      limit: Number(limit),
+    });
+  }
+
 }
