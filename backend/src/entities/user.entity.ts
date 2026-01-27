@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { Exclude } from 'class-transformer';
 
 export enum UserRole {
@@ -23,6 +29,13 @@ export class User {
     default: UserRole.USER,
   })
   role: UserRole;
+
+  // Learning progress counters (used by rewards/badges)
+  @Column({ type: 'int', default: 0 })
+  lessonsCompleted: number;
+
+  @Column({ type: 'int', default: 0 })
+  coursesCompleted: number;
 
   @Column({ nullable: true })
   @Exclude()
