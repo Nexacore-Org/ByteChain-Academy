@@ -24,6 +24,9 @@ export class User {
   @Exclude()
   password: string;
 
+  @Column({ nullable: true })
+  name: string;
+
   @Column({
     type: 'varchar',
     default: UserRole.USER,

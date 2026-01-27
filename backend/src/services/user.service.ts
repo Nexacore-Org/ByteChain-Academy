@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThan } from 'typeorm';
 import { User, UserRole } from '../entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from '../dto/auth.dto';
+import { UpdateProfileDto } from 'src/dto/update-profile.dto';
 
 @Injectable()
 export class UserService {
@@ -44,7 +45,10 @@ export class UserService {
     });
   }
 
-  async validatePassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
+  async validatePassword(
+    plainPassword: string,
+    hashedPassword: string,
+  ): Promise<boolean> {
     return bcrypt.compare(plainPassword, hashedPassword);
   }
 
@@ -76,7 +80,7 @@ export class UserService {
 
     let validUser: User | null = null;
     for (const user of users) {
-      if (user.resetToken && await bcrypt.compare(token, user.resetToken)) {
+      if (user.resetToken && (await bcrypt.compare(token, user.resetToken))) {
         validUser = user;
         break;
       }
@@ -96,7 +100,35 @@ export class UserService {
   }
 
   private generateResetToken(): string {
-    return Math.random().toString(36).substring(2, 15) + 
-           Math.random().toString(36).substring(2, 15);
+    return (
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15)
+    );
+  }
+
+  async getProfile(userId: string): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  }
+
+  async updateProfile(
+    userId: string,
+    updateProfileDto: UpdateProfileDto,
+  ): Promise<User> {
+    const user = await this.getProfile(userId);
+
+    if (updateProfileDto.name !== undefined) {
+      user.name = updateProfileDto.name;
+    }
+
+    return this.userRepository.save(user);
+  }
+
+  async deleteProfile(userId: string): Promise<void> {
+    const user = await this.getProfile(userId);
+    await this.userRepository.remove(user);
   }
 }

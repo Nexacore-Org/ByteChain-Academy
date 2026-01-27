@@ -6,7 +6,13 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RateLimitGuard } from './common/guards/rate-limit.guard';
 import { AuthModule } from './modules/auth.module';
+
 import { RewardsModule } from './modules/rewards.module';
+
+import { CoursesModule } from './modules/courses.module';
+import { CertificatesModule } from './modules/certificates.module';
+import { QuizzesModule } from './modules/quizzes.module';
+import { LessonsModule } from './modules/lessons.module';
 
 @Module({
   imports: [
@@ -20,6 +26,10 @@ import { RewardsModule } from './modules/rewards.module';
     }),
     AuthModule,
     RewardsModule,
+    CoursesModule,
+    CertificatesModule,
+    QuizzesModule,
+    LessonsModule,
   ],
   controllers: [AppController],
   providers: [
