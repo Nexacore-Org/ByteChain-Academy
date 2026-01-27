@@ -18,7 +18,7 @@ import { JwtStrategy } from '../strategies/jwt.strategy';
     TypeOrmModule.forRoot({
       type: 'sqlite',
       database: 'database.sqlite',
-      entities: [User],
+      autoLoadEntities: true,
       synchronize: true,
     }),
     TypeOrmModule.forFeature([User]),
