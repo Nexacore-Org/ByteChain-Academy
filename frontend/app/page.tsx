@@ -1,16 +1,26 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { SignUpModal } from "@/components/auth/signup-modal"
 import { LoginModal } from "@/components/auth/login-modal"
+import { useAuth } from "@/contexts/auth-context"
+import { useRouter } from "next/navigation"
 import { Play, Book, Zap, BookOpenIcon } from "lucide-react"
 import Link from "next/link"
 
 export default function Home() {
   const [signupOpen, setSignupOpen] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
+  const { isAuthenticated } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/dashboard")
+    }
+  }, [isAuthenticated, router])
 
   const handleSwitchToSignup = () => {
     setLoginOpen(false)

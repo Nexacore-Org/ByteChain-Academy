@@ -65,7 +65,10 @@ export function CourseCard({
 
   return (
     <>
-      <Card className="cursor-pointer hover:border-[#00ff88]/50 transition-colors">
+      <Card 
+        className="cursor-pointer hover:border-[#00ff88]/50 transition-colors"
+        onClick={handleCardClick}
+      >
         <CardContent className="p-6 space-y-4">
           <div className="flex items-start justify-between">
             <span
@@ -107,7 +110,10 @@ export function CourseCard({
             <span>{instructor}</span> 
           </div>
           <Button
-            onClick={handleCardClick}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleCardClick()
+            }}
             className="bg-[#03202c] text-[#00eeb0] px-2 py-1 rounded-full text-sm"
           >
             {isAuthenticated ? "Enroll Now" : "Sign in to enroll"}
