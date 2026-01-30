@@ -4,19 +4,24 @@ import { Repository } from 'typeorm';
 import { Badge } from '../entities/badge.entity';
 import { UserBadge } from '../entities/user-badge.entity';
 import { User } from '../entities/user.entity';
+import { RewardHistory } from '../entities/reward-history.entity';
 import { BADGE_MILESTONES } from '../modules/rewards/badge-milestones';
 
 @Injectable()
 export class RewardsService {
+  private readonly POINTS_PER_LESSON = 10;
+  private readonly POINTS_PER_COURSE = 50;
+
   constructor(
     @InjectRepository(Badge) private badgeRepository: Repository<Badge>,
     @InjectRepository(UserBadge)
     private userBadgeRepository: Repository<UserBadge>,
     @InjectRepository(User) private userRepository: Repository<User>,
+    @InjectRepository(RewardHistory)
+    private rewardHistoryRepository: Repository<RewardHistory>,
   ) {}
 
   async ensureBadgeCatalog(): Promise<void> {
-    // Keep DB badge metadata aligned with code-defined milestones.
     for (const milestone of BADGE_MILESTONES) {
       const existing = await this.badgeRepository.findOne({
         where: { key: milestone.key },
@@ -74,41 +79,100 @@ export class RewardsService {
     userId: string;
     lessonsCompletedDelta?: number;
     coursesCompletedDelta?: number;
+    activityId?: string;
+    activityType?: 'lesson' | 'course';
   }): Promise<{
-    progress: { lessonsCompleted: number; coursesCompleted: number };
+    progress: {
+      lessonsCompleted: number;
+      coursesCompleted: number;
+      points: number;
+    };
     newlyAwarded: Badge[];
+    pointsEarned: number;
   }> {
-    const lessonsDelta = args.lessonsCompletedDelta ?? 0;
-    const coursesDelta = args.coursesCompletedDelta ?? 0;
+    let lessonsDelta = args.lessonsCompletedDelta ?? 0;
+    let coursesDelta = args.coursesCompletedDelta ?? 0;
+    let pointsToAdd = 0;
 
-    if (lessonsDelta > 0) {
-      await this.userRepository.increment(
-        { id: args.userId },
-        'lessonsCompleted',
-        lessonsDelta,
-      );
+    if (args.activityId && args.activityType) {
+      const existingReward = await this.rewardHistoryRepository.findOne({
+        where: {
+          userId: args.userId,
+          activityType: args.activityType,
+          activityId: args.activityId,
+        },
+      });
+
+      if (!existingReward) {
+        if (args.activityType === 'lesson') {
+          pointsToAdd = this.POINTS_PER_LESSON;
+
+          if (lessonsDelta === 0) lessonsDelta = 1;
+        } else if (args.activityType === 'course') {
+          pointsToAdd = this.POINTS_PER_COURSE;
+
+          if (coursesDelta === 0) coursesDelta = 1;
+        }
+
+        await this.rewardHistoryRepository.save(
+          this.rewardHistoryRepository.create({
+            userId: args.userId,
+            activityType: args.activityType,
+            activityId: args.activityId,
+            points: pointsToAdd,
+          }),
+        );
+      } else {
+        lessonsDelta = 0;
+        coursesDelta = 0;
+        pointsToAdd = 0;
+      }
+    } else {
+      if (lessonsDelta > 0)
+        pointsToAdd += lessonsDelta * this.POINTS_PER_LESSON;
+      if (coursesDelta > 0)
+        pointsToAdd += coursesDelta * this.POINTS_PER_COURSE;
     }
-    if (coursesDelta > 0) {
-      await this.userRepository.increment(
-        { id: args.userId },
-        'coursesCompleted',
-        coursesDelta,
-      );
+
+    if (lessonsDelta > 0 || coursesDelta > 0 || pointsToAdd > 0) {
+      if (lessonsDelta > 0) {
+        await this.userRepository.increment(
+          { id: args.userId },
+          'lessonsCompleted',
+          lessonsDelta,
+        );
+      }
+      if (coursesDelta > 0) {
+        await this.userRepository.increment(
+          { id: args.userId },
+          'coursesCompleted',
+          coursesDelta,
+        );
+      }
+      if (pointsToAdd > 0) {
+        await this.userRepository.increment(
+          { id: args.userId },
+          'points',
+          pointsToAdd,
+        );
+      }
     }
 
     const newlyAwarded = await this.awardEligibleBadges(args.userId);
 
     const user = await this.userRepository.findOneOrFail({
       where: { id: args.userId },
-      select: ['id', 'lessonsCompleted', 'coursesCompleted'],
+      select: ['id', 'lessonsCompleted', 'coursesCompleted', 'points'],
     });
 
     return {
       progress: {
         lessonsCompleted: user.lessonsCompleted,
         coursesCompleted: user.coursesCompleted,
+        points: user.points,
       },
       newlyAwarded,
+      pointsEarned: pointsToAdd,
     };
   }
 
@@ -154,9 +218,7 @@ export class RewardsService {
           }),
         );
         newlyAwarded.push(badge);
-      } catch {
-        // Duplicate protection: unique constraint on (userId, badgeId) makes this safe.
-      }
+      } catch {}
     }
 
     return newlyAwarded;

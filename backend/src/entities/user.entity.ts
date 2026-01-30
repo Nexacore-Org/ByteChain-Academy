@@ -33,12 +33,14 @@ export class User {
   })
   role: UserRole;
 
-  // Learning progress counters (used by rewards/badges)
   @Column({ type: 'int', default: 0 })
   lessonsCompleted: number;
 
   @Column({ type: 'int', default: 0 })
   coursesCompleted: number;
+
+  @Column({ type: 'int', default: 0 })
+  points: number;
 
   @Column({ nullable: true })
   @Exclude()

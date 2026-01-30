@@ -40,9 +40,9 @@ export class RewardsController {
     const lessons = dto.lessonsCompletedDelta ?? 0;
     const courses = dto.coursesCompletedDelta ?? 0;
 
-    if (lessons <= 0 && courses <= 0) {
+    if (lessons <= 0 && courses <= 0 && !dto.activityId) {
       throw new BadRequestException(
-        'Provide lessonsCompletedDelta and/or coursesCompletedDelta > 0',
+        'Provide lessonsCompletedDelta, coursesCompletedDelta > 0, or an activityId',
       );
     }
 
@@ -50,6 +50,8 @@ export class RewardsController {
       userId: req.user.id,
       lessonsCompletedDelta: lessons,
       coursesCompletedDelta: courses,
+      activityId: dto.activityId,
+      activityType: dto.activityType,
     });
   }
 }

@@ -1,4 +1,4 @@
-import { IsInt, IsOptional, Max, Min } from 'class-validator';
+import { IsInt, IsOptional, Max, Min, IsString, IsEnum } from 'class-validator';
 
 export class UpdateProgressDto {
   @IsOptional()
@@ -12,4 +12,12 @@ export class UpdateProgressDto {
   @Min(0)
   @Max(1000)
   coursesCompletedDelta?: number;
+
+  @IsOptional()
+  @IsString()
+  activityId?: string;
+
+  @IsOptional()
+  @IsEnum(['lesson', 'course'])
+  activityType?: 'lesson' | 'course';
 }
