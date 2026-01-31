@@ -1,27 +1,28 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Logo } from "./logo"
-import { Button } from "./ui/button"
-import { LoginModal } from "./auth/login-modal"
-import { SignUpModal } from "./auth/signup-modal"
-import { useAuth } from "@/contexts/auth-context"
-import Link from "next/link"
+import { useState } from "react";
+import { Logo } from "./logo";
+import { Button } from "./ui/button";
+import { LoginModal } from "./auth/login-modal";
+import { SignUpModal } from "./auth/signup-modal";
+import { AccountDropdown } from "./account-dropdown";
+import { useAuth } from "@/contexts/auth-context";
+import Link from "next/link";
 
 export function Header() {
-  const [loginOpen, setLoginOpen] = useState(false)
-  const [signupOpen, setSignupOpen] = useState(false)
-  const { isAuthenticated, logout } = useAuth()
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [signupOpen, setSignupOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   const handleSwitchToSignup = () => {
-    setLoginOpen(false)
-    setSignupOpen(true)
-  }
+    setLoginOpen(false);
+    setSignupOpen(true);
+  };
 
   const handleSwitchToLogin = () => {
-    setSignupOpen(false)
-    setLoginOpen(true)
-  }
+    setSignupOpen(false);
+    setLoginOpen(true);
+  };
 
   return (
     <>
@@ -30,19 +31,22 @@ export function Header() {
         <div className="flex items-center gap-4">
           {isAuthenticated ? (
             <>
-              <Button variant="outline" onClick={logout}>
-                Log out
-              </Button>
+              <Link href="/dashboard">
+                <Button variant="outline">Dashboard</Button>
+              </Link>
               <Link href="/courses">
                 <Button>Start Learning</Button>
               </Link>
+              <AccountDropdown />
             </>
           ) : (
             <>
               <Button variant="outline" onClick={() => setLoginOpen(true)}>
                 Log in
               </Button>
-              <Button onClick={() => setSignupOpen(true)}>Start Learning</Button>
+              <Button onClick={() => setSignupOpen(true)}>
+                Start Learning
+              </Button>
             </>
           )}
         </div>
@@ -58,5 +62,5 @@ export function Header() {
         onSwitchToLogin={handleSwitchToLogin}
       />
     </>
-  )
+  );
 }
