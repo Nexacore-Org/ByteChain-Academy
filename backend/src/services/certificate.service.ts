@@ -1,36 +1,116 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Certificate } from '../entities/certificate.entity';
-import { VerifyCertificateDto, CertificateVerificationResultDto, IssueCertificateDto } from '../dto/certificate.dto';
+import {
+  VerifyCertificateDto,
+  CertificateVerificationResultDto,
+  IssueCertificateDto,
+} from '../dto/certificate.dto';
+import { User } from '../entities/user.entity';
+import { Course } from '../entities/course.entity';
 import * as crypto from 'crypto';
 
 @Injectable()
 export class CertificateService {
   constructor(
     @InjectRepository(Certificate)
-    private certificateRepository: Repository<Certificate>,
+    private readonly certificateRepository: Repository<Certificate>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    @InjectRepository(Course)
+    private readonly courseRepository: Repository<Course>,
   ) {}
 
-  /**
-   * Generates a hash for a certificate based on its data
-   */
+  /* -------------------------------------------------------------------------- */
+  /*                                HASH UTILITY                                */
+  /* -------------------------------------------------------------------------- */
+
   private generateCertificateHash(data: any): string {
-    const hash = crypto
+    return crypto
       .createHash('sha256')
       .update(JSON.stringify(data))
       .digest('hex');
-    return hash;
   }
 
-  /**
-   * Issues a new certificate
-   */
-  async issueCertificate(issueCertificateDto: IssueCertificateDto): Promise<any> {
-    const { recipientName, recipientEmail, courseOrProgram, issuedAt, expiresAt, certificateData } = issueCertificateDto;
+  /* -------------------------------------------------------------------------- */
+  /*                        AUTO ISSUE (COURSE COMPLETION)                       */
+  /* -------------------------------------------------------------------------- */
 
-    // Generate unique hash for the certificate
-    const hashData = {
+  /**
+   * Issues certificate automatically when a course is completed
+   * (THIS is what solves Issue #125)
+   */
+  async issueCertificateForCourse(
+    userId: string,
+    courseId: string,
+  ): Promise<Certificate> {
+    // Prevent duplicates (user + course)
+    const existing = await this.certificateRepository.findOne({
+      where: {
+        user: { id: userId },
+        course: { id: courseId },
+      },
+    });
+
+    if (existing) return existing;
+
+    const user = await this.userRepository.findOneBy({ id: userId });
+    const course = await this.courseRepository.findOneBy({ id: courseId });
+
+    if (!user || !course) {
+      throw new NotFoundException('User or course not found');
+    }
+
+    const issuedAt = new Date();
+
+    const hashPayload = {
+      userId: user.id,
+      courseId: course.id,
+      issuedAt,
+    };
+
+    const certificateHash = this.generateCertificateHash(hashPayload);
+
+    const certificate = this.certificateRepository.create({
+      certificateHash,
+      recipientName: user.name,
+      recipientEmail: user.email,
+      courseOrProgram: course.title,
+      certificateData: JSON.stringify({
+        userId: user.id,
+        courseId: course.id,
+      }),
+      issuedAt,
+      isValid: true,
+      user,
+      course,
+    });
+
+    return this.certificateRepository.save(certificate);
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                          MANUAL / ADMIN ISSUANCE                            */
+  /* -------------------------------------------------------------------------- */
+
+  async issueCertificate(
+    issueCertificateDto: IssueCertificateDto,
+  ): Promise<any> {
+    const {
+      recipientName,
+      recipientEmail,
+      courseOrProgram,
+      issuedAt,
+      expiresAt,
+      certificateData,
+    } = issueCertificateDto;
+
+    const hashPayload = {
       recipientName,
       recipientEmail,
       courseOrProgram,
@@ -38,18 +118,18 @@ export class CertificateService {
       timestamp: Date.now(),
     };
 
-    const certificateHash = this.generateCertificateHash(hashData);
+    const certificateHash = this.generateCertificateHash(hashPayload);
 
-    // Check if certificate already exists
-    const existingCertificate = await this.certificateRepository.findOne({
+    const existing = await this.certificateRepository.findOne({
       where: { certificateHash },
     });
 
-    if (existingCertificate) {
-      throw new BadRequestException('Certificate with this hash already exists');
+    if (existing) {
+      throw new BadRequestException(
+        'Certificate with this hash already exists',
+      );
     }
 
-    // Create new certificate
     const certificate = this.certificateRepository.create({
       certificateHash,
       recipientName,
@@ -70,13 +150,16 @@ export class CertificateService {
     };
   }
 
-  /**
-   * Verifies a certificate by its hash
-   */
-  async verifyCertificate(verifyCertificateDto: VerifyCertificateDto): Promise<CertificateVerificationResultDto> {
+  /* -------------------------------------------------------------------------- */
+  /*                              VERIFICATION                                   */
+  /* -------------------------------------------------------------------------- */
+
+  async verifyCertificate(
+    verifyCertificateDto: VerifyCertificateDto,
+  ): Promise<CertificateVerificationResultDto> {
     const { certificateHash } = verifyCertificateDto;
 
-    if (!certificateHash || certificateHash.trim() === '') {
+    if (!certificateHash?.trim()) {
       return {
         isValid: false,
         message: 'Certificate hash is required',
@@ -94,7 +177,6 @@ export class CertificateService {
       };
     }
 
-    // Check if certificate is marked as valid
     if (!certificate.isValid) {
       return {
         isValid: false,
@@ -102,7 +184,6 @@ export class CertificateService {
       };
     }
 
-    // Check if certificate has expired
     if (certificate.expiresAt && new Date() > certificate.expiresAt) {
       return {
         isValid: false,
@@ -110,7 +191,6 @@ export class CertificateService {
       };
     }
 
-    // Certificate is valid
     return {
       isValid: true,
       message: 'Certificate is valid and verified.',
@@ -122,21 +202,21 @@ export class CertificateService {
         issuedAt: certificate.issuedAt,
         expiresAt: certificate.expiresAt,
         isValid: certificate.isValid,
-        certificateData: certificate.certificateData ? JSON.parse(certificate.certificateData) : null,
+        certificateData: certificate.certificateData
+          ? JSON.parse(certificate.certificateData)
+          : null,
       },
     };
   }
 
-  /**
-   * Gets all certificates (admin only)
-   */
-  async getAllCertificates(): Promise<any[]> {
+  /* -------------------------------------------------------------------------- */
+  /*                                  ADMIN                                      */
+  /* -------------------------------------------------------------------------- */
+
+  async getAllCertificates(): Promise<Certificate[]> {
     return this.certificateRepository.find();
   }
 
-  /**
-   * Revokes a certificate
-   */
   async revokeCertificate(certificateId: string): Promise<any> {
     const certificate = await this.certificateRepository.findOne({
       where: { id: certificateId },
