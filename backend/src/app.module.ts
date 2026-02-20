@@ -5,16 +5,16 @@ import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RateLimitGuard } from './common/guards/rate-limit.guard';
-import { AuthModule } from './modules/auth.module';
-
-import { RewardsModule } from './modules/rewards.module';
-
-import { CoursesModule } from './modules/courses.module';
-import { CertificatesModule } from './modules/certificates.module';
-import { QuizzesModule } from './modules/quizzes.module';
-import { LessonsModule } from './modules/lessons.module';
-import { PagginationServiceService } from './paggination-service/paggination-service.service';
-import { PaginationService } from './services/pagination/pagination.service';
+// import { PagginationServiceService } from './paggination-service/paggination-service.service';
+// import { PaginationService } from './services/pagination/pagination.service';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
+import { RewardsModule } from './rewards/rewards.module';
+import { CertificatesModule } from './certificates/certificates.module';
+import { CoursesModule } from './courses/courses.module';
+import { LessonsModule } from './lessons/lessons.module';
+import { ProgressModule } from './progress/progress.module';
+import { QuizzesModule } from './quizzes/quizzes.module';
 
 @Module({
   imports: [
@@ -27,11 +27,13 @@ import { PaginationService } from './services/pagination/pagination.service';
       ],
     }),
     AuthModule,
+    UsersModule,
     RewardsModule,
-    CoursesModule,
     CertificatesModule,
-    QuizzesModule,
+    CoursesModule,
     LessonsModule,
+    ProgressModule,
+    QuizzesModule,
   ],
   controllers: [AppController],
   providers: [
@@ -40,8 +42,8 @@ import { PaginationService } from './services/pagination/pagination.service';
       provide: APP_GUARD,
       useClass: RateLimitGuard,
     },
-    PagginationServiceService,
-    PaginationService,
+    // PagginationServiceService,
+    // PaginationService,
   ],
 })
 export class AppModule {}
