@@ -7,10 +7,10 @@ import { DataSource } from 'typeorm';
 import { User } from '../src/entities/user.entity';
 import { Course } from '../src/entities/course.entity';
 import { Lesson } from '../src/entities/lesson.entity';
-import { Quiz } from '../src/entities/quiz.entity';
-import { Question } from '../src/entities/question.entity';
-import { QuizSubmission } from '../src/entities/quiz-submission.entity';
-import { QuestionType } from '../src/entities/question.entity';
+import { Quiz } from '../src/quizzes/entities/quiz.entity';
+import { Question } from '../src/quizzes/entities/question.entity';
+import { QuizSubmission } from '../src/quizzes/entities/quiz-submission.entity';
+import { QuestionType } from '../src/quizzes/entities/question.entity';
 
 describe('QuizzesController (e2e)', () => {
   let app: INestApplication<App>;
@@ -281,7 +281,9 @@ describe('QuizzesController (e2e)', () => {
       expect(response.body.passed).toBe(false);
 
       // Cleanup
-      await dataSource.getRepository(QuizSubmission).delete({ quizId: newQuizId });
+      await dataSource
+        .getRepository(QuizSubmission)
+        .delete({ quizId: newQuizId });
       await dataSource.getRepository(Quiz).delete({ id: newQuizId });
     });
 
@@ -329,7 +331,9 @@ describe('QuizzesController (e2e)', () => {
       expect(response.body.passed).toBe(false); // Below 70% threshold
 
       // Cleanup
-      await dataSource.getRepository(QuizSubmission).delete({ quizId: newQuizId });
+      await dataSource
+        .getRepository(QuizSubmission)
+        .delete({ quizId: newQuizId });
       await dataSource.getRepository(Quiz).delete({ id: newQuizId });
     });
   });
@@ -379,7 +383,9 @@ describe('QuizzesController (e2e)', () => {
       expect(response.body).toHaveProperty('submittedAt');
 
       // Cleanup
-      await dataSource.getRepository(QuizSubmission).delete({ quizId: newQuizId });
+      await dataSource
+        .getRepository(QuizSubmission)
+        .delete({ quizId: newQuizId });
       await dataSource.getRepository(Quiz).delete({ id: newQuizId });
     });
 
@@ -459,7 +465,9 @@ describe('QuizzesController (e2e)', () => {
       expect(response.body[0]).toHaveProperty('score');
 
       // Cleanup
-      await dataSource.getRepository(QuizSubmission).delete({ quizId: quiz1Id });
+      await dataSource
+        .getRepository(QuizSubmission)
+        .delete({ quizId: quiz1Id });
       await dataSource.getRepository(Quiz).delete({ id: quiz1Id });
     });
   });
