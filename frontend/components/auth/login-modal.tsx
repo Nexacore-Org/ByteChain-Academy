@@ -32,8 +32,8 @@ export function LoginModal({ open, onOpenChange, onSwitchToSignup }: LoginModalP
       // Reset form
       setEmail("")
       setPassword("")
-      // Navigate to courses page
-      router.push("/courses")
+      // Navigate to dashboard page
+      router.push("/dashboard")
     } catch (error) {
       console.error("Login error:", error)
     } finally {
