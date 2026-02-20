@@ -16,8 +16,8 @@ interface LoginModalProps {
 }
 
 export function LoginModal({ open, onOpenChange, onSwitchToSignup }: LoginModalProps) {
-  const [email, setEmail] = useState("alex@example.com")
-  const [password, setPassword] = useState("******")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const { login } = useAuth()
