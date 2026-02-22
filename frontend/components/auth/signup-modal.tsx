@@ -34,8 +34,8 @@ export function SignUpModal({ open, onOpenChange, onSwitchToLogin }: SignUpModal
       setName("")
       setEmail("")
       setPassword("")
-      // Navigate to courses page
-      router.push("/courses")
+      // Navigate to dashboard page
+      router.push("/dashboard")
     } catch (error) {
       console.error("Signup error:", error)
     } finally {
