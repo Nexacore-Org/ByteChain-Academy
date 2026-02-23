@@ -9,13 +9,11 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
-  // Query,
 } from '@nestjs/common';
-import { LessonsService } from '../services/lessons.service';
+import { LessonsService } from './lessons.service';
 
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
-import { PaginationService } from 'src/common/services/pagination.service';
 import { UserRole } from 'src/users/entities/user.entity';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { CreateLessonDto } from './dto/create-lesson.dto';
@@ -24,10 +22,7 @@ import { UpdateLessonDto } from './dto/update-lesson.dto';
 
 @Controller('lessons')
 export class LessonsController {
-  constructor(
-    private readonly lessonsService: LessonsService,
-    private readonly paginationService: PaginationService,
-  ) {}
+  constructor(private readonly lessonsService: LessonsService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -71,12 +66,4 @@ export class LessonsController {
   async remove(@Param('id') id: string): Promise<void> {
     await this.lessonsService.remove(id);
   }
-
-  // @Get()
-  // async getLessons(@Query('page') page = '1', @Query('limit') limit = '10') {
-  //   return this.paginationService.findAllLessons({
-  //     page: Number(page),
-  //     limit: Number(limit),
-  //   });
-  // }
 }
