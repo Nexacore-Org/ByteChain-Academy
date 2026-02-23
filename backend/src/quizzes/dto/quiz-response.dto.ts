@@ -1,3 +1,5 @@
+import { QuestionType } from '../entities/question.entity';
+
 export class QuizSubmissionResponseDto {
   id: string;
   userId: string;

@@ -1,45 +1,55 @@
 import {
   Controller,
-  // Get,
-  // Post,
-  // Body,
-  // Patch,
-  // Param,
-  // Delete,
+  Get,
+  Post,
+  Body,
+  Param,
+  Req,
+  UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
+import { Request } from 'express';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { ProgressService } from './progress.service';
-// import { CreateProgressDto } from './dto/create-progress.dto';
-// import { UpdateProgressDto } from './dto/update-progress.dto';
+import { CompleteLessonDto } from './dto/complete-lesson.dto';
+
+interface RequestWithUser extends Request {
+  user: { id: string; email: string; role: string };
+}
 
 @Controller('progress')
 export class ProgressController {
   constructor(private readonly progressService: ProgressService) {}
 
-  // @Post()
-  // create(@Body() createProgressDto: CreateProgressDto) {
-  //   return this.progressService.create(createProgressDto);
-  // }
+  /**
+   * Mark a lesson as complete for the authenticated user.
+   * Triggers certificate auto-issuance when all lessons in the course are completed.
+   */
+  @Post('lesson')
+  @UseGuards(JwtAuthGuard)
+  async completeLesson(
+    @Req() req: RequestWithUser,
+    @Body() dto: CompleteLessonDto,
+  ) {
+    return this.progressService.completeLesson(
+      req.user.id,
+      dto.courseId,
+      dto.lessonId,
+    );
+  }
 
-  // @Get()
-  // findAll() {
-  //   return this.progressService.findAll();
-  // }
-
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.progressService.findOne(+id);
-  // }
-
-  // @Patch(':id')
-  // update(
-  //   @Param('id') id: string,
-  //   @Body() updateProgressDto: UpdateProgressDto,
-  // ) {
-  //   return this.progressService.update(+id, updateProgressDto);
-  // }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.progressService.remove(+id);
-  // }
+  /**
+   * Get the authenticated user's progress for a specific course (list of lesson completion statuses).
+   */
+  @Get('course/:courseId')
+  @UseGuards(JwtAuthGuard)
+  async getCourseProgress(
+    @Req() req: RequestWithUser,
+    @Param('courseId') courseId: string,
+  ) {
+    if (!courseId) {
+      throw new BadRequestException('courseId is required');
+    }
+    return this.progressService.getCourseProgress(req.user.id, courseId);
+  }
 }

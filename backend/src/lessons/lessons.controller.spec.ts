@@ -8,7 +8,9 @@ describe('LessonsController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [LessonsController],
-      providers: [LessonsService],
+      providers: [
+        { provide: LessonsService, useValue: { create: jest.fn(), findAllByCourse: jest.fn(), findOne: jest.fn(), update: jest.fn(), remove: jest.fn() } },
+      ],
     }).compile();
 
     controller = module.get<LessonsController>(LessonsController);

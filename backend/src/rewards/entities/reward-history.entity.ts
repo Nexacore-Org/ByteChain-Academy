@@ -6,7 +6,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { User } from './user.entity';
+import { User } from 'src/users/entities/user.entity';
 
 @Entity('reward_history')
 export class RewardHistory {
