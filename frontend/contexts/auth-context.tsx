@@ -22,7 +22,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     // Mock login - in production, this would call your API
-    // For now, we'll just set a token in localStorage
     localStorage.setItem("auth_token", "mock_token_" + Date.now());
     localStorage.setItem("user_email", email);
     setIsAuthenticated(true);

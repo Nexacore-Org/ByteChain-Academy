@@ -20,6 +20,7 @@ export function LoginModal({ open, onOpenChange, onSwitchToSignup }: LoginModalP
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
   const { login } = useAuth()
   const router = useRouter()
 
@@ -27,6 +28,7 @@ export function LoginModal({ open, onOpenChange, onSwitchToSignup }: LoginModalP
     e.preventDefault()
     setIsLoading(true)
     try {
+      setError("")
       await login(email, password)
       onOpenChange(false)
       // Reset form
@@ -34,8 +36,15 @@ export function LoginModal({ open, onOpenChange, onSwitchToSignup }: LoginModalP
       setPassword("")
       // Navigate to dashboard page
       router.push("/dashboard")
-    } catch (error) {
-      console.error("Login error:", error)
+    } catch (err: any) {
+      console.error("Login error:", err)
+      if (!window.navigator.onLine) {
+        setError("Unable to connect. Please check your connection and try again")
+      } else if (err.status === 401 || err.message?.includes("401")) {
+        setError("Incorrect email or password")
+      } else {
+        setError("Something went wrong. Please try again")
+      }
     } finally {
       setIsLoading(false)
     }
@@ -67,7 +76,10 @@ export function LoginModal({ open, onOpenChange, onSwitchToSignup }: LoginModalP
                 type="email"
                 placeholder="Email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  setError("")
+                }}
                 className="pl-10"
                 required
               />
@@ -84,7 +96,10 @@ export function LoginModal({ open, onOpenChange, onSwitchToSignup }: LoginModalP
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value)
+                  setError("")
+                }}
                 className="pl-10 pr-10"
                 required
               />
@@ -97,6 +112,13 @@ export function LoginModal({ open, onOpenChange, onSwitchToSignup }: LoginModalP
               </button>
             </div>
           </div>
+          
+          {error && (
+            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm animate-in fade-in slide-in-from-top-1">
+              {error}
+            </div>
+          )}
+
           <Button
             type="submit"
             className="w-full bg-[#02c177]"
