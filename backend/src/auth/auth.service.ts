@@ -80,6 +80,7 @@ export class AuthService {
   async resetPassword(resetPasswordDto: ResetPasswordDto) {
     try {
       await this.userService.resetPassword(
+        resetPasswordDto.email,
         resetPasswordDto.token,
         resetPasswordDto.newPassword,
       );

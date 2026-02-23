@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThan } from 'typeorm';
+import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from 'src/auth/dto/ register.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -71,28 +72,29 @@ export class UserService {
     return resetToken;
   }
 
-  async resetPassword(token: string, newPassword: string): Promise<void> {
-    const users = await this.userRepository.find({
+  async resetPassword(
+    email: string,
+    token: string,
+    newPassword: string,
+  ): Promise<void> {
+    const user = await this.userRepository.findOne({
       where: {
+        email,
         resetTokenExpires: MoreThan(new Date()),
       },
     });
 
-    let validUser: User | null = null;
-    for (const user of users) {
-      if (user.resetToken && (await bcrypt.compare(token, user.resetToken))) {
-        validUser = user;
-        break;
-      }
-    }
-
-    if (!validUser) {
+    if (
+      !user ||
+      !user.resetToken ||
+      !(await bcrypt.compare(token, user.resetToken))
+    ) {
       throw new Error('Invalid or expired reset token');
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    await this.userRepository.update(validUser.id, {
+    await this.userRepository.update(user.id, {
       password: hashedPassword,
       resetToken: undefined,
       resetTokenExpires: undefined,
@@ -100,10 +102,7 @@ export class UserService {
   }
 
   private generateResetToken(): string {
-    return (
-      Math.random().toString(36).substring(2, 15) +
-      Math.random().toString(36).substring(2, 15)
-    );
+    return crypto.randomBytes(32).toString('hex');
   }
 
   async getProfile(userId: string): Promise<User> {
