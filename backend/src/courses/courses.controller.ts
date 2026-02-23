@@ -7,13 +7,12 @@ import {
   Patch,
   UseGuards,
   Req,
-  // Query,
+  Query,
 } from '@nestjs/common';
 
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
-
-import { PaginationService } from 'src/common/services/pagination.service';
+import { PaginationDto } from '../common/dto/pagination.dto';
 import { CoursesService } from './courses.service';
 import { UserRole } from 'src/users/entities/user.entity';
 import { Roles } from 'src/common/decorators/roles.decorator';
@@ -23,10 +22,7 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 
 @Controller('courses')
 export class CoursesController {
-  constructor(
-    private readonly coursesService: CoursesService,
-    private readonly paginationService: PaginationService,
-  ) {}
+  constructor(private readonly coursesService: CoursesService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -38,8 +34,18 @@ export class CoursesController {
   }
 
   @Get()
-  async findAll(): Promise<CourseResponseDto[]> {
-    return this.coursesService.findAll();
+  async findAll(
+    @Query() pagination: PaginationDto,
+  ): Promise<{
+    data: CourseResponseDto[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const page = pagination.page ?? 1;
+    const limit = pagination.limit ?? 10;
+    return this.coursesService.findAllPaginated(page, limit);
   }
 
   @Get('registered')
@@ -72,12 +78,4 @@ export class CoursesController {
     await this.coursesService.enrollUser(req.user.id, courseId);
     return { message: 'Successfully enrolled in course' };
   }
-
-  // @Get()
-  // async getCourses(@Query('page') page = '1', @Query('limit') limit = '10') {
-  //   return this.paginationService.findAll({
-  //     page: Number(page),
-  //     limit: Number(limit),
-  //   });
-  // }
 }
