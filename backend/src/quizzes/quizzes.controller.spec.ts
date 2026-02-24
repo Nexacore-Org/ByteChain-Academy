@@ -8,7 +8,9 @@ describe('QuizzesController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [QuizzesController],
-      providers: [QuizzesService],
+      providers: [
+        { provide: QuizzesService, useValue: { getQuizByLessonId: jest.fn(), submitQuiz: jest.fn(), getSubmission: jest.fn() } },
+      ],
     }).compile();
 
     controller = module.get<QuizzesController>(QuizzesController);

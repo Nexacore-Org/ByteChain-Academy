@@ -7,7 +7,7 @@ import {
   CreateDateColumn,
   Unique,
 } from 'typeorm';
-import { User } from './user.entity';
+import { User } from 'src/users/entities/user.entity';
 import { Badge } from './badge.entity';
 
 @Entity('user_badges')

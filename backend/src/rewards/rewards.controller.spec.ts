@@ -8,7 +8,9 @@ describe('RewardsController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [RewardsController],
-      providers: [RewardsService],
+      providers: [
+        { provide: RewardsService, useValue: { getEarnedBadges: jest.fn(), updateProgressAndAwardBadges: jest.fn() } },
+      ],
     }).compile();
 
     controller = module.get<RewardsController>(RewardsController);

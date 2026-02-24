@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Course } from 'src/courses/entities/course.entity';
-import { Lesson } from 'src/entities/lesson.entity';
+import { Lesson } from './entities/lesson.entity';
 import { Repository } from 'typeorm';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
