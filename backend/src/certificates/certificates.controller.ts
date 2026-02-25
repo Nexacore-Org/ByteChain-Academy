@@ -21,7 +21,7 @@ import { VerifyCertificateDto } from './dto/verify-certificate.dto';
 
 @Controller('certificates')
 export class CertificateController {
-  constructor(private readonly certificateService: CertificateService) {}
+  constructor(private readonly certificateService: CertificateService) { }
 
   /**
    * Public endpoint to verify a certificate
@@ -42,7 +42,8 @@ export class CertificateController {
   @UseGuards(JwtAuthGuard)
   @Get()
   async getMyCertificates(@Req() req) {
-    return this.certificateService.getAllCertificates(); // optionally filter by req.user.id if needed
+    const userId = req.user.id as string;
+    return this.certificateService.getCertificatesByUser(userId);
   }
 
   /**
