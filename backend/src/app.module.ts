@@ -5,6 +5,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { CommonModule } from './common/common.module';
 import { RateLimitGuard } from './common/guards/rate-limit.guard';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -34,6 +35,7 @@ import { QuizzesModule } from './quizzes/quizzes.module';
         },
       ],
     }),
+    CommonModule,
     AuthModule,
     UsersModule,
     RewardsModule,
