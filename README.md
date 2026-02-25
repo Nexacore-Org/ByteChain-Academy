@@ -87,3 +87,9 @@ For inquiries, discussions, or help, feel free to reach out to us:
 - 🐛 Issues: Open an issue for feature requests or bug reports
 
 ---
+
+## 🔌 Ports
+
+- **Backend:** runs on port 3001 (http://localhost:3001)
+- **Frontend:** runs on port 3000 (http://localhost:3000)
+
