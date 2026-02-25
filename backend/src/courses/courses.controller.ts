@@ -7,7 +7,7 @@ import {
   Patch,
   UseGuards,
   Req,
-  // Query,
+  Query,
 } from '@nestjs/common';
 
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -38,8 +38,11 @@ export class CoursesController {
   }
 
   @Get()
-  async findAll(): Promise<CourseResponseDto[]> {
-    return this.coursesService.findAll();
+  async findAll(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+  ) {
+    return this.coursesService.findAll(Number(page) || 1, Number(limit) || 10);
   }
 
   @Get('registered')
@@ -73,11 +76,4 @@ export class CoursesController {
     return { message: 'Successfully enrolled in course' };
   }
 
-  // @Get()
-  // async getCourses(@Query('page') page = '1', @Query('limit') limit = '10') {
-  //   return this.paginationService.findAll({
-  //     page: Number(page),
-  //     limit: Number(limit),
-  //   });
-  // }
 }
