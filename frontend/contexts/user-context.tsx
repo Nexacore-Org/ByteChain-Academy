@@ -1,6 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import { api } from "@/lib/api";
 
 export interface UserProfile {
   id: string;
@@ -18,6 +25,12 @@ export interface LearningStats {
   streakDays: number;
 }
 
+export interface UserStats {
+  courseCount: number;
+  certificateCount: number;
+  xp: number;
+}
+
 export interface NotificationPreferences {
   courseUpdates: boolean;
   newLessonsAvailable: boolean;
@@ -27,12 +40,17 @@ export interface NotificationPreferences {
 interface UserContextType {
   user: UserProfile | null;
   stats: LearningStats;
+  userStats: UserStats | null;
+  userStatsLoading: boolean;
+  userStatsError: boolean;
   notificationPreferences: NotificationPreferences;
   updateProfile: (updates: Partial<UserProfile>) => void;
   updateNotificationPreferences: (
     updates: Partial<NotificationPreferences>,
   ) => void;
   loadUserData: () => void;
+  fetchUserStats: () => Promise<void>;
+  invalidateUserStats: () => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -54,6 +72,9 @@ const defaultNotificationPreferences: NotificationPreferences = {
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<LearningStats>(defaultStats);
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [userStatsLoading, setUserStatsLoading] = useState(false);
+  const [userStatsError, setUserStatsError] = useState(false);
   const [notificationPreferences, setNotificationPreferences] =
     useState<NotificationPreferences>(defaultNotificationPreferences);
 
@@ -156,15 +177,54 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  const fetchUserStats = useCallback(async () => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) return;
+    setUserStatsLoading(true);
+    setUserStatsError(false);
+    try {
+      const data = await api.get<{
+        courseCount: number;
+        certificateCount: number;
+        xp: number;
+      }>("/users/me/stats");
+      setUserStats(data);
+    } catch {
+      setUserStatsError(true);
+      setUserStats(null);
+    } finally {
+      setUserStatsLoading(false);
+    }
+  }, []);
+
+  const invalidateUserStats = useCallback(() => {
+    setUserStats(null);
+    void fetchUserStats();
+  }, [fetchUserStats]);
+
+  useEffect(() => {
+    if (user) {
+      void fetchUserStats();
+    } else {
+      setUserStats(null);
+      setUserStatsError(false);
+    }
+  }, [user, fetchUserStats]);
+
   return (
     <UserContext.Provider
       value={{
         user,
         stats,
+        userStats,
+        userStatsLoading,
+        userStatsError,
         notificationPreferences,
         updateProfile,
         updateNotificationPreferences,
         loadUserData,
+        fetchUserStats,
+        invalidateUserStats,
       }}
     >
       {children}

@@ -135,4 +135,23 @@ export class UserService {
     const user = await this.getProfile(userId);
     await this.userRepository.remove(user);
   }
+
+  async getStats(
+    userId: string,
+    courseCount: number,
+    certificateCount: number,
+  ): Promise<{ courseCount: number; certificateCount: number; xp: number }> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      select: ['id', 'points'],
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return {
+      courseCount,
+      certificateCount,
+      xp: user.points ?? 0,
+    };
+  }
 }
