@@ -15,21 +15,17 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    try {
-      const user = await this.userService.create(registerDto);
-      const token = this.generateToken(user);
+    const user = await this.userService.create(registerDto);
+    const token = this.generateToken(user);
 
-      return {
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-        },
-        token,
-      };
-    } catch (error) {
-      throw new UnauthorizedException(error.message);
-    }
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      },
+      token,
+    };
   }
 
   async login(loginDto: LoginDto) {
@@ -61,36 +57,28 @@ export class AuthService {
   }
 
   async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
-    try {
-      const resetToken = await this.userService.createResetToken(
-        forgotPasswordDto.email,
-      );
+    const resetToken = await this.userService.createResetToken(
+      forgotPasswordDto.email,
+    );
 
-      // In a real application, you would send an email here
-      // For now, we'll just return the token (in production, never do this)
-      return {
-        message: 'Password reset link sent to your email',
-        resetToken, // Only for development/testing
-      };
-    } catch (error) {
-      throw new UnauthorizedException(error.message);
-    }
+    // In a real application, you would send an email here
+    // For now, we'll just return the token (in production, never do this)
+    return {
+      message: 'Password reset link sent to your email',
+      resetToken, // Only for development/testing
+    };
   }
 
   async resetPassword(resetPasswordDto: ResetPasswordDto) {
-    try {
-      await this.userService.resetPassword(
-        resetPasswordDto.email,
-        resetPasswordDto.token,
-        resetPasswordDto.newPassword,
-      );
+    await this.userService.resetPassword(
+      resetPasswordDto.email,
+      resetPasswordDto.token,
+      resetPasswordDto.newPassword,
+    );
 
-      return {
-        message: 'Password reset successfully',
-      };
-    } catch (error) {
-      throw new UnauthorizedException(error.message);
-    }
+    return {
+      message: 'Password reset successfully',
+    };
   }
 
   private generateToken(user: any) {

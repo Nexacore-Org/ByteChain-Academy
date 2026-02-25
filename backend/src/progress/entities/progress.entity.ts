@@ -2,31 +2,48 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
+  CreateDateColumn,
+  UpdateDateColumn,
   ManyToOne,
-  JoinColumn,
+  Unique,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { Course } from '../../courses/entities/course.entity';
 import { Lesson } from '../../lessons/entities/lesson.entity';
 
 @Entity('progress')
+@Unique(['user', 'lesson'])
 export class Progress {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ default: false })
-  completed: boolean;
-
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userId' })
-  user: User;
-
-  @Column()
+  @Column({ type: 'varchar' })
   userId: string;
 
-  @ManyToOne(() => Lesson, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'lessonId' })
-  lesson: Lesson;
+  @Column({ type: 'varchar' })
+  courseId: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   lessonId: string;
+
+  @Column({ type: 'boolean', default: false })
+  completed: boolean;
+
+  @Column({ type: 'datetime', nullable: true })
+  completedAt: Date | null;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  user: User;
+
+  @ManyToOne(() => Course, { onDelete: 'CASCADE' })
+  course: Course;
+
+  @ManyToOne(() => Lesson, { onDelete: 'CASCADE' })
+  lesson: Lesson;
 }

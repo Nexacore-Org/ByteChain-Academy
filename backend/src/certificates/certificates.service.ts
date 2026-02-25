@@ -217,6 +217,12 @@ export class CertificateService {
     return this.certificateRepository.find();
   }
 
+  async getCertificatesByUser(userId: string): Promise<Certificate[]> {
+    return this.certificateRepository.find({
+      where: { user: { id: userId } },
+    });
+  }
+
   async revokeCertificate(certificateId: string): Promise<any> {
     const certificate = await this.certificateRepository.findOne({
       where: { id: certificateId },

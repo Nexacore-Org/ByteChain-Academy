@@ -8,7 +8,15 @@ describe('ProgressController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ProgressController],
-      providers: [ProgressService],
+      providers: [
+        {
+          provide: ProgressService,
+          useValue: {
+            completeLesson: jest.fn(),
+            getCourseProgress: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
     controller = module.get<ProgressController>(ProgressController);

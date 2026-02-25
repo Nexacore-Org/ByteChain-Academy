@@ -25,12 +25,20 @@ export class CoursesService {
     return new CourseResponseDto(savedCourse);
   }
 
-  async findAll(): Promise<CourseResponseDto[]> {
-    const courses = await this.courseRepository.find({
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<PaginatedResult<CourseResponseDto>> {
+    const result = await this.paginationService.paginate<Course>(this.courseRepository, {
+      page,
+      limit,
       where: { published: true },
       order: { createdAt: 'DESC' },
     });
-    return courses.map((course) => new CourseResponseDto(course));
+    return {
+      ...result,
+      data: result.data.map((course) => new CourseResponseDto(course)),
+    };
   }
 
   async findAllPaginated(
