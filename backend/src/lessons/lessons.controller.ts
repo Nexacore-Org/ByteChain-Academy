@@ -9,11 +9,13 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { LessonsService } from './lessons.service';
 
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { PaginationDto } from '../common/dto/pagination.dto';
 import { UserRole } from 'src/users/entities/user.entity';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { CreateLessonDto } from './dto/create-lesson.dto';
@@ -34,12 +36,47 @@ export class LessonsController {
     return new LessonResponseDto(lesson);
   }
 
+  @Get()
+  async findAll(
+    @Query() pagination: PaginationDto,
+  ): Promise<{
+    data: LessonResponseDto[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const page = pagination.page ?? 1;
+    const limit = pagination.limit ?? 10;
+    const result = await this.lessonsService.findAllPaginated(page, limit);
+    return {
+      ...result,
+      data: result.data.map((lesson) => new LessonResponseDto(lesson)),
+    };
+  }
+
   @Get('course/:courseId')
   async findByCourse(
     @Param('courseId') courseId: string,
-  ): Promise<LessonResponseDto[]> {
-    const lessons = await this.lessonsService.findAllByCourse(courseId);
-    return lessons.map((lesson) => new LessonResponseDto(lesson));
+    @Query() pagination: PaginationDto,
+  ): Promise<{
+    data: LessonResponseDto[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const page = pagination.page ?? 1;
+    const limit = pagination.limit ?? 10;
+    const result = await this.lessonsService.findAllByCoursePaginated(
+      courseId,
+      page,
+      limit,
+    );
+    return {
+      ...result,
+      data: result.data.map((lesson) => new LessonResponseDto(lesson)),
+    };
   }
 
   @Get(':id')

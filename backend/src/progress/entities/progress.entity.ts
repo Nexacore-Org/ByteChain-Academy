@@ -7,9 +7,9 @@ import {
   ManyToOne,
   Unique,
 } from 'typeorm';
-import { User } from 'src/users/entities/user.entity';
-import { Course } from 'src/courses/entities/course.entity';
-import { Lesson } from 'src/lessons/entities/lesson.entity';
+import { User } from '../../users/entities/user.entity';
+import { Course } from '../../courses/entities/course.entity';
+import { Lesson } from '../../lessons/entities/lesson.entity';
 
 @Entity('progress')
 @Unique(['user', 'lesson'])

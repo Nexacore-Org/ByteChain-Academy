@@ -2,14 +2,12 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CourseRegistration } from '../courses/entities/course-registration.entity';
+import { PaginationService } from '../common/services/pagination.service';
 import { CourseResponseDto } from './dto/course-response.dto';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { Course } from './entities/course.entity';
-import {
-  PaginationService,
-  PaginatedResult,
-} from 'src/common/services/pagination.service';
+import { PaginatedResult } from '../common/services/pagination.service';
 
 @Injectable()
 export class CoursesService {
@@ -37,6 +35,24 @@ export class CoursesService {
       where: { published: true },
       order: { createdAt: 'DESC' },
     });
+    return {
+      ...result,
+      data: result.data.map((course) => new CourseResponseDto(course)),
+    };
+  }
+
+  async findAllPaginated(
+    page: number,
+    limit: number,
+  ): Promise<PaginatedResult<CourseResponseDto>> {
+    const result = await this.paginationService.paginate(
+      this.courseRepository,
+      { page, limit },
+      {
+        where: { published: true },
+        order: { createdAt: 'DESC' },
+      },
+    );
     return {
       ...result,
       data: result.data.map((course) => new CourseResponseDto(course)),
