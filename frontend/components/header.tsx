@@ -7,12 +7,14 @@ import { LoginModal } from "./auth/login-modal";
 import { SignUpModal } from "./auth/signup-modal";
 import { AccountDropdown } from "./account-dropdown";
 import { useAuth } from "@/contexts/auth-context";
+import { useUser } from "@/contexts/user-context";
 import Link from "next/link";
 
 export function Header() {
   const [loginOpen, setLoginOpen] = useState(false);
   const [signupOpen, setSignupOpen] = useState(false);
   const { isAuthenticated } = useAuth();
+  const { user } = useUser();
 
   const handleSwitchToSignup = () => {
     setLoginOpen(false);
@@ -31,6 +33,11 @@ export function Header() {
         <div className="flex items-center gap-4">
           {isAuthenticated ? (
             <>
+              {user?.role === "Admin" && (
+                <Link href="/admin">
+                  <Button variant="outline">Admin</Button>
+                </Link>
+              )}
               <Link href="/dashboard">
                 <Button variant="outline">Dashboard</Button>
               </Link>
