@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { useUser } from "@/contexts/user-context";
 import { useRouter } from "next/navigation";
-import { User, Settings, LogOut, ChevronDown } from "lucide-react";
+import { User, Settings, LogOut, ChevronDown, LayoutDashboard } from "lucide-react";
 
 export function AccountDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -130,6 +130,15 @@ export function AccountDropdown() {
             >
               <Settings className="w-4 h-4" />
               Settings
+            </button>
+
+            <button
+              onClick={() => handleNavigate("/admin/courses")}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+              role="menuitem"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              Admin
             </button>
           </div>
 
