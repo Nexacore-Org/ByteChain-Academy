@@ -42,7 +42,18 @@ export class CertificateService {
   /* -------------------------------------------------------------------------- */
 
   /**
-   * Issues certificate automatically when a course is completed
+   * Issues a certificate automatically when a course is completed.
+   * 
+   * This method enforces duplicate prevention at the service level by checking
+   * if a certificate already exists for the given user and course combination.
+   * If a certificate already exists for this user-course pair, it returns the
+   * existing certificate instead of creating a new one. This ensures that only
+   * one certificate per user per course can be issued, maintaining data integrity.
+   * 
+   * @param userId - The ID of the user completing the course
+   * @param courseId - The ID of the course being completed
+   * @returns A Certificate entity (either newly created or existing)
+   * 
    * (THIS is what solves Issue #125)
    */
   async issueCertificateForCourse(
