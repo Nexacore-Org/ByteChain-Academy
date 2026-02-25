@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThan } from 'typeorm';
 import * as crypto from 'crypto';
@@ -20,7 +25,7 @@ export class UserService {
     });
 
     if (existingUser) {
-      throw new Error('User with this email already exists');
+      throw new ConflictException('An account with this email already exists');
     }
 
     const hashedPassword = await bcrypt.hash(userData.password, 10);
@@ -56,7 +61,7 @@ export class UserService {
   async createResetToken(email: string): Promise<string> {
     const user = await this.findByEmail(email);
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
 
     const resetToken = this.generateResetToken();
@@ -89,7 +94,7 @@ export class UserService {
       !user.resetToken ||
       !(await bcrypt.compare(token, user.resetToken))
     ) {
-      throw new Error('Invalid or expired reset token');
+      throw new UnauthorizedException('Invalid or expired reset token');
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
