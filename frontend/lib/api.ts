@@ -1,47 +1,46 @@
-const API_BASE =
-  typeof window !== "undefined"
-    ? (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001")
-    : process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+/**
+ * API client for ByteChain backend.
+ * Uses NEXT_PUBLIC_API_URL or falls back to http://localhost:3001.
+ */
 
-function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("auth_token");
+const API_BASE =
+  typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL
+    ? process.env.NEXT_PUBLIC_API_URL
+    : "http://localhost:3001";
+
+function getAuthHeaders(): HeadersInit {
+  if (typeof window === "undefined") return {};
+  const token = localStorage.getItem("auth_token");
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
 }
 
-async function request<T>(
+export async function apiFetch<T>(
   path: string,
-  options: RequestInit & { params?: Record<string, string> } = {}
+  options: RequestInit = {}
 ): Promise<T> {
-  const { params, ...rest } = options;
-  let url = `${API_BASE}${path}`;
-  if (params && Object.keys(params).length > 0) {
-    const search = new URLSearchParams(params).toString();
-    url += (path.includes("?") ? "&" : "?") + search;
-  }
-  const token = getToken();
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-    ...(rest.headers as Record<string, string>),
-  };
-  if (token && !token.startsWith("mock_token_")) {
-    (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
-  }
-  const res = await fetch(url, { ...rest, headers });
+  const url = path.startsWith("http") ? path : `${API_BASE}${path}`;
+  const res = await fetch(url, {
+    ...options,
+    headers: { ...getAuthHeaders(), ...options.headers },
+    credentials: "include",
+  });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { message?: string }).message || res.statusText);
+    const err = new Error(res.statusText || `HTTP ${res.status}`);
+    (err as Error & { status?: number }).status = res.status;
+    throw err;
   }
   if (res.status === 204) return undefined as T;
-  return res.json();
+  return res.json() as Promise<T>;
 }
 
 export const api = {
-  get: <T>(path: string, params?: Record<string, string>) =>
-    request<T>(path, { method: "GET", params }),
-
-  patch: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: "PATCH", body: body ? JSON.stringify(body) : undefined }),
-
-  post: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: "POST", body: body ? JSON.stringify(body) : undefined }),
+  get: <T>(path: string) => apiFetch<T>(path, { method: "GET" }),
+  post: <T>(path: string, body: unknown) =>
+    apiFetch<T>(path, { method: "POST", body: JSON.stringify(body) }),
+  patch: <T>(path: string, body: unknown) =>
+    apiFetch<T>(path, { method: "PATCH", body: JSON.stringify(body) }),
+  delete: <T>(path: string) => apiFetch<T>(path, { method: "DELETE" }),
 };
