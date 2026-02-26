@@ -40,6 +40,7 @@ export default function RootLayout({
             </LearningProvider>
           </UserProvider>
         </AuthProvider>
+        <Toaster theme="dark" position="top-center" richColors />
       </body>
     </html>
   );

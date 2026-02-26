@@ -13,6 +13,7 @@ import {
   Gift,
   FileCheck,
   Shield,
+  LayoutDashboard
 } from "lucide-react";
 
 export function AccountDropdown() {
@@ -168,6 +169,14 @@ export function AccountDropdown() {
               Settings
             </button>
 
+            <button
+              onClick={() => handleNavigate("/admin/courses")}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+              role="menuitem"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              Admin
+            </button>
             {user?.role === "Admin" && (
               <button
                 onClick={() => handleNavigate("/admin/certificates")}
