@@ -213,8 +213,29 @@ export class CertificateService {
   /*                                  ADMIN                                      */
   /* -------------------------------------------------------------------------- */
 
-  async getAllCertificates(): Promise<Certificate[]> {
-    return this.certificateRepository.find();
+  async getAllCertificates(search?: string): Promise<{
+    totalIssued: number;
+    revoked: number;
+    data: Certificate[];
+  }> {
+    const qb = this.certificateRepository
+      .createQueryBuilder('cert')
+      .leftJoinAndSelect('cert.user', 'user')
+      .leftJoinAndSelect('cert.course', 'course');
+
+    if (search && search.trim()) {
+      const term = `%${search.trim()}%`;
+      qb.andWhere(
+        '(cert.recipientName LIKE :term OR cert.recipientEmail LIKE :term OR cert.courseOrProgram LIKE :term)',
+        { term },
+      );
+    }
+
+    const data = await qb.orderBy('cert.issuedAt', 'DESC').getMany();
+    const totalIssued = data.length;
+    const revoked = data.filter((c) => !c.isValid).length;
+
+    return { totalIssued, revoked, data };
   }
 
   async getCertificatesByUser(userId: string): Promise<Certificate[]> {

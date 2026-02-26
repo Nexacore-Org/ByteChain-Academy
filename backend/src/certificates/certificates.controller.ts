@@ -6,6 +6,8 @@ import {
   Body,
   Get,
   Param,
+  Patch,
+  Query,
   HttpCode,
   HttpStatus,
   UseGuards,
@@ -48,23 +50,31 @@ export class CertificateController {
 
   /**
    * ADMIN: Get all certificates
-   * GET /certificates/all
+   * GET /certificates/all?search=...
    */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Get('all')
-  async getAllCertificates() {
-    return this.certificateService.getAllCertificates();
+  async getAllCertificates(@Query('search') search?: string) {
+    return this.certificateService.getAllCertificates(search);
   }
 
   /**
    * ADMIN: Revoke a certificate by ID
-   * POST /certificates/revoke/:id
+   * POST /certificates/revoke/:id (legacy)
+   * PATCH /certificates/:id/revoke (preferred)
    */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Post('revoke/:id')
-  async revokeCertificate(@Param('id') id: string) {
+  async revokeCertificatePost(@Param('id') id: string) {
+    return this.certificateService.revokeCertificate(id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @Patch(':id/revoke')
+  async revokeCertificatePatch(@Param('id') id: string) {
     return this.certificateService.revokeCertificate(id);
   }
 }
