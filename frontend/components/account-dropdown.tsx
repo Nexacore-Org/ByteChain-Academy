@@ -4,7 +4,16 @@ import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { useUser } from "@/contexts/user-context";
 import { useRouter } from "next/navigation";
-import { User, Settings, LogOut, ChevronDown } from "lucide-react";
+import {
+  User,
+  Settings,
+  LogOut,
+  ChevronDown,
+  Award,
+  Gift,
+  FileCheck,
+  Shield,
+} from "lucide-react";
 
 export function AccountDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -124,6 +133,33 @@ export function AccountDropdown() {
             </button>
 
             <button
+              onClick={() => handleNavigate("/certificates")}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+              role="menuitem"
+            >
+              <Award className="w-4 h-4" />
+              My Certificates
+            </button>
+
+            <button
+              onClick={() => handleNavigate("/rewards")}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+              role="menuitem"
+            >
+              <Gift className="w-4 h-4" />
+              Rewards
+            </button>
+
+            <button
+              onClick={() => handleNavigate("/verify-certificate")}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+              role="menuitem"
+            >
+              <FileCheck className="w-4 h-4" />
+              Verify Certificate
+            </button>
+
+            <button
               onClick={() => handleNavigate("/settings")}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
               role="menuitem"
@@ -131,6 +167,17 @@ export function AccountDropdown() {
               <Settings className="w-4 h-4" />
               Settings
             </button>
+
+            {user?.role === "Admin" && (
+              <button
+                onClick={() => handleNavigate("/admin/certificates")}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+                role="menuitem"
+              >
+                <Shield className="w-4 h-4" />
+                Admin Panel
+              </button>
+            )}
           </div>
 
           {/* Logout */}

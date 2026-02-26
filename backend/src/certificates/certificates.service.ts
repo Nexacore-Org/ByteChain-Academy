@@ -42,7 +42,18 @@ export class CertificateService {
   /* -------------------------------------------------------------------------- */
 
   /**
-   * Issues certificate automatically when a course is completed
+   * Issues a certificate automatically when a course is completed.
+   * 
+   * This method enforces duplicate prevention at the service level by checking
+   * if a certificate already exists for the given user and course combination.
+   * If a certificate already exists for this user-course pair, it returns the
+   * existing certificate instead of creating a new one. This ensures that only
+   * one certificate per user per course can be issued, maintaining data integrity.
+   * 
+   * @param userId - The ID of the user completing the course
+   * @param courseId - The ID of the course being completed
+   * @returns A Certificate entity (either newly created or existing)
+   * 
    * (THIS is what solves Issue #125)
    */
   async issueCertificateForCourse(
@@ -213,8 +224,29 @@ export class CertificateService {
   /*                                  ADMIN                                      */
   /* -------------------------------------------------------------------------- */
 
-  async getAllCertificates(): Promise<Certificate[]> {
-    return this.certificateRepository.find();
+  async getAllCertificates(search?: string): Promise<{
+    totalIssued: number;
+    revoked: number;
+    data: Certificate[];
+  }> {
+    const qb = this.certificateRepository
+      .createQueryBuilder('cert')
+      .leftJoinAndSelect('cert.user', 'user')
+      .leftJoinAndSelect('cert.course', 'course');
+
+    if (search && search.trim()) {
+      const term = `%${search.trim()}%`;
+      qb.andWhere(
+        '(cert.recipientName LIKE :term OR cert.recipientEmail LIKE :term OR cert.courseOrProgram LIKE :term)',
+        { term },
+      );
+    }
+
+    const data = await qb.orderBy('cert.issuedAt', 'DESC').getMany();
+    const totalIssued = data.length;
+    const revoked = data.filter((c) => !c.isValid).length;
+
+    return { totalIssued, revoked, data };
   }
 
   async getCertificatesByUser(userId: string): Promise<Certificate[]> {

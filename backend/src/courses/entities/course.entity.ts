@@ -1,4 +1,4 @@
-import { Lesson } from 'src/lessons/entities/lesson.entity';
+import { Lesson } from '../../lessons/entities/lesson.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,

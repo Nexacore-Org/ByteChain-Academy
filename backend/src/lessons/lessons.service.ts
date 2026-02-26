@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Course } from 'src/courses/entities/course.entity';
 import { Lesson } from './entities/lesson.entity';
 import { Repository } from 'typeorm';
+import { PaginationService } from '../common/services/pagination.service';
+import { PaginatedResult } from '../common/services/pagination.service';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 
@@ -13,6 +15,7 @@ export class LessonsService {
     private lessonRepository: Repository<Lesson>,
     @InjectRepository(Course)
     private courseRepository: Repository<Course>,
+    private readonly paginationService: PaginationService,
   ) {}
 
   async create(createLessonDto: CreateLessonDto): Promise<Lesson> {
@@ -51,6 +54,34 @@ export class LessonsService {
     }
 
     return this.lessonRepository.find({
+      where: { courseId },
+      order: { order: 'ASC', createdAt: 'ASC' },
+    });
+  }
+
+  async findAllPaginated(
+    page: number,
+    limit: number,
+  ): Promise<PaginatedResult<Lesson>> {
+    return this.paginationService.paginate(this.lessonRepository, { page, limit }, {
+      order: { order: 'ASC', createdAt: 'ASC' },
+    });
+  }
+
+  async findAllByCoursePaginated(
+    courseId: string,
+    page: number,
+    limit: number,
+  ): Promise<PaginatedResult<Lesson>> {
+    const course = await this.courseRepository.findOne({
+      where: { id: courseId },
+    });
+
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${courseId} not found`);
+    }
+
+    return this.paginationService.paginate(this.lessonRepository, { page, limit }, {
       where: { courseId },
       order: { order: 'ASC', createdAt: 'ASC' },
     });
