@@ -22,6 +22,8 @@ export class QuizSubmissionResponseDto {
   }
 }
 
+import { QuestionType } from '../entities/question.entity';
+
 export class QuestionResponseDto {
   id: string;
   text: string;

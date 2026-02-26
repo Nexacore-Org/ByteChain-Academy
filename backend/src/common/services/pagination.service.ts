@@ -1,16 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import {
-  Repository,
-  FindOptionsWhere,
-  FindOptionsOrder,
-  ObjectLiteral,
-} from 'typeorm';
+import { FindManyOptions, ObjectLiteral, Repository } from 'typeorm';
 
-export interface PaginateOptions<T> {
+export interface PaginateOptions {
   page: number;
   limit: number;
-  where?: FindOptionsWhere<T>;
-  order?: FindOptionsOrder<T>;
 }
 
 export interface PaginatedResult<T> {
@@ -23,38 +16,23 @@ export interface PaginatedResult<T> {
 
 @Injectable()
 export class PaginationService {
-  /**
-   * Paginate a TypeORM repository query.
-   * @param repo Repository instance
-   * @param options page (1-based), limit, optional where and order
-   * @returns Paginated result with data, total, page, limit, totalPages
-   */
   async paginate<T extends ObjectLiteral>(
-    repo: Repository<T>,
-    options: PaginateOptions<T>,
+    repository: Repository<T>,
+    options: PaginateOptions,
+    findOptions?: Omit<FindManyOptions<T>, 'skip' | 'take'>,
   ): Promise<PaginatedResult<T>> {
-    const { page, limit, where, order } = options;
-    const skip = (Math.max(1, page) - 1) * limit;
-    const take = Math.max(1, Math.min(limit, 100));
-
-    const [data, total] = await Promise.all([
-      repo.find({
-        where,
-        order,
-        skip,
-        take,
-      }),
-      repo.count({ where }),
-    ]);
-
-    const totalPages = Math.ceil(total / take);
-
+    const { page, limit } = options;
+    const [data, total] = await repository.findAndCount({
+      ...findOptions,
+      skip: (page - 1) * limit,
+      take: limit,
+    });
     return {
       data,
       total,
-      page: Math.max(1, page),
-      limit: take,
-      totalPages,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
     };
   }
 }

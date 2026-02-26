@@ -9,7 +9,7 @@ import {
     Index,
 } from 'typeorm';
 import { Quiz } from './quiz.entity';
-import { User } from 'src/users/entities/user.entity';
+import { User } from '../../users/entities/user.entity';
 
 @Entity('quiz_submissions')
 @Index(['userId', 'quizId'], { unique: true })

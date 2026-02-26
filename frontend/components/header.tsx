@@ -6,6 +6,7 @@ import { Button } from "./ui/button";
 import { LoginModal } from "./auth/login-modal";
 import { SignUpModal } from "./auth/signup-modal";
 import { AccountDropdown } from "./account-dropdown";
+import { NavCounters } from "./nav-counters";
 import { useAuth } from "@/contexts/auth-context";
 import Link from "next/link";
 
@@ -31,6 +32,7 @@ export function Header() {
         <div className="flex items-center gap-4">
           {isAuthenticated ? (
             <>
+              <NavCounters />
               <Link href="/dashboard">
                 <Button variant="outline">Dashboard</Button>
               </Link>

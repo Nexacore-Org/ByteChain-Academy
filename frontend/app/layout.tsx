@@ -34,7 +34,10 @@ export default function RootLayout({
       >
         <AuthProvider>
           <UserProvider>
-            <LearningProvider>{children}</LearningProvider>
+            <LearningProvider>
+              {children}
+              <Toaster theme="dark" position="top-center" richColors />
+            </LearningProvider>
           </UserProvider>
         </AuthProvider>
         <Toaster theme="dark" position="top-center" richColors />

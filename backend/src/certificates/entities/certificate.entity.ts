@@ -13,7 +13,6 @@ import {
 
 @Entity('certificates')
 @Index(['certificateHash'], { unique: true })
-@Unique(['user', 'course'])
 export class Certificate {
   @PrimaryGeneratedColumn('uuid')
   id: string;
