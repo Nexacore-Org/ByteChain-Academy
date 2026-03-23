@@ -1,12 +1,12 @@
 /**
  * API client for ByteChain backend.
- * Uses NEXT_PUBLIC_API_URL or falls back to http://localhost:3001.
+ * Uses NEXT_PUBLIC_API_URL or falls back to http://localhost:3001/api/v1.
  */
 
 const API_BASE =
   typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL
     ? process.env.NEXT_PUBLIC_API_URL
-    : "http://localhost:3001";
+    : "http://localhost:3001/api/v1";
 
 function getAuthHeaders(): HeadersInit {
   if (typeof window === "undefined") return {};
@@ -54,46 +54,20 @@ export async function fetchAdminCourses(params: {
   if (params.limit) searchParams.set("limit", String(params.limit ?? 10));
   const qs = searchParams.toString();
   const url = `${API_BASE}/admin/courses${qs ? `?${qs}` : ""}`;
-  let res = await fetch(url, { headers: getAuthHeaders() });
-
-  // Fallback: if /admin/courses doesn't exist, try /courses (public list)
-  if (res.status === 404 && API_BASE) {
-    const fallbackParams = new URLSearchParams();
-    fallbackParams.set("page", String(params.page ?? 1));
-    fallbackParams.set("limit", String(params.limit ?? 10));
-    res = await fetch(`${API_BASE}/courses?${fallbackParams}`, {
-      headers: getAuthHeaders(),
-    });
-  }
+  const res = await fetch(url, { headers: getAuthHeaders() });
 
   if (!res.ok) {
     const err = await res.text();
     throw new Error(err || `Failed to fetch courses (${res.status})`);
   }
-  const data = await res.json();
-  // Normalize: backend /courses returns { data, total, page, limit, totalPages }
-  return {
-    data: data.data ?? data,
-    total: data.total ?? (Array.isArray(data.data) ? data.data.length : data.length),
-    page: data.page ?? 1,
-    limit: data.limit ?? 10,
-    totalPages: data.totalPages ?? 1,
-  };
+  return res.json() as Promise<PaginatedCourses>;
 }
 
 export async function deleteAdminCourse(id: string): Promise<void> {
-  const url = `${API_BASE}/admin/courses/${id}`;
-  let res = await fetch(url, {
+  const res = await fetch(`${API_BASE}/admin/courses/${id}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
-  // Fallback: some backends use DELETE /courses/:id
-  if (res.status === 404 && API_BASE) {
-    res = await fetch(`${API_BASE}/courses/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
-  }
   if (!res.ok) {
     const err = await res.text();
     throw new Error(err || `Failed to delete course (${res.status})`);
@@ -104,8 +78,7 @@ export async function reorderLessons(
   courseId: string,
   orderedIds: string[]
 ): Promise<void> {
-  const url = `${API_BASE}/admin/courses/${courseId}/lessons/reorder`;
-  const res = await fetch(url, {
+  const res = await fetch(`${API_BASE}/admin/courses/${courseId}/lessons/reorder`, {
     method: "PATCH",
     headers: {
       ...getAuthHeaders(),
@@ -113,22 +86,6 @@ export async function reorderLessons(
     },
     body: JSON.stringify({ orderedIds }),
   });
-
-  // Fallback: update each lesson's order via PATCH /lessons/:id
-  if (res.status === 404 && API_BASE) {
-    for (let i = 0; i < orderedIds.length; i++) {
-      const r = await fetch(`${API_BASE}/lessons/${orderedIds[i]}`, {
-        method: "PATCH",
-        headers: {
-          ...getAuthHeaders(),
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ order: i }),
-      });
-      if (!r.ok) throw new Error(`Failed to update lesson order (${r.status})`);
-    }
-    return;
-  }
 
   if (!res.ok) {
     const err = await res.text();
@@ -171,8 +128,16 @@ export async function apiFetch<T>(
 export const api = {
   get: <T>(path: string) => apiFetch<T>(path, { method: "GET" }),
   post: <T>(path: string, body: unknown) =>
-    apiFetch<T>(path, { method: "POST", body: JSON.stringify(body) }),
+    apiFetch<T>(path, {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: { "Content-Type": "application/json" },
+    }),
   patch: <T>(path: string, body: unknown) =>
-    apiFetch<T>(path, { method: "PATCH", body: JSON.stringify(body) }),
+    apiFetch<T>(path, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+      headers: { "Content-Type": "application/json" },
+    }),
   delete: <T>(path: string) => apiFetch<T>(path, { method: "DELETE" }),
 };
