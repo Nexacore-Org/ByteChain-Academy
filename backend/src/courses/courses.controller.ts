@@ -5,16 +5,19 @@ import {
   Body,
   Param,
   Patch,
+  Delete,
   UseGuards,
   Req,
   Query,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { CoursesService } from './courses.service';
-import { UserRole } from '../users/entities/user.entity';
+import { UserRole } from '../common/enums/user-role.enum';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CourseResponseDto } from './dto/course-response.dto';
 import { CreateCourseDto } from './dto/create-course.dto';
@@ -77,5 +80,13 @@ export class CoursesController {
   ): Promise<{ message: string }> {
     await this.coursesService.enrollUser(req.user.id, courseId);
     return { message: 'Successfully enrolled in course' };
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(@Param('id') id: string): Promise<void> {
+    await this.coursesService.remove(id);
   }
 }
