@@ -114,7 +114,11 @@ export class CoursesService {
       this.courseRepository,
       { page, limit },
       {
-        where: where.length ? where : Object.keys(statusFilter).length ? statusFilter : undefined,
+        where: where.length
+          ? where
+          : Object.keys(statusFilter).length
+            ? statusFilter
+            : undefined,
         order: { createdAt: 'DESC' },
       },
     );
@@ -153,13 +157,5 @@ export class CoursesService {
       });
       await this.courseRegistrationRepository.save(registration);
     }
-  }
-
-  async remove(id: string): Promise<void> {
-    const course = await this.courseRepository.findOne({ where: { id } });
-    if (!course) {
-      throw new NotFoundException(`Course with ID ${id} not found`);
-    }
-    await this.courseRepository.remove(course);
   }
 }

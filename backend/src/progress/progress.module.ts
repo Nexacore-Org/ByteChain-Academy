@@ -5,11 +5,13 @@ import { ProgressController } from './progress.controller';
 import { Progress } from './entities/progress.entity';
 import { Lesson } from 'src/lessons/entities/lesson.entity';
 import { CertificatesModule } from 'src/certificates/certificates.module';
+import { NotificationsModule } from 'src/notifications/notifications.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Progress, Lesson]),
     CertificatesModule,
+    NotificationsModule,
   ],
   controllers: [ProgressController],
   providers: [ProgressService],

@@ -13,6 +13,8 @@ import { Lesson } from 'src/lessons/entities/lesson.entity';
 import { CreateQuizDto } from './dto/create-quiz.dto';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
+import { NotificationsService } from 'src/notifications/notifications.service';
+import { NotificationType } from 'src/notifications/entities/notification.entity';
 
 @Injectable()
 export class QuizzesService {
@@ -25,6 +27,7 @@ export class QuizzesService {
     private lessonRepository: Repository<Lesson>,
     @InjectRepository(QuizSubmission)
     private quizSubmissionRepository: Repository<QuizSubmission>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(createQuizDto: CreateQuizDto): Promise<Quiz> {
@@ -215,9 +218,14 @@ export class QuizzesService {
     const savedSubmission =
       await this.quizSubmissionRepository.save(submission);
 
-    // TODO: Integrate with progress module when implemented
-    // This submission can be used to update user progress and trigger rewards
-    // Example: await this.progressService.updateProgress(userId, quiz.lessonId, passed);
+    if (savedSubmission.passed) {
+      await this.notificationsService.createNotification(
+        userId,
+        NotificationType.QUIZ_PASSED,
+        `You passed the quiz "${quiz.title}".`,
+        `/courses/lessons/${quiz.lessonId}`,
+      );
+    }
 
     return savedSubmission;
   }

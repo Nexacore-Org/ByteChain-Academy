@@ -14,6 +14,8 @@ import { User } from 'src/users/entities/user.entity';
 import { CertificateVerificationResultDto } from './dto/certificate-response.dto';
 import { IssueCertificateDto } from './dto/issue-certificate.dto';
 import { VerifyCertificateDto } from './dto/verify-certificate.dto';
+import { NotificationsService } from 'src/notifications/notifications.service';
+import { NotificationType } from 'src/notifications/entities/notification.entity';
 
 @Injectable()
 export class CertificateService {
@@ -24,6 +26,7 @@ export class CertificateService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Course)
     private readonly courseRepository: Repository<Course>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   /* -------------------------------------------------------------------------- */
@@ -43,17 +46,17 @@ export class CertificateService {
 
   /**
    * Issues a certificate automatically when a course is completed.
-   * 
+   *
    * This method enforces duplicate prevention at the service level by checking
    * if a certificate already exists for the given user and course combination.
    * If a certificate already exists for this user-course pair, it returns the
    * existing certificate instead of creating a new one. This ensures that only
    * one certificate per user per course can be issued, maintaining data integrity.
-   * 
+   *
    * @param userId - The ID of the user completing the course
    * @param courseId - The ID of the course being completed
    * @returns A Certificate entity (either newly created or existing)
-   * 
+   *
    * (THIS is what solves Issue #125)
    */
   async issueCertificateForCourse(
@@ -101,8 +104,14 @@ export class CertificateService {
       user,
       course,
     });
-
-    return this.certificateRepository.save(certificate);
+    const savedCertificate = await this.certificateRepository.save(certificate);
+    await this.notificationsService.createNotification(
+      userId,
+      NotificationType.CERTIFICATE_ISSUED,
+      `You received a certificate for ${course.title}.`,
+      '/certificates',
+    );
+    return savedCertificate;
   }
 
   /* -------------------------------------------------------------------------- */

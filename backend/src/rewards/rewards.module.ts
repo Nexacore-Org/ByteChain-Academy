@@ -6,9 +6,13 @@ import { RewardHistory } from './entities/reward-history.entity';
 import { UserBadge } from './entities/user-badge.entity';
 import { RewardsController } from './rewards.controller';
 import { RewardsService } from './rewards.service';
+import { NotificationsModule } from 'src/notifications/notifications.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Badge, UserBadge, RewardHistory])],
+  imports: [
+    TypeOrmModule.forFeature([User, Badge, UserBadge, RewardHistory]),
+    NotificationsModule,
+  ],
   controllers: [RewardsController],
   providers: [RewardsService],
   exports: [RewardsService],

@@ -11,16 +11,6 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../common/guards/roles.guard';
-import { Roles } from '../common/decorators/roles.decorator';
-import { UserRole } from '../common/enums/user-role.enum';
-import { CoursesService } from '../courses/courses.service';
-import { PaginationDto } from '../common/dto/pagination.dto';
-import { CreateCourseDto } from '../courses/dto/create-course.dto';
-import { UpdateCourseDto } from '../courses/dto/update-course.dto';
-import { CourseResponseDto } from '../courses/dto/course-response.dto';
-
 import {
   ApiTags,
   ApiBearerAuth,
@@ -51,11 +41,17 @@ export class AdminCoursesController {
   ) {}
 
   @Get()
-  @ApiOperation({ summary: 'List all courses with optional search & status filter (admin)' })
+  @ApiOperation({
+    summary: 'List all courses with optional search & status filter (admin)',
+  })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
-  @ApiQuery({ name: 'status', required: false, enum: ['published', 'draft', ''] })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['published', 'draft', ''],
+  })
   async findAll(
     @Query('page') page = 1,
     @Query('limit') limit = 10,
@@ -76,13 +72,6 @@ export class AdminCoursesController {
     @Body() createCourseDto: CreateCourseDto,
   ): Promise<CourseResponseDto> {
     return this.coursesService.create(createCourseDto);
-  }
-
-  @Get()
-  async findAll(@Query() pagination: PaginationDto) {
-    const page = pagination.page ?? 1;
-    const limit = pagination.limit ?? 10;
-    return this.coursesService.findAllPaginated(page, limit);
   }
 
   @Get(':id')

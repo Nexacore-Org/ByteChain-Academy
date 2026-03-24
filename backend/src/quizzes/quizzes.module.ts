@@ -8,12 +8,14 @@ import { Lesson } from 'src/lessons/entities/lesson.entity';
 import { QuizzesController } from './quizzes.controller';
 import { QuizzesService } from './quizzes.service';
 import { AuthModule } from '../auth/auth.module';
+import { NotificationsModule } from 'src/notifications/notifications.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Quiz, Question, Lesson, QuizSubmission]),
     PassportModule,
     AuthModule,
+    NotificationsModule,
   ],
   controllers: [QuizzesController],
   providers: [QuizzesService],

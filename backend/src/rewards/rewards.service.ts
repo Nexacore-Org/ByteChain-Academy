@@ -6,6 +6,8 @@ import { User } from 'src/users/entities/user.entity';
 import { Badge } from './entities/badge.entity';
 import { RewardHistory } from './entities/reward-history.entity';
 import { UserBadge } from './entities/user-badge.entity';
+import { NotificationsService } from 'src/notifications/notifications.service';
+import { NotificationType } from 'src/notifications/entities/notification.entity';
 
 @Injectable()
 export class RewardsService {
@@ -19,6 +21,7 @@ export class RewardsService {
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(RewardHistory)
     private rewardHistoryRepository: Repository<RewardHistory>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async ensureBadgeCatalog(): Promise<void> {
@@ -218,6 +221,12 @@ export class RewardsService {
           }),
         );
         newlyAwarded.push(badge);
+        await this.notificationsService.createNotification(
+          userId,
+          NotificationType.BADGE_EARNED,
+          `You earned a new badge: ${badge.name}.`,
+          '/rewards',
+        );
       } catch (err) {
         console.log('error', err);
       }
