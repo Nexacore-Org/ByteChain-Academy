@@ -8,6 +8,12 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
+export enum XpRewardReason {
+  LESSON_COMPLETE = 'LESSON_COMPLETE',
+  QUIZ_PASS = 'QUIZ_PASS',
+  COURSE_COMPLETE = 'COURSE_COMPLETE',
+}
+
 @Entity('reward_history')
 export class RewardHistory {
   @PrimaryGeneratedColumn('uuid')
@@ -16,19 +22,18 @@ export class RewardHistory {
   @Column()
   userId: string;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   user: User;
 
-  @Column()
-  activityType: 'lesson' | 'course';
-
-  @Column()
-  activityId: string;
-
   @Column({ type: 'int' })
-  points: number;
+  amount: number;
+
+  @Column({
+    type: 'varchar',
+  })
+  reason: XpRewardReason;
 
   @CreateDateColumn()
-  awardedAt: Date;
+  createdAt: Date;
 }

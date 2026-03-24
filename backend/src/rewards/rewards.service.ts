@@ -1,20 +1,47 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { BADGE_MILESTONES } from './badge-milestones';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
+import {
+  BADGE_MILESTONES,
+  MilestoneRule,
+} from './badge-milestones';
 import { User } from 'src/users/entities/user.entity';
 import { Badge } from './entities/badge.entity';
-import { RewardHistory } from './entities/reward-history.entity';
+import {
+  RewardHistory,
+  XpRewardReason,
+} from './entities/reward-history.entity';
 import { UserBadge } from './entities/user-badge.entity';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { NotificationType } from 'src/notifications/entities/notification.entity';
 
+export const XP_LESSON_COMPLETE = 10;
+export const XP_QUIZ_PASS = 25;
+export const XP_COURSE_COMPLETE = 100;
+
+function meetsMilestoneRule(
+  user: Pick<User, 'xp' | 'lessonsCompleted' | 'coursesCompleted'>,
+  rule: MilestoneRule,
+  quizPassCount: number,
+): boolean {
+  switch (rule.kind) {
+    case 'xp':
+      return user.xp >= rule.min;
+    case 'lessons':
+      return user.lessonsCompleted >= rule.min;
+    case 'courses':
+      return user.coursesCompleted >= rule.min;
+    case 'quiz_passes':
+      return quizPassCount >= rule.min;
+    default:
+      return false;
+  }
+}
+
 @Injectable()
 export class RewardsService {
-  private readonly POINTS_PER_LESSON = 10;
-  private readonly POINTS_PER_COURSE = 50;
-
   constructor(
+    @InjectDataSource() private readonly dataSource: DataSource,
     @InjectRepository(Badge) private badgeRepository: Repository<Badge>,
     @InjectRepository(UserBadge)
     private userBadgeRepository: Repository<UserBadge>,
@@ -26,6 +53,9 @@ export class RewardsService {
 
   async ensureBadgeCatalog(): Promise<void> {
     for (const milestone of BADGE_MILESTONES) {
+      const xpThreshold =
+        milestone.rule.kind === 'xp' ? milestone.rule.min : 0;
+
       const existing = await this.badgeRepository.findOne({
         where: { key: milestone.key },
       });
@@ -35,7 +65,8 @@ export class RewardsService {
             key: milestone.key,
             name: milestone.name,
             description: milestone.description,
-            icon: milestone.icon,
+            xpThreshold,
+            iconUrl: milestone.iconUrl,
           }),
         );
         continue;
@@ -44,13 +75,15 @@ export class RewardsService {
       const next = {
         name: milestone.name,
         description: milestone.description,
-        icon: milestone.icon,
+        xpThreshold,
+        iconUrl: milestone.iconUrl,
       };
 
       const needsUpdate =
         existing.name !== next.name ||
         existing.description !== next.description ||
-        (existing.icon ?? null) !== (next.icon ?? null);
+        existing.xpThreshold !== next.xpThreshold ||
+        (existing.iconUrl ?? null) !== (next.iconUrl ?? null);
 
       if (needsUpdate) {
         await this.badgeRepository.update({ id: existing.id }, next);
@@ -78,136 +111,86 @@ export class RewardsService {
     return earned.map((ub) => ({ badge: ub.badge, awardedAt: ub.awardedAt }));
   }
 
-  async updateProgressAndAwardBadges(args: {
-    userId: string;
-    lessonsCompletedDelta?: number;
-    coursesCompletedDelta?: number;
-    activityId?: string;
-    activityType?: 'lesson' | 'course';
-  }): Promise<{
-    progress: {
-      lessonsCompleted: number;
-      coursesCompleted: number;
-      points: number;
-    };
-    newlyAwarded: Badge[];
-    pointsEarned: number;
-  }> {
-    let lessonsDelta = args.lessonsCompletedDelta ?? 0;
-    let coursesDelta = args.coursesCompletedDelta ?? 0;
-    let pointsToAdd = 0;
-
-    if (args.activityId && args.activityType) {
-      const existingReward = await this.rewardHistoryRepository.findOne({
-        where: {
-          userId: args.userId,
-          activityType: args.activityType,
-          activityId: args.activityId,
-        },
+  /**
+   * Increments user XP (and legacy `points` for existing stats/rank queries),
+   * records {@link RewardHistory}, then evaluates milestone badges.
+   */
+  async awardXP(
+    userId: string,
+    amount: number,
+    reason: XpRewardReason,
+  ): Promise<{ xp: number; newlyAwardedBadges: Badge[] }> {
+    await this.dataSource.transaction(async (manager) => {
+      const user = await manager.findOne(User, {
+        where: { id: userId },
+        lock: { mode: 'pessimistic_write' },
       });
-
-      if (!existingReward) {
-        if (args.activityType === 'lesson') {
-          pointsToAdd = this.POINTS_PER_LESSON;
-
-          if (lessonsDelta === 0) lessonsDelta = 1;
-        } else if (args.activityType === 'course') {
-          pointsToAdd = this.POINTS_PER_COURSE;
-
-          if (coursesDelta === 0) coursesDelta = 1;
-        }
-
-        await this.rewardHistoryRepository.save(
-          this.rewardHistoryRepository.create({
-            userId: args.userId,
-            activityType: args.activityType,
-            activityId: args.activityId,
-            points: pointsToAdd,
-          }),
-        );
-      } else {
-        lessonsDelta = 0;
-        coursesDelta = 0;
-        pointsToAdd = 0;
+      if (!user) {
+        throw new NotFoundException('User not found');
       }
-    } else {
-      if (lessonsDelta > 0)
-        pointsToAdd += lessonsDelta * this.POINTS_PER_LESSON;
-      if (coursesDelta > 0)
-        pointsToAdd += coursesDelta * this.POINTS_PER_COURSE;
-    }
 
-    if (lessonsDelta > 0 || coursesDelta > 0 || pointsToAdd > 0) {
-      if (lessonsDelta > 0) {
-        await this.userRepository.increment(
-          { id: args.userId },
-          'lessonsCompleted',
-          lessonsDelta,
-        );
-      }
-      if (coursesDelta > 0) {
-        await this.userRepository.increment(
-          { id: args.userId },
-          'coursesCompleted',
-          coursesDelta,
-        );
-      }
-      if (pointsToAdd > 0) {
-        await this.userRepository.increment(
-          { id: args.userId },
-          'points',
-          pointsToAdd,
-        );
-      }
-    }
+      const baseXp =
+        (user.xp ?? 0) > 0 ? user.xp! : (user.points ?? 0);
+      const nextXp = baseXp + amount;
+      user.xp = nextXp;
+      user.points = nextXp;
 
-    const newlyAwarded = await this.awardEligibleBadges(args.userId);
+      if (reason === XpRewardReason.LESSON_COMPLETE) {
+        user.lessonsCompleted = (user.lessonsCompleted ?? 0) + 1;
+      }
+      if (reason === XpRewardReason.COURSE_COMPLETE) {
+        user.coursesCompleted = (user.coursesCompleted ?? 0) + 1;
+      }
 
-    const user = await this.userRepository.findOneOrFail({
-      where: { id: args.userId },
-      select: ['id', 'lessonsCompleted', 'coursesCompleted', 'points'],
+      await manager.save(User, user);
+
+      await manager.getRepository(RewardHistory).save(
+        manager.getRepository(RewardHistory).create({
+          userId,
+          amount,
+          reason,
+        }),
+      );
     });
 
-    return {
-      progress: {
-        lessonsCompleted: user.lessonsCompleted,
-        coursesCompleted: user.coursesCompleted,
-        points: user.points,
-      },
-      newlyAwarded,
-      pointsEarned: pointsToAdd,
-    };
+    const newlyAwardedBadges = await this.checkAndAwardBadges(userId);
+    const user = await this.userRepository.findOneOrFail({
+      where: { id: userId },
+      select: ['xp'],
+    });
+
+    return { xp: user.xp, newlyAwardedBadges };
   }
 
-  async awardEligibleBadges(userId: string): Promise<Badge[]> {
+  async checkAndAwardBadges(userId: string): Promise<Badge[]> {
     await this.ensureBadgeCatalog();
 
     const user = await this.userRepository.findOneOrFail({
       where: { id: userId },
-      select: ['id', 'lessonsCompleted', 'coursesCompleted'],
+      select: ['id', 'xp', 'lessonsCompleted', 'coursesCompleted'],
     });
 
-    const milestonesByKey = new Map(BADGE_MILESTONES.map((m) => [m.key, m]));
+    const quizPassCount = await this.rewardHistoryRepository.count({
+      where: { userId, reason: XpRewardReason.QUIZ_PASS },
+    });
+
     const allBadges = await this.badgeRepository.find({
       where: BADGE_MILESTONES.map((m) => ({ key: m.key })),
     });
+
+    const milestonesByKey = new Map(BADGE_MILESTONES.map((m) => [m.key, m]));
 
     const earned = await this.userBadgeRepository.find({
       where: { userId },
       relations: { badge: true },
     });
-    const earnedKeys = new Set(earned.map((ub) => ub.badge.key));
+    const earnedIds = new Set(earned.map((ub) => ub.badgeId));
 
-    const eligible = allBadges.filter((badge) => {
-      if (earnedKeys.has(badge.key)) return false;
-      const milestone = milestonesByKey.get(badge.key);
+    const eligible = allBadges.filter((b) => {
+      if (earnedIds.has(b.id)) return false;
+      const milestone = milestonesByKey.get(b.key);
       if (!milestone) return false;
-
-      if (milestone.type === 'lessons_completed')
-        return user.lessonsCompleted >= milestone.threshold;
-      if (milestone.type === 'courses_completed')
-        return user.coursesCompleted >= milestone.threshold;
-      return false;
+      return meetsMilestoneRule(user, milestone.rule, quizPassCount);
     });
 
     const newlyAwarded: Badge[] = [];
@@ -227,11 +210,52 @@ export class RewardsService {
           `You earned a new badge: ${badge.name}.`,
           '/rewards',
         );
-      } catch (err) {
-        console.log('error', err);
+      } catch {
+        // Unique constraint race: ignore
       }
     }
 
     return newlyAwarded;
+  }
+
+  async getMyRewards(userId: string): Promise<{
+    xp: number;
+    badges: Array<{ badge: Badge; awardedAt: Date }>;
+    recentHistory: RewardHistory[];
+  }> {
+    const user = await this.userRepository.findOneOrFail({
+      where: { id: userId },
+      select: ['xp'],
+    });
+
+    const [badges, recentHistory] = await Promise.all([
+      this.getEarnedBadges(userId),
+      this.rewardHistoryRepository.find({
+        where: { userId },
+        order: { createdAt: 'DESC' },
+        take: 50,
+      }),
+    ]);
+
+    return {
+      xp: user.xp,
+      badges,
+      recentHistory,
+    };
+  }
+
+  async getLeaderboard(): Promise<
+    Array<{ username: string | null; xp: number }>
+  > {
+    const rows = await this.userRepository.find({
+      select: ['username', 'name', 'xp'],
+      order: { xp: 'DESC' },
+      take: 10,
+    });
+
+    return rows.map((u) => ({
+      username: u.username ?? u.name ?? null,
+      xp: u.xp ?? 0,
+    }));
   }
 }

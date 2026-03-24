@@ -9,7 +9,15 @@ describe('RewardsController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [RewardsController],
       providers: [
-        { provide: RewardsService, useValue: { getEarnedBadges: jest.fn(), updateProgressAndAwardBadges: jest.fn() } },
+        {
+          provide: RewardsService,
+          useValue: {
+            getEarnedBadges: jest.fn(),
+            getMyRewards: jest.fn(),
+            getLeaderboard: jest.fn(),
+            getBadgeMilestones: jest.fn(),
+          },
+        },
       ],
     }).compile();
 

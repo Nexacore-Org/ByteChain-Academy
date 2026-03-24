@@ -12,7 +12,7 @@ export class Badge {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  // Stable programmatic identifier (e.g. "lessons_5")
+  /** Stable programmatic identifier for seeding and lookups */
   @Index({ unique: true })
   @Column()
   key: string;
@@ -23,8 +23,12 @@ export class Badge {
   @Column({ type: 'text' })
   description: string;
 
+  /** Total XP at or above which this badge is earned */
+  @Column({ type: 'int' })
+  xpThreshold: number;
+
   @Column({ nullable: true })
-  icon?: string;
+  iconUrl?: string;
 
   @CreateDateColumn()
   createdAt: Date;

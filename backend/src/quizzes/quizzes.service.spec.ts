@@ -13,6 +13,8 @@ import { Lesson } from 'src/lessons/entities/lesson.entity';
 import { QuizSubmission } from '../quizzes/entities/quiz-submission.entity';
 import { QuestionType } from '../quizzes/entities/question.entity';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
+import { NotificationsService } from 'src/notifications/notifications.service';
+import { RewardsService } from 'src/rewards/rewards.service';
 
 describe('QuizzesService', () => {
   let service: QuizzesService;
@@ -63,6 +65,14 @@ describe('QuizzesService', () => {
         {
           provide: getRepositoryToken(QuizSubmission),
           useValue: mockQuizSubmissionRepository,
+        },
+        {
+          provide: NotificationsService,
+          useValue: { createNotification: jest.fn() },
+        },
+        {
+          provide: RewardsService,
+          useValue: { awardXP: jest.fn().mockResolvedValue({ xp: 0 }) },
         },
       ],
     }).compile();

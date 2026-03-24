@@ -1,61 +1,53 @@
-export type BadgeMilestoneType = 'lessons_completed' | 'courses_completed';
+export type MilestoneRule =
+  | { kind: 'xp'; min: number }
+  | { kind: 'lessons'; min: number }
+  | { kind: 'courses'; min: number }
+  | { kind: 'quiz_passes'; min: number };
 
 export interface BadgeMilestone {
   key: string;
   name: string;
   description: string;
-  icon?: string;
-  type: BadgeMilestoneType;
-  threshold: number;
+  iconUrl?: string;
+  /** Eligibility evaluated in {@link RewardsService.checkAndAwardBadges} */
+  rule: MilestoneRule;
 }
 
+/** Five milestone badges; eligibility uses XP and/or activity counts. */
 export const BADGE_MILESTONES: BadgeMilestone[] = [
   {
-    key: 'lessons_1',
+    key: 'first_lesson',
     name: 'First Lesson',
     description: 'Complete your first lesson.',
-    icon: '📘',
-    type: 'lessons_completed',
-    threshold: 1,
+    iconUrl: '📘',
+    rule: { kind: 'lessons', min: 1 },
   },
   {
-    key: 'lessons_5',
-    name: 'Lesson Explorer',
-    description: 'Complete 5 lessons.',
-    icon: '🧭',
-    type: 'lessons_completed',
-    threshold: 5,
+    key: 'five_lessons',
+    name: 'Five Lessons',
+    description: 'Complete five lessons.',
+    iconUrl: '🧭',
+    rule: { kind: 'lessons', min: 5 },
   },
   {
-    key: 'lessons_10',
-    name: 'Lesson Apprentice',
-    description: 'Complete 10 lessons.',
-    icon: '🧠',
-    type: 'lessons_completed',
-    threshold: 10,
+    key: 'first_quiz_pass',
+    name: 'First Quiz Pass',
+    description: 'Pass a quiz.',
+    iconUrl: '✅',
+    rule: { kind: 'quiz_passes', min: 1 },
   },
   {
-    key: 'courses_1',
-    name: 'First Course',
-    description: 'Complete your first course.',
-    icon: '🎓',
-    type: 'courses_completed',
-    threshold: 1,
+    key: 'course_completer',
+    name: 'Course Completer',
+    description: 'Complete a full course.',
+    iconUrl: '🎓',
+    rule: { kind: 'courses', min: 1 },
   },
   {
-    key: 'courses_3',
-    name: 'Course Collector',
-    description: 'Complete 3 courses.',
-    icon: '🏅',
-    type: 'courses_completed',
-    threshold: 3,
-  },
-  {
-    key: 'courses_5',
-    name: 'Course Master',
-    description: 'Complete 5 courses.',
-    icon: '👑',
-    type: 'courses_completed',
-    threshold: 5,
+    key: 'xp_500',
+    name: '500 XP Club',
+    description: 'Accumulate 500 total experience points.',
+    iconUrl: '🏆',
+    rule: { kind: 'xp', min: 500 },
   },
 ];

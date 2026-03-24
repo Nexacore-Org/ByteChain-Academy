@@ -9,6 +9,7 @@ import { QuizzesController } from './quizzes.controller';
 import { QuizzesService } from './quizzes.service';
 import { AuthModule } from '../auth/auth.module';
 import { NotificationsModule } from 'src/notifications/notifications.module';
+import { RewardsModule } from 'src/rewards/rewards.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { NotificationsModule } from 'src/notifications/notifications.module';
     PassportModule,
     AuthModule,
     NotificationsModule,
+    RewardsModule,
   ],
   controllers: [QuizzesController],
   providers: [QuizzesService],
