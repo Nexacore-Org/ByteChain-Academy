@@ -27,6 +27,18 @@ export class User {
   @Column({ nullable: true })
   name: string;
 
+  @Column({ nullable: true })
+  username: string;
+
+  @Column({ nullable: true })
+  bio: string;
+
+  @Column({ nullable: true })
+  walletAddress: string;
+
+  @Column({ nullable: true })
+  avatarUrl: string;
+
   @Column({
     type: 'varchar',
     default: UserRole.USER,
@@ -41,6 +53,12 @@ export class User {
 
   @Column({ type: 'int', default: 0 })
   points: number;
+
+  @Column({ type: 'int', default: 0 })
+  xp: number;
+
+  @Column({ type: 'int', default: 0 })
+  streak: number;
 
   @Column({ nullable: true })
   @Exclude()

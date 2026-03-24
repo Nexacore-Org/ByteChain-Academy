@@ -10,9 +10,15 @@ import {
   HttpStatus,
   UseInterceptors,
   ClassSerializerInterceptor,
+  Post,
+  UploadedFile,
+  Param,
+  ParseFilePipeBuilder,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateProfileDto } from '../users/dto/update-profile.dto';
-import { ProfileResponseDto } from '../users/dto/profile-response.dto';
+import { UserProfileResponseDto } from '../users/dto/user-profile-response.dto';
 
 import { plainToInstance } from 'class-transformer';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
@@ -20,23 +26,24 @@ import { UserService } from './users.service';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { UserRole } from './entities/user.entity';
-import { CertificateService } from '../certificates/certificates.service';
-import { CoursesService } from '../courses/courses.service';
+
+type AvatarUploadFile = {
+  size: number;
+  mimetype: string;
+  originalname: string;
+  buffer: Buffer;
+};
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
 @UseInterceptors(ClassSerializerInterceptor)
 export class UsersController {
-  constructor(
-    private readonly userService: UserService,
-    private readonly certificateService: CertificateService,
-    private readonly coursesService: CoursesService,
-  ) {}
+  constructor(private readonly userService: UserService) {}
 
-  @Get('profile')
-  async getProfile(@Request() req): Promise<ProfileResponseDto> {
-    const user = await this.userService.getProfile(req.user.id);
-    return plainToInstance(ProfileResponseDto, user);
+  @Get('me')
+  async getMyProfile(@Request() req): Promise<UserProfileResponseDto> {
+    const user = await this.userService.getMyProfile(req.user.id as string);
+    return plainToInstance(UserProfileResponseDto, user);
   }
 
   @Get('admin')
@@ -46,16 +53,51 @@ export class UsersController {
     return { message: 'Admin-only profile data' };
   }
 
-  @Patch('profile')
-  async updateProfile(
+  @Patch('me')
+  async updateMyProfile(
     @Request() req,
     @Body() updateProfileDto: UpdateProfileDto,
-  ): Promise<ProfileResponseDto> {
-    const user = await this.userService.updateProfile(
-      req.user.id,
-      updateProfileDto,
+  ): Promise<UserProfileResponseDto> {
+    await this.userService.updateProfile(req.user.id, updateProfileDto);
+    const updatedUser = await this.userService.getMyProfile(
+      req.user.id as string,
     );
-    return plainToInstance(ProfileResponseDto, user);
+    return plainToInstance(UserProfileResponseDto, updatedUser);
+  }
+
+  @Post('me/avatar')
+  @UseInterceptors(
+    FileInterceptor('avatar', {
+      limits: {
+        fileSize: Number(process.env.MAX_AVATAR_SIZE_MB || 2) * 1024 * 1024,
+      },
+      fileFilter: (_req, file, cb) => {
+        if (!file.mimetype.startsWith('image/')) {
+          return cb(
+            new BadRequestException('Only image files are allowed'),
+            false,
+          );
+        }
+        cb(null, true);
+      },
+    }),
+  )
+  async uploadMyAvatar(
+    @Request() req,
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({ fileType: /(jpg|jpeg|png|webp|gif)$/ })
+        .addMaxSizeValidator({
+          maxSize: Number(process.env.MAX_AVATAR_SIZE_MB || 2) * 1024 * 1024,
+        })
+        .build({
+          fileIsRequired: true,
+          errorHttpStatusCode: HttpStatus.BAD_REQUEST,
+        }),
+    )
+    file: AvatarUploadFile,
+  ): Promise<{ avatarUrl: string }> {
+    return this.userService.uploadAvatar(req.user.id as string, file);
   }
 
   @Delete('profile')
@@ -65,18 +107,28 @@ export class UsersController {
   }
 
   @Get('me/stats')
-  async getMeStats(@Request() req): Promise<{
+  async getMyStats(@Request() req): Promise<{
     courseCount: number;
+    completedCourseCount: number;
     certificateCount: number;
     xp: number;
+    streak: number;
+    badgesCount: number;
+    rank: number;
   }> {
-    const userId = req.user.id as string;
-    const [userCourses, userCerts] = await Promise.all([
-      this.coursesService.findUserCourses(userId),
-      this.certificateService.getCertificatesByUser(userId),
-    ]);
-    const courseCount = userCourses.length;
-    const certificateCount = userCerts.length;
-    return this.userService.getStats(userId, courseCount, certificateCount);
+    return this.userService.getMyStats(req.user.id as string);
+  }
+
+  @Get(':id/public')
+  async getPublicProfile(@Param('id') id: string): Promise<{
+    id: string;
+    username: string | null;
+    xp: number;
+    badgesCount: number;
+    coursesCompleted: number;
+    avatarUrl: string | null;
+    bio: string | null;
+  }> {
+    return this.userService.getPublicProfile(id);
   }
 }

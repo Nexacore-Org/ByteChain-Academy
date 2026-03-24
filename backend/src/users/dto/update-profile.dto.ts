@@ -5,5 +5,10 @@ export class UpdateProfileDto {
   @IsString()
   @MinLength(2)
   @MaxLength(100)
-  name?: string;
+  username?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  bio?: string;
 }
