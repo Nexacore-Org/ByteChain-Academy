@@ -4,6 +4,8 @@ import { ProgressService } from './progress.service';
 import { Progress } from './entities/progress.entity';
 import { Lesson } from 'src/lessons/entities/lesson.entity';
 import { CertificateService } from 'src/certificates/certificates.service';
+import { NotificationsService } from 'src/notifications/notifications.service';
+import { RewardsService } from 'src/rewards/rewards.service';
 
 describe('ProgressService', () => {
   let service: ProgressService;
@@ -29,6 +31,14 @@ describe('ProgressService', () => {
         {
           provide: CertificateService,
           useValue: { issueCertificateForCourse: jest.fn() },
+        },
+        {
+          provide: NotificationsService,
+          useValue: { createNotification: jest.fn() },
+        },
+        {
+          provide: RewardsService,
+          useValue: { awardXP: jest.fn().mockResolvedValue({ xp: 0 }) },
         },
       ],
     }).compile();

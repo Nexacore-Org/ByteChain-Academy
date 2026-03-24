@@ -15,6 +15,9 @@ import { SubmitQuizDto } from './dto/submit-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { NotificationType } from 'src/notifications/entities/notification.entity';
+import { RewardsService } from 'src/rewards/rewards.service';
+import { XP_QUIZ_PASS } from 'src/rewards/rewards.service';
+import { XpRewardReason } from 'src/rewards/entities/reward-history.entity';
 
 @Injectable()
 export class QuizzesService {
@@ -28,6 +31,7 @@ export class QuizzesService {
     @InjectRepository(QuizSubmission)
     private quizSubmissionRepository: Repository<QuizSubmission>,
     private readonly notificationsService: NotificationsService,
+    private readonly rewardsService: RewardsService,
   ) {}
 
   async create(createQuizDto: CreateQuizDto): Promise<Quiz> {
@@ -219,6 +223,11 @@ export class QuizzesService {
       await this.quizSubmissionRepository.save(submission);
 
     if (savedSubmission.passed) {
+      await this.rewardsService.awardXP(
+        userId,
+        XP_QUIZ_PASS,
+        XpRewardReason.QUIZ_PASS,
+      );
       await this.notificationsService.createNotification(
         userId,
         NotificationType.QUIZ_PASSED,

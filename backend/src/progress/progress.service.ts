@@ -8,6 +8,12 @@ import {
   NotificationType,
 } from 'src/notifications/entities/notification.entity';
 import { NotificationsService } from 'src/notifications/notifications.service';
+import { RewardsService } from 'src/rewards/rewards.service';
+import {
+  XP_COURSE_COMPLETE,
+  XP_LESSON_COMPLETE,
+} from 'src/rewards/rewards.service';
+import { XpRewardReason } from 'src/rewards/entities/reward-history.entity';
 
 @Injectable()
 export class ProgressService {
@@ -18,6 +24,7 @@ export class ProgressService {
     private readonly lessonRepository: Repository<Lesson>,
     private readonly certificateService: CertificateService,
     private readonly notificationsService: NotificationsService,
+    private readonly rewardsService: RewardsService,
   ) {}
 
   /**
@@ -54,6 +61,11 @@ export class ProgressService {
     await this.progressRepository.save(progress);
 
     if (!alreadyCompleted) {
+      await this.rewardsService.awardXP(
+        userId,
+        XP_LESSON_COMPLETE,
+        XpRewardReason.LESSON_COMPLETE,
+      );
       await this.notificationsService.createNotification(
         userId,
         NotificationType.LESSON_COMPLETE,
@@ -69,6 +81,11 @@ export class ProgressService {
 
     if (allLessonsCompleted) {
       if (!alreadyCompleted) {
+        await this.rewardsService.awardXP(
+          userId,
+          XP_COURSE_COMPLETE,
+          XpRewardReason.COURSE_COMPLETE,
+        );
         await this.notificationsService.createNotification(
           userId,
           NotificationType.COURSE_COMPLETE,
