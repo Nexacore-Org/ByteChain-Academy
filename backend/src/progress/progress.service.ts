@@ -4,6 +4,10 @@ import { CertificateService } from 'src/certificates/certificates.service';
 import { Repository } from 'typeorm';
 import { Progress } from './entities/progress.entity';
 import { Lesson } from 'src/lessons/entities/lesson.entity';
+import {
+  NotificationType,
+} from 'src/notifications/entities/notification.entity';
+import { NotificationsService } from 'src/notifications/notifications.service';
 
 @Injectable()
 export class ProgressService {
@@ -13,6 +17,7 @@ export class ProgressService {
     @InjectRepository(Lesson)
     private readonly lessonRepository: Repository<Lesson>,
     private readonly certificateService: CertificateService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   /**
@@ -20,6 +25,11 @@ export class ProgressService {
    * Triggers certificate auto-issuance when all lessons in the course are completed.
    */
   async completeLesson(userId: string, courseId: string, lessonId: string) {
+    const alreadyCompleted = await this.progressRepository.findOne({
+      where: { userId, lessonId, completed: true },
+      select: ['id'],
+    });
+
     let progress = await this.progressRepository.findOne({
       where: { userId, lessonId },
       relations: ['user', 'lesson', 'course'],
@@ -43,12 +53,29 @@ export class ProgressService {
 
     await this.progressRepository.save(progress);
 
+    if (!alreadyCompleted) {
+      await this.notificationsService.createNotification(
+        userId,
+        NotificationType.LESSON_COMPLETE,
+        'You completed a lesson.',
+        `/courses/${courseId}/lessons/${lessonId}`,
+      );
+    }
+
     const allLessonsCompleted = await this.checkAllLessonsCompleted(
       userId,
       courseId,
     );
 
     if (allLessonsCompleted) {
+      if (!alreadyCompleted) {
+        await this.notificationsService.createNotification(
+          userId,
+          NotificationType.COURSE_COMPLETE,
+          'You completed a course.',
+          `/courses/${courseId}`,
+        );
+      }
       await this.certificateService.issueCertificateForCourse(userId, courseId);
     }
 
@@ -61,7 +88,9 @@ export class ProgressService {
   async getCourseProgress(
     userId: string,
     courseId: string,
-  ): Promise<{ lessonId: string; completed: boolean; completedAt: Date | null }[]> {
+  ): Promise<
+    { lessonId: string; completed: boolean; completedAt: Date | null }[]
+  > {
     const progressList = await this.progressRepository.find({
       where: { userId, courseId },
       relations: ['lesson'],

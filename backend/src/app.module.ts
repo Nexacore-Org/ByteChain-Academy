@@ -16,6 +16,7 @@ import { LessonsModule } from './lessons/lessons.module';
 import { ProgressModule } from './progress/progress.module';
 import { QuizzesModule } from './quizzes/quizzes.module';
 import { AdminModule } from './admin/admin.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { AdminModule } from './admin/admin.module';
     LessonsModule,
     ProgressModule,
     QuizzesModule,
+    NotificationsModule,
     AdminModule,
   ],
   controllers: [AppController],
@@ -57,4 +59,3 @@ import { AdminModule } from './admin/admin.module';
   ],
 })
 export class AppModule {}
-
