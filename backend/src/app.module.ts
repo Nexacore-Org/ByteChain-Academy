@@ -17,6 +17,7 @@ import { QuizzesModule } from './quizzes/quizzes.module';
 import { AdminModule } from './admin/admin.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AuthThrottlerGuard } from './common/guards/auth-throttler.guard';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { AuthThrottlerGuard } from './common/guards/auth-throttler.guard';
     ProgressModule,
     QuizzesModule,
     NotificationsModule,
+    AnalyticsModule,
     AdminModule,
   ],
   controllers: [AppController],
