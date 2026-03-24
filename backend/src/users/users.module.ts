@@ -6,10 +6,18 @@ import { UsersController } from './users.controller';
 import { User } from './entities/user.entity';
 import { CertificatesModule } from '../certificates/certificates.module';
 import { CoursesModule } from '../courses/courses.module';
+import { Certificate } from '../certificates/entities/certificate.entity';
+import { UserBadge } from '../rewards/entities/user-badge.entity';
+import { CourseRegistration } from '../courses/entities/course-registration.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([
+      User,
+      Certificate,
+      UserBadge,
+      CourseRegistration,
+    ]),
     CertificatesModule,
     CoursesModule,
   ],
