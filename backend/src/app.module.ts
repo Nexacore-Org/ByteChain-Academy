@@ -15,6 +15,7 @@ import { CoursesModule } from './courses/courses.module';
 import { LessonsModule } from './lessons/lessons.module';
 import { ProgressModule } from './progress/progress.module';
 import { QuizzesModule } from './quizzes/quizzes.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { QuizzesModule } from './quizzes/quizzes.module';
     LessonsModule,
     ProgressModule,
     QuizzesModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [
