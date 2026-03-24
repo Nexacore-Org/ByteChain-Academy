@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CommonModule } from './common/common.module';
-import { RateLimitGuard } from './common/guards/rate-limit.guard';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { RewardsModule } from './rewards/rewards.module';
@@ -17,6 +16,7 @@ import { ProgressModule } from './progress/progress.module';
 import { QuizzesModule } from './quizzes/quizzes.module';
 import { AdminModule } from './admin/admin.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { AuthThrottlerGuard } from './common/guards/auth-throttler.guard';
 
 @Module({
   imports: [
@@ -29,13 +29,16 @@ import { NotificationsModule } from './notifications/notifications.module';
       autoLoadEntities: true,
       synchronize: true,
     }),
-    ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          ttl: 60,
-          limit: 60,
-        },
-      ],
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        throttlers: [
+          {
+            ttl: Number(configService.get<string>('THROTTLE_TTL') ?? 60),
+            limit: Number(configService.get<string>('THROTTLE_LIMIT') ?? 60),
+          },
+        ],
+      }),
     }),
     CommonModule,
     AuthModule,
@@ -54,7 +57,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     AppService,
     {
       provide: APP_GUARD,
-      useClass: RateLimitGuard,
+      useClass: AuthThrottlerGuard,
     },
   ],
 })
