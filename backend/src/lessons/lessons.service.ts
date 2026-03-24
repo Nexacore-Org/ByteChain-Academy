@@ -140,4 +140,23 @@ export class LessonsService {
 
     await this.lessonRepository.remove(lesson);
   }
+
+  async reorderLessons(
+    courseId: string,
+    orderedIds: string[],
+  ): Promise<void> {
+    const course = await this.courseRepository.findOne({
+      where: { id: courseId },
+    });
+
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${courseId} not found`);
+    }
+
+    await Promise.all(
+      orderedIds.map((id, index) =>
+        this.lessonRepository.update({ id, courseId }, { order: index }),
+      ),
+    );
+  }
 }
