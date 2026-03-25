@@ -4,8 +4,17 @@ import { CoursesService } from './courses.service';
 import { Course } from './entities/course.entity';
 import { CourseRegistration } from './entities/course-registration.entity';
 import { PaginationService } from 'src/common/services/pagination.service';
+import { Lesson } from 'src/lessons/entities/lesson.entity';
+import { Progress } from 'src/progress/entities/progress.entity';
 
-const mockRepo = () => ({ findOne: jest.fn(), find: jest.fn(), create: jest.fn(), save: jest.fn() });
+const mockRepo = () => ({
+  findOne: jest.fn(),
+  find: jest.fn(),
+  create: jest.fn(),
+  save: jest.fn(),
+  delete: jest.fn(),
+  count: jest.fn(),
+});
 
 describe('CoursesService', () => {
   let service: CoursesService;
@@ -15,8 +24,26 @@ describe('CoursesService', () => {
       providers: [
         CoursesService,
         { provide: getRepositoryToken(Course), useValue: mockRepo() },
-        { provide: getRepositoryToken(CourseRegistration), useValue: mockRepo() },
-        { provide: PaginationService, useValue: { paginate: jest.fn().mockResolvedValue({ data: [], total: 0, page: 1, limit: 10, totalPages: 0 }) } },
+        {
+          provide: getRepositoryToken(CourseRegistration),
+          useValue: mockRepo(),
+        },
+        { provide: getRepositoryToken(Lesson), useValue: mockRepo() },
+        { provide: getRepositoryToken(Progress), useValue: mockRepo() },
+        {
+          provide: PaginationService,
+          useValue: {
+            paginate: jest
+              .fn()
+              .mockResolvedValue({
+                data: [],
+                total: 0,
+                page: 1,
+                limit: 10,
+                totalPages: 0,
+              }),
+          },
+        },
       ],
     }).compile();
 

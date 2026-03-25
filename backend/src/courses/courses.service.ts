@@ -1,6 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, Repository } from 'typeorm';
+import { ILike, In, Repository } from 'typeorm';
 import { CourseRegistration } from '../courses/entities/course-registration.entity';
 import { PaginationService } from '../common/services/pagination.service';
 import { CourseResponseDto } from './dto/course-response.dto';
@@ -8,6 +11,13 @@ import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { Course } from './entities/course.entity';
 import { PaginatedResult } from '../common/services/pagination.service';
+import { Lesson } from '../lessons/entities/lesson.entity';
+import { Progress } from '../progress/entities/progress.entity';
+import {
+  CourseRegistrationResponseDto,
+  EnrollmentStatusResponseDto,
+  EnrolledCourseResponseDto,
+} from './dto/enrollment-response.dto';
 
 @Injectable()
 export class CoursesService {
@@ -16,6 +26,10 @@ export class CoursesService {
     private courseRepository: Repository<Course>,
     @InjectRepository(CourseRegistration)
     private courseRegistrationRepository: Repository<CourseRegistration>,
+    @InjectRepository(Lesson)
+    private lessonRepository: Repository<Lesson>,
+    @InjectRepository(Progress)
+    private progressRepository: Repository<Progress>,
     private readonly paginationService: PaginationService,
   ) {}
 
@@ -28,33 +42,40 @@ export class CoursesService {
   async findAll(
     page: number = 1,
     limit: number = 10,
+    userId?: string,
+  ): Promise<PaginatedResult<CourseResponseDto>> {
+    return this.findAllPaginated(page, limit, userId);
+  }
+
+  async findAllPaginated(
+    page: number,
+    limit: number,
+    userId?: string,
   ): Promise<PaginatedResult<CourseResponseDto>> {
     const result = await this.paginationService.paginate<Course>(
       this.courseRepository,
       { page, limit },
       { where: { published: true }, order: { createdAt: 'DESC' } },
     );
-    return {
-      ...result,
-      data: result.data.map((course) => new CourseResponseDto(course)),
-    };
-  }
 
-  async findAllPaginated(
-    page: number,
-    limit: number,
-  ): Promise<PaginatedResult<CourseResponseDto>> {
-    const result = await this.paginationService.paginate(
-      this.courseRepository,
-      { page, limit },
-      {
-        where: { published: true },
-        order: { createdAt: 'DESC' },
-      },
-    );
+    let enrolledIds = new Set<string>();
+    if (userId && result.data.length > 0) {
+      const courseIds = result.data.map((c) => c.id);
+      const regs = await this.courseRegistrationRepository.find({
+        where: { userId, courseId: In(courseIds) },
+        select: ['courseId'],
+      });
+      enrolledIds = new Set(regs.map((r) => r.courseId));
+    }
+
     return {
       ...result,
-      data: result.data.map((course) => new CourseResponseDto(course)),
+      data: result.data.map((course) =>
+        new CourseResponseDto(course, {
+          isEnrolled:
+            userId !== undefined ? enrolledIds.has(course.id) : undefined,
+        }),
+      ),
     };
   }
 
@@ -80,15 +101,132 @@ export class CoursesService {
     return new CourseResponseDto(updatedCourse);
   }
 
-  async findUserCourses(userId: string): Promise<CourseResponseDto[]> {
+  /**
+   * Idempotent: returns existing registration if already enrolled.
+   */
+  async enroll(
+    userId: string,
+    courseId: string,
+  ): Promise<CourseRegistrationResponseDto> {
+    const course = await this.courseRepository.findOne({
+      where: { id: courseId, published: true },
+    });
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${courseId} not found`);
+    }
+
+    const existing = await this.courseRegistrationRepository.findOne({
+      where: { userId, courseId },
+    });
+    if (existing) {
+      return this.toRegistrationDto(existing);
+    }
+
+    const registration = this.courseRegistrationRepository.create({
+      userId,
+      courseId,
+    });
+    try {
+      const saved = await this.courseRegistrationRepository.save(registration);
+      return this.toRegistrationDto(saved);
+    } catch (err) {
+      const again = await this.courseRegistrationRepository.findOne({
+        where: { userId, courseId },
+      });
+      if (again) {
+        return this.toRegistrationDto(again);
+      }
+      throw err;
+    }
+  }
+
+  async unenroll(userId: string, courseId: string): Promise<void> {
+    const course = await this.courseRepository.findOne({
+      where: { id: courseId },
+    });
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${courseId} not found`);
+    }
+
+    const result = await this.courseRegistrationRepository.delete({
+      userId,
+      courseId,
+    });
+    if (!result.affected) {
+      throw new NotFoundException('Enrolment not found');
+    }
+  }
+
+  async getEnrollmentStatus(
+    userId: string,
+    courseId: string,
+  ): Promise<EnrollmentStatusResponseDto> {
+    const course = await this.courseRepository.findOne({
+      where: { id: courseId },
+    });
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${courseId} not found`);
+    }
+
+    const reg = await this.courseRegistrationRepository.findOne({
+      where: { userId, courseId },
+    });
+    if (!reg) {
+      return { enrolled: false };
+    }
+    return { enrolled: true, enrolledAt: reg.enrolledAt };
+  }
+
+  async getEnrolledCourses(
+    userId: string,
+  ): Promise<EnrolledCourseResponseDto[]> {
     const registrations = await this.courseRegistrationRepository.find({
       where: { userId },
       relations: ['course'],
+      order: { enrolledAt: 'DESC' },
     });
 
-    return registrations.map(
-      (registration) => new CourseResponseDto(registration.course),
-    );
+    const out: EnrolledCourseResponseDto[] = [];
+
+    for (const reg of registrations) {
+      const course = reg.course;
+      if (!course) continue;
+
+      const totalLessons = await this.lessonRepository.count({
+        where: { courseId: course.id },
+      });
+      const completedLessons = await this.progressRepository.count({
+        where: { userId, courseId: course.id, completed: true },
+      });
+      const progressPercent =
+        totalLessons === 0
+          ? 0
+          : Math.round((completedLessons / totalLessons) * 100);
+
+      out.push({
+        id: course.id,
+        title: course.title,
+        description: course.description,
+        published: course.published,
+        createdAt: course.createdAt,
+        updatedAt: course.updatedAt,
+        progressPercent,
+        enrolledAt: reg.enrolledAt,
+      });
+    }
+
+    return out;
+  }
+
+  private toRegistrationDto(
+    r: CourseRegistration,
+  ): CourseRegistrationResponseDto {
+    return {
+      id: r.id,
+      userId: r.userId,
+      courseId: r.courseId,
+      enrolledAt: r.enrolledAt,
+    };
   }
 
   async findAllAdmin(
@@ -137,25 +275,4 @@ export class CoursesService {
     await this.courseRepository.remove(course);
   }
 
-  async enrollUser(userId: string, courseId: string): Promise<void> {
-    const course = await this.courseRepository.findOne({
-      where: { id: courseId },
-    });
-    if (!course) {
-      throw new NotFoundException(`Course with ID ${courseId} not found`);
-    }
-
-    const existingRegistration =
-      await this.courseRegistrationRepository.findOne({
-        where: { userId, courseId },
-      });
-
-    if (!existingRegistration) {
-      const registration = this.courseRegistrationRepository.create({
-        userId,
-        courseId,
-      });
-      await this.courseRegistrationRepository.save(registration);
-    }
-  }
 }

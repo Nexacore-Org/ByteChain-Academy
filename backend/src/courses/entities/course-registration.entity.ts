@@ -1,8 +1,17 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  JoinColumn,
+  Unique,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Course } from './course.entity';
 
 @Entity('course_registrations')
+@Unique(['userId', 'courseId'])
 export class CourseRegistration {
     @PrimaryGeneratedColumn('uuid')
     id: string;
