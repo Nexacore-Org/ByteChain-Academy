@@ -18,6 +18,8 @@ import { AdminModule } from './admin/admin.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AuthThrottlerGuard } from './common/guards/auth-throttler.guard';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { DAOModule } from './dao/dao.module';
 
 @Module({
   imports: [
@@ -53,6 +55,8 @@ import { AnalyticsModule } from './analytics/analytics.module';
     NotificationsModule,
     AnalyticsModule,
     AdminModule,
+    ScheduleModule.forRoot(),
+    DAOModule,
   ],
   controllers: [AppController],
   providers: [
