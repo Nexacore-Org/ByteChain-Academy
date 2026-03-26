@@ -7,10 +7,14 @@ import { CoursesService } from './courses.service';
 import { CourseRegistration } from './entities/course-registration.entity';
 import { AuthModule } from '../auth/auth.module';
 import { PaginationService } from '../common/services/pagination.service';
-import { LessonsModule } from '../lessons/lessons.module';
+import { Lesson } from '../lessons/entities/lesson.entity';
+import { Progress } from '../progress/entities/progress.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Course, CourseRegistration]), forwardRef(() => AuthModule), forwardRef(() => LessonsModule)],
+  imports: [
+    TypeOrmModule.forFeature([Course, CourseRegistration, Lesson, Progress]),
+    AuthModule,
+  ],
   controllers: [CoursesController, AdminCoursesController],
   providers: [CoursesService, PaginationService],
   exports: [CoursesService],

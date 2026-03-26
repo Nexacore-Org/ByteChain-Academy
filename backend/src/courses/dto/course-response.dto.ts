@@ -1,6 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { IsString, IsNotEmpty, IsBoolean, IsDate } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsBoolean,
+  IsDate,
+  IsOptional,
+} from 'class-validator';
 
 export class CourseResponseDto {
   @IsString()
@@ -24,12 +30,30 @@ export class CourseResponseDto {
   @IsDate()
   updatedAt: Date;
 
-  constructor(course: any) {
+  /** Present on GET /courses when the request includes a valid JWT */
+  @IsOptional()
+  @IsBoolean()
+  isEnrolled?: boolean;
+
+  constructor(
+    course: {
+      id: string;
+      title: string;
+      description: string;
+      published: boolean;
+      createdAt: Date;
+      updatedAt: Date;
+    },
+    options?: { isEnrolled?: boolean },
+  ) {
     this.id = course.id;
     this.title = course.title;
     this.description = course.description;
     this.published = course.published;
     this.createdAt = course.createdAt;
     this.updatedAt = course.updatedAt;
+    if (options?.isEnrolled !== undefined) {
+      this.isEnrolled = options.isEnrolled;
+    }
   }
 }
