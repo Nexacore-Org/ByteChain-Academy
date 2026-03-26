@@ -37,7 +37,7 @@ export class Notification {
   @Column({ type: 'text' })
   message: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   link: string | null;
 
   @Column({ default: false })
