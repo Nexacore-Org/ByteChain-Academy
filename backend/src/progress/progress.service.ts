@@ -4,9 +4,7 @@ import { CertificateService } from 'src/certificates/certificates.service';
 import { Repository } from 'typeorm';
 import { Progress } from './entities/progress.entity';
 import { Lesson } from 'src/lessons/entities/lesson.entity';
-import {
-  NotificationType,
-} from 'src/notifications/entities/notification.entity';
+import { NotificationType } from 'src/notifications/entities/notification.entity';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { RewardsService } from 'src/rewards/rewards.service';
 import {
@@ -14,6 +12,7 @@ import {
   XP_LESSON_COMPLETE,
 } from 'src/rewards/rewards.service';
 import { XpRewardReason } from 'src/rewards/entities/reward-history.entity';
+import { StreakService } from 'src/users/streak.service';
 
 @Injectable()
 export class ProgressService {
@@ -25,6 +24,7 @@ export class ProgressService {
     private readonly certificateService: CertificateService,
     private readonly notificationsService: NotificationsService,
     private readonly rewardsService: RewardsService,
+    private readonly streakService: StreakService,
   ) {}
 
   /**
@@ -72,6 +72,7 @@ export class ProgressService {
         'You completed a lesson.',
         `/courses/${courseId}/lessons/${lessonId}`,
       );
+      await this.streakService.updateStreak(userId);
     }
 
     const allLessonsCompleted = await this.checkAllLessonsCompleted(

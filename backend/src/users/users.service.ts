@@ -247,6 +247,8 @@ export class UserService {
     certificateCount: number;
     xp: number;
     streak: number;
+    longestStreak: number;
+    lastActiveAt: Date | null;
     badgesCount: number;
     rank: number;
   }> {
@@ -269,6 +271,8 @@ export class UserService {
       certificateCount,
       xp: resolvedXp,
       streak: user.streak ?? 0,
+      longestStreak: user.longestStreak ?? 0,
+      lastActiveAt: user.lastActiveAt ?? null,
       badgesCount,
       rank: usersAhead + 1,
     };

@@ -75,7 +75,8 @@ export class AnalyticsService {
 
   async getCoursePerformance(): Promise<CoursePerformanceDto[]> {
     const cacheKey = 'analytics:course-performance';
-    const cached = await this.cacheManager.get<CoursePerformanceDto[]>(cacheKey);
+    const cached =
+      await this.cacheManager.get<CoursePerformanceDto[]>(cacheKey);
     if (cached) return cached;
 
     const rows = await this.courseRepository
@@ -114,9 +115,7 @@ export class AnalyticsService {
         enrollmentCount,
         completionCount,
         completionRate,
-        averageQuizScore: Number(
-          Number(row.averageQuizScore ?? 0).toFixed(2),
-        ),
+        averageQuizScore: Number(Number(row.averageQuizScore ?? 0).toFixed(2)),
       };
     });
 
@@ -126,7 +125,8 @@ export class AnalyticsService {
 
   async getLearnerActivity(): Promise<LearnerActivityPointDto[]> {
     const cacheKey = 'analytics:learner-activity';
-    const cached = await this.cacheManager.get<LearnerActivityPointDto[]>(cacheKey);
+    const cached =
+      await this.cacheManager.get<LearnerActivityPointDto[]>(cacheKey);
     if (cached) return cached;
 
     const end = new Date();
@@ -137,15 +137,17 @@ export class AnalyticsService {
 
     const rows = await this.progressRepository
       .createQueryBuilder('p')
-      .select("DATE(p.completedAt)", 'activityDate')
+      .select('DATE(p.completedAt)', 'activityDate')
       .addSelect('COUNT(DISTINCT p.userId)', 'activeUsers')
       .where('p.completed = :completed', { completed: true })
       .andWhere('p.completedAt BETWEEN :start AND :end', { start, end })
-      .groupBy("DATE(p.completedAt)")
+      .groupBy('DATE(p.completedAt)')
       .orderBy('activityDate', 'ASC')
       .getRawMany<{ activityDate: string; activeUsers: string }>();
 
-    const rowMap = new Map(rows.map((row) => [row.activityDate, Number(row.activeUsers)]));
+    const rowMap = new Map(
+      rows.map((row) => [row.activityDate, Number(row.activeUsers)]),
+    );
     const payload: LearnerActivityPointDto[] = [];
     for (let i = 0; i < 30; i++) {
       const date = new Date(start);
@@ -196,7 +198,8 @@ export class AnalyticsService {
       }>();
 
     const payload = rows.map((row) => {
-      const resolvedXp = Number(row.xp ?? 0) > 0 ? Number(row.xp) : Number(row.points ?? 0);
+      const resolvedXp =
+        Number(row.xp ?? 0) > 0 ? Number(row.xp) : Number(row.points ?? 0);
       return {
         userId: row.userId,
         username: row.username ?? row.name ?? null,

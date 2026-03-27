@@ -63,9 +63,13 @@ export class LessonsService {
     page: number,
     limit: number,
   ): Promise<PaginatedResult<Lesson>> {
-    return this.paginationService.paginate(this.lessonRepository, { page, limit }, {
-      order: { order: 'ASC', createdAt: 'ASC' },
-    });
+    return this.paginationService.paginate(
+      this.lessonRepository,
+      { page, limit },
+      {
+        order: { order: 'ASC', createdAt: 'ASC' },
+      },
+    );
   }
 
   async findAllByCoursePaginated(
@@ -81,10 +85,14 @@ export class LessonsService {
       throw new NotFoundException(`Course with ID ${courseId} not found`);
     }
 
-    return this.paginationService.paginate(this.lessonRepository, { page, limit }, {
-      where: { courseId },
-      order: { order: 'ASC', createdAt: 'ASC' },
-    });
+    return this.paginationService.paginate(
+      this.lessonRepository,
+      { page, limit },
+      {
+        where: { courseId },
+        order: { order: 'ASC', createdAt: 'ASC' },
+      },
+    );
   }
 
   async findOne(id: string): Promise<Lesson> {
@@ -141,10 +149,7 @@ export class LessonsService {
     await this.lessonRepository.remove(lesson);
   }
 
-  async reorderLessons(
-    courseId: string,
-    orderedIds: string[],
-  ): Promise<void> {
+  async reorderLessons(courseId: string, orderedIds: string[]): Promise<void> {
     const course = await this.courseRepository.findOne({
       where: { id: courseId },
     });

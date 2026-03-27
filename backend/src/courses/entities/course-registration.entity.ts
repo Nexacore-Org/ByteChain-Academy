@@ -13,23 +13,23 @@ import { Course } from './course.entity';
 @Entity('course_registrations')
 @Unique(['userId', 'courseId'])
 export class CourseRegistration {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-    @ManyToOne(() => User, { eager: false })
-    @JoinColumn({ name: 'userId' })
-    user: User;
+  @ManyToOne(() => User, { eager: false })
+  @JoinColumn({ name: 'userId' })
+  user: User;
 
-    @Column()
-    userId: string;
+  @Column()
+  userId: string;
 
-    @ManyToOne(() => Course, (course) => course.registrations, { eager: false })
-    @JoinColumn({ name: 'courseId' })
-    course: Course;
+  @ManyToOne(() => Course, (course) => course.registrations, { eager: false })
+  @JoinColumn({ name: 'courseId' })
+  course: Course;
 
-    @Column()
-    courseId: string;
+  @Column()
+  courseId: string;
 
-    @CreateDateColumn()
-    enrolledAt: Date;
+  @CreateDateColumn()
+  enrolledAt: Date;
 }

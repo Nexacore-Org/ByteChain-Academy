@@ -27,8 +27,14 @@ export interface LearningStats {
 
 export interface UserStats {
   courseCount: number;
+  completedCourseCount: number;
   certificateCount: number;
   xp: number;
+  streak: number;
+  longestStreak: number;
+  lastActiveAt: string | null;
+  badgesCount: number;
+  rank: number;
 }
 
 export interface NotificationPreferences {

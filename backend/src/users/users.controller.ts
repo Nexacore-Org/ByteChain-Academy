@@ -113,6 +113,8 @@ export class UsersController {
     certificateCount: number;
     xp: number;
     streak: number;
+    longestStreak: number;
+    lastActiveAt: Date | null;
     badgesCount: number;
     rank: number;
   }> {

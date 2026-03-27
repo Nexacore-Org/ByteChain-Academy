@@ -5,7 +5,12 @@ import { Certificate } from './entities/certificate.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Course } from 'src/courses/entities/course.entity';
 
-const mockRepo = () => ({ findOne: jest.fn(), find: jest.fn(), create: jest.fn(), save: jest.fn() });
+const mockRepo = () => ({
+  findOne: jest.fn(),
+  find: jest.fn(),
+  create: jest.fn(),
+  save: jest.fn(),
+});
 
 describe('CertificateService', () => {
   let service: CertificateService;
