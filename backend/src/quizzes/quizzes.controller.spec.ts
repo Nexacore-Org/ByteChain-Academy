@@ -12,7 +12,18 @@ describe('QuizzesController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [QuizzesController],
       providers: [
-        { provide: QuizzesService, useValue: { create: jest.fn(), findByLessonId: jest.fn(), update: jest.fn(), findOne: jest.fn(), submitQuiz: jest.fn(), getUserSubmission: jest.fn(), getUserSubmissions: jest.fn() } },
+        {
+          provide: QuizzesService,
+          useValue: {
+            create: jest.fn(),
+            findByLessonId: jest.fn(),
+            update: jest.fn(),
+            findOne: jest.fn(),
+            submitQuiz: jest.fn(),
+            getUserSubmission: jest.fn(),
+            getUserSubmissions: jest.fn(),
+          },
+        },
       ],
     }).compile();
 

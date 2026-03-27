@@ -77,7 +77,10 @@ describe('RewardsService', () => {
         RewardsService,
         { provide: getDataSourceToken(), useValue: dataSource },
         { provide: getRepositoryToken(Badge), useValue: badgeRepository },
-        { provide: getRepositoryToken(UserBadge), useValue: userBadgeRepository },
+        {
+          provide: getRepositoryToken(UserBadge),
+          useValue: userBadgeRepository,
+        },
         { provide: getRepositoryToken(User), useValue: userRepository },
         {
           provide: getRepositoryToken(RewardHistory),
@@ -85,7 +88,9 @@ describe('RewardsService', () => {
         },
         {
           provide: NotificationsService,
-          useValue: { createNotification: jest.fn().mockResolvedValue(undefined) },
+          useValue: {
+            createNotification: jest.fn().mockResolvedValue(undefined),
+          },
         },
       ],
     }).compile();
@@ -108,9 +113,9 @@ describe('RewardsService', () => {
             lessonsCompleted: 0,
             coursesCompleted: 0,
           }),
-          save: jest.fn().mockImplementation((_entity, u: User) =>
-            Promise.resolve(u),
-          ),
+          save: jest
+            .fn()
+            .mockImplementation((_entity, u: User) => Promise.resolve(u)),
           getRepository: jest.fn(() => ({
             create: jest.fn((x: unknown) => x),
             save: jest.fn().mockResolvedValue({}),

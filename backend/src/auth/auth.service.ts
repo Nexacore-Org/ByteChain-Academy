@@ -1,22 +1,29 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { RegisterDto } from './dto/ register.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UserService } from 'src/users/users.service';
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    private configService: ConfigService,
+    private emailService: EmailService,
   ) {}
 
   async register(registerDto: RegisterDto) {
     const user = await this.userService.create(registerDto);
     const token = this.generateToken(user);
+    const username = user.username || user.name || user.email.split('@')[0];
+
+    await this.emailService.sendWelcomeEmail(user.email, username);
 
     return {
       user: {
@@ -60,12 +67,18 @@ export class AuthService {
     const resetToken = await this.userService.createResetToken(
       forgotPasswordDto.email,
     );
+    const clientBaseUrl =
+      this.configService.get<string>('CLIENT_URL') ?? 'http://localhost:3000';
+    const resetUrl = `${clientBaseUrl}/reset-password?email=${encodeURIComponent(forgotPasswordDto.email)}&token=${encodeURIComponent(resetToken)}`;
 
-    // In a real application, you would send an email here
-    // For now, we'll just return the token (in production, never do this)
+    await this.emailService.sendPasswordResetEmail(
+      forgotPasswordDto.email,
+      resetToken,
+      resetUrl,
+    );
+
     return {
       message: 'Password reset link sent to your email',
-      resetToken, // Only for development/testing
     };
   }
 

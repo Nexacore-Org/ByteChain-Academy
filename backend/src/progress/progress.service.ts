@@ -4,9 +4,7 @@ import { CertificateService } from 'src/certificates/certificates.service';
 import { Repository } from 'typeorm';
 import { Progress } from './entities/progress.entity';
 import { Lesson } from 'src/lessons/entities/lesson.entity';
-import {
-  NotificationType,
-} from 'src/notifications/entities/notification.entity';
+import { NotificationType } from 'src/notifications/entities/notification.entity';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { RewardsService } from 'src/rewards/rewards.service';
 import {

@@ -22,7 +22,9 @@ describe('CertificateController', () => {
       ],
     }).compile();
 
-    controller = testingModule.get<CertificateController>(CertificateController);
+    controller = testingModule.get<CertificateController>(
+      CertificateController,
+    );
   });
 
   it('should be defined', () => {

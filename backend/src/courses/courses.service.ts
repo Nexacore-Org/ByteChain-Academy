@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, In, Repository } from 'typeorm';
 import { CourseRegistration } from '../courses/entities/course-registration.entity';
@@ -70,11 +67,12 @@ export class CoursesService {
 
     return {
       ...result,
-      data: result.data.map((course) =>
-        new CourseResponseDto(course, {
-          isEnrolled:
-            userId !== undefined ? enrolledIds.has(course.id) : undefined,
-        }),
+      data: result.data.map(
+        (course) =>
+          new CourseResponseDto(course, {
+            isEnrolled:
+              userId !== undefined ? enrolledIds.has(course.id) : undefined,
+          }),
       ),
     };
   }
@@ -274,5 +272,4 @@ export class CoursesService {
     }
     await this.courseRepository.remove(course);
   }
-
 }

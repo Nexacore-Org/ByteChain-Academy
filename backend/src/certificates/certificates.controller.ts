@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
   Controller,
@@ -23,7 +22,7 @@ import { VerifyCertificateDto } from './dto/verify-certificate.dto';
 
 @Controller('certificates')
 export class CertificateController {
-  constructor(private readonly certificateService: CertificateService) { }
+  constructor(private readonly certificateService: CertificateService) {}
 
   /**
    * Public endpoint to verify a certificate

@@ -1,4 +1,13 @@
-import { IsBoolean, IsDate, IsInt, IsNotEmpty, IsOptional, IsString, Min, Max } from 'class-validator';
+import {
+  IsBoolean,
+  IsDate,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Min,
+  Max,
+} from 'class-validator';
 
 /** GET /courses/:id/enrollment-status */
 export class EnrollmentStatusResponseDto {

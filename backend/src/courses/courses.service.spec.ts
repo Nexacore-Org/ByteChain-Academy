@@ -33,15 +33,13 @@ describe('CoursesService', () => {
         {
           provide: PaginationService,
           useValue: {
-            paginate: jest
-              .fn()
-              .mockResolvedValue({
-                data: [],
-                total: 0,
-                page: 1,
-                limit: 10,
-                totalPages: 0,
-              }),
+            paginate: jest.fn().mockResolvedValue({
+              data: [],
+              total: 0,
+              page: 1,
+              limit: 10,
+              totalPages: 0,
+            }),
           },
         },
       ],

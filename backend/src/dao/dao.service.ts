@@ -24,7 +24,10 @@ export class DAOService {
     private dataSource: DataSource,
   ) {}
 
-  async createProposal(userId: string, dto: CreateProposalDto): Promise<DAOProposal> {
+  async createProposal(
+    userId: string,
+    dto: CreateProposalDto,
+  ): Promise<DAOProposal> {
     const deadline = new Date();
     deadline.setDate(deadline.getDate() + 7);
 
@@ -43,7 +46,8 @@ export class DAOService {
     limit = 10,
     status?: ProposalStatus,
   ): Promise<{ proposals: DAOProposal[]; total: number }> {
-    const query = this.proposalRepository.createQueryBuilder('proposal')
+    const query = this.proposalRepository
+      .createQueryBuilder('proposal')
       .leftJoinAndSelect('proposal.proposer', 'proposer')
       .orderBy('proposal.createdAt', 'DESC')
       .skip((page - 1) * limit)
@@ -78,7 +82,9 @@ export class DAOService {
     const proposal = await this.getProposalById(proposalId);
 
     if (proposal.status !== ProposalStatus.ACTIVE) {
-      throw new BadRequestException('Voting is only allowed on ACTIVE proposals');
+      throw new BadRequestException(
+        'Voting is only allowed on ACTIVE proposals',
+      );
     }
 
     if (new Date() > proposal.votingDeadline) {
@@ -114,11 +120,20 @@ export class DAOService {
           break;
       }
 
-      await manager.increment(DAOProposal, { id: proposalId }, incrementField, 1);
-      
-      const updatedProposal = await manager.findOne(DAOProposal, { where: { id: proposalId } });
+      await manager.increment(
+        DAOProposal,
+        { id: proposalId },
+        incrementField,
+        1,
+      );
+
+      const updatedProposal = await manager.findOne(DAOProposal, {
+        where: { id: proposalId },
+      });
       if (!updatedProposal) {
-        throw new NotFoundException(`Proposal with ID ${proposalId} not found after update`);
+        throw new NotFoundException(
+          `Proposal with ID ${proposalId} not found after update`,
+        );
       }
       return updatedProposal;
     });
@@ -143,7 +158,7 @@ export class DAOService {
     for (const proposal of expiredProposals) {
       // A proposal passes when it receives more than 50% yes votes from active users
       const passThreshold = activeUsersCount * 0.5;
-      
+
       if (proposal.yesVotes > passThreshold) {
         proposal.status = ProposalStatus.PASSED;
       } else {
