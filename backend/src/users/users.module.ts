@@ -1,5 +1,5 @@
 // src/users/users.module.ts
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserService } from './users.service';
 import { UsersController } from './users.controller';
@@ -19,7 +19,7 @@ import { CourseRegistration } from '../courses/entities/course-registration.enti
       CourseRegistration,
     ]),
     CertificatesModule,
-    CoursesModule,
+    forwardRef(() => CoursesModule),
   ],
   controllers: [UsersController],
   providers: [UserService],
