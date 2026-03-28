@@ -3,12 +3,17 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Certificate } from '../certificates/entities/certificate.entity';
 
 import * as crypto from 'crypto';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as PDFDocument from 'pdfkit';
+import * as QRCode from 'qrcode';
 import { Course } from 'src/courses/entities/course.entity';
 import { User } from 'src/users/entities/user.entity';
 import { CertificateVerificationResultDto } from './dto/certificate-response.dto';
@@ -33,11 +38,163 @@ export class CertificateService {
   /*                                HASH UTILITY                                */
   /* -------------------------------------------------------------------------- */
 
-  private generateCertificateHash(data: any): string {
+  private generateCertificateHash(
+    userId: string,
+    courseId: string,
+    issuedAt: Date,
+  ): string {
     return crypto
       .createHash('sha256')
-      .update(JSON.stringify(data))
+      .update(userId + courseId + issuedAt.toISOString())
       .digest('hex');
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                              PDF GENERATION                                 */
+  /* -------------------------------------------------------------------------- */
+
+  private async generatePdf(certificate: Certificate): Promise<string> {
+    const storagePath =
+      process.env.CERTIFICATE_STORAGE_PATH || 'uploads/certificates';
+
+    if (!fs.existsSync(storagePath)) {
+      fs.mkdirSync(storagePath, { recursive: true });
+    }
+
+    const fileName = `${certificate.certificateHash}.pdf`;
+    const filePath = path.join(storagePath, fileName);
+
+    const verifyUrl = `${process.env.APP_URL || 'http://localhost:3000'}/api/v1/certificates/verify/${certificate.certificateHash}`;
+    const qrBuffer = await QRCode.toBuffer(verifyUrl, { width: 120 });
+
+    await new Promise<void>((resolve, reject) => {
+      const doc = new PDFDocument({ size: 'A4', margin: 60 });
+      const writeStream = fs.createWriteStream(filePath);
+
+      doc.pipe(writeStream);
+
+      doc.rect(0, 0, doc.page.width, doc.page.height).fill('#f9f7f2');
+
+      doc
+        .rect(30, 30, doc.page.width - 60, doc.page.height - 60)
+        .lineWidth(3)
+        .stroke('#1a3c5e');
+
+      doc
+        .rect(38, 38, doc.page.width - 76, doc.page.height - 76)
+        .lineWidth(1)
+        .stroke('#c9aa71');
+
+      doc
+        .fillColor('#1a3c5e')
+        .fontSize(28)
+        .font('Helvetica-Bold')
+        .text('ByteChain Academy', 0, 70, { align: 'center' });
+
+      doc
+        .fillColor('#c9aa71')
+        .fontSize(13)
+        .font('Helvetica')
+        .text('Blockchain Education for the Future', 0, 106, {
+          align: 'center',
+        });
+
+      doc
+        .moveTo(80, 130)
+        .lineTo(doc.page.width - 80, 130)
+        .lineWidth(1)
+        .stroke('#c9aa71');
+
+      doc
+        .fillColor('#1a3c5e')
+        .fontSize(18)
+        .font('Helvetica')
+        .text('CERTIFICATE OF COMPLETION', 0, 150, { align: 'center' });
+
+      doc
+        .fillColor('#333333')
+        .fontSize(13)
+        .font('Helvetica')
+        .text('This is to certify that', 0, 195, { align: 'center' });
+
+      doc
+        .fillColor('#1a3c5e')
+        .fontSize(26)
+        .font('Helvetica-Bold')
+        .text(certificate.recipientName, 0, 220, { align: 'center' });
+
+      doc
+        .moveTo(160, 256)
+        .lineTo(doc.page.width - 160, 256)
+        .lineWidth(1)
+        .stroke('#c9aa71');
+
+      doc
+        .fillColor('#333333')
+        .fontSize(13)
+        .font('Helvetica')
+        .text('has successfully completed the course', 0, 268, {
+          align: 'center',
+        });
+
+      doc
+        .fillColor('#1a3c5e')
+        .fontSize(20)
+        .font('Helvetica-Bold')
+        .text(certificate.courseOrProgram, 0, 293, { align: 'center' });
+
+      const issuedDate = new Date(certificate.issuedAt).toLocaleDateString(
+        'en-US',
+        { year: 'numeric', month: 'long', day: 'numeric' },
+      );
+
+      doc
+        .fillColor('#555555')
+        .fontSize(12)
+        .font('Helvetica')
+        .text(`Date of Completion: ${issuedDate}`, 0, 340, { align: 'center' });
+
+      doc.image(qrBuffer, doc.page.width / 2 - 60, 375, { width: 120 });
+
+      doc
+        .fillColor('#555555')
+        .fontSize(8)
+        .font('Helvetica')
+        .text('Scan to verify authenticity', 0, 502, { align: 'center' });
+
+      doc
+        .fillColor('#888888')
+        .fontSize(7)
+        .font('Helvetica')
+        .text(`Certificate ID: ${certificate.certificateHash}`, 60, 520, {
+          width: doc.page.width - 120,
+          align: 'center',
+        });
+
+      doc
+        .moveTo(80, 545)
+        .lineTo(doc.page.width - 80, 545)
+        .lineWidth(1)
+        .stroke('#c9aa71');
+
+      doc
+        .fillColor('#888888')
+        .fontSize(9)
+        .font('Helvetica')
+        .text(
+          `© ${new Date().getFullYear()} ByteChain Academy · blockchain-powered education`,
+          0,
+          555,
+          { align: 'center' },
+        );
+
+      doc.end();
+
+      writeStream.on('finish', resolve);
+      writeStream.on('error', reject);
+    });
+
+    return filePath;
   }
 
   /* -------------------------------------------------------------------------- */
@@ -82,13 +239,11 @@ export class CertificateService {
 
     const issuedAt = new Date();
 
-    const hashPayload = {
-      userId: user.id,
-      courseId: course.id,
+    const certificateHash = this.generateCertificateHash(
+      user.id,
+      course.id,
       issuedAt,
-    };
-
-    const certificateHash = this.generateCertificateHash(hashPayload);
+    );
 
     const certificate = this.certificateRepository.create({
       certificateHash,
@@ -105,6 +260,11 @@ export class CertificateService {
       course,
     });
     const savedCertificate = await this.certificateRepository.save(certificate);
+
+    const pdfPath = await this.generatePdf(savedCertificate);
+    savedCertificate.certificatePath = pdfPath;
+    await this.certificateRepository.save(savedCertificate);
+
     await this.notificationsService.createNotification(
       userId,
       NotificationType.CERTIFICATE_ISSUED,
@@ -138,7 +298,11 @@ export class CertificateService {
       timestamp: Date.now(),
     };
 
-    const certificateHash = this.generateCertificateHash(hashPayload);
+    const certificateHash = this.generateCertificateHash(
+      recipientName + recipientEmail,
+      courseOrProgram,
+      new Date(issuedAt),
+    );
 
     const existing = await this.certificateRepository.findOne({
       where: { certificateHash },
@@ -262,6 +426,91 @@ export class CertificateService {
     return this.certificateRepository.find({
       where: { user: { id: userId } },
     });
+  }
+
+  async getMyCertificates(userId: string): Promise<
+    {
+      id: string;
+      courseOrProgram: string;
+      issuedAt: Date;
+      certificateHash: string;
+      downloadUrl: string;
+    }[]
+  > {
+    const certs = await this.certificateRepository.find({
+      where: { user: { id: userId } },
+      order: { issuedAt: 'DESC' },
+    });
+
+    const baseUrl = process.env.APP_URL || 'http://localhost:3000';
+
+    return certs.map((c) => ({
+      id: c.id,
+      courseOrProgram: c.courseOrProgram,
+      issuedAt: c.issuedAt,
+      certificateHash: c.certificateHash,
+      downloadUrl: `${baseUrl}/api/v1/certificates/${c.id}/download`,
+    }));
+  }
+
+  async verifyCertificateByHash(hash: string): Promise<{
+    valid: boolean;
+    recipientName?: string;
+    courseOrProgram?: string;
+    issuedAt?: Date;
+  }> {
+    const certificate = await this.certificateRepository.findOne({
+      where: { certificateHash: hash },
+    });
+
+    if (!certificate || !certificate.isValid) {
+      return { valid: false };
+    }
+
+    if (certificate.expiresAt && new Date() > certificate.expiresAt) {
+      return { valid: false };
+    }
+
+    return {
+      valid: true,
+      recipientName: certificate.recipientName,
+      courseOrProgram: certificate.courseOrProgram,
+      issuedAt: certificate.issuedAt,
+    };
+  }
+
+  async getCertificateForDownload(
+    certificateId: string,
+    requestingUserId: string,
+  ): Promise<string> {
+    const certificate = await this.certificateRepository.findOne({
+      where: { id: certificateId },
+      relations: ['user'],
+    });
+
+    if (!certificate) {
+      throw new NotFoundException('Certificate not found');
+    }
+
+    if (certificate.user.id !== requestingUserId) {
+      throw new ForbiddenException(
+        'You are not allowed to download this certificate',
+      );
+    }
+
+    if (!certificate.certificatePath) {
+      const pdfPath = await this.generatePdf(certificate);
+      certificate.certificatePath = pdfPath;
+      await this.certificateRepository.save(certificate);
+    }
+
+    if (!fs.existsSync(certificate.certificatePath)) {
+      const pdfPath = await this.generatePdf(certificate);
+      certificate.certificatePath = pdfPath;
+      await this.certificateRepository.save(certificate);
+    }
+
+    return certificate.certificatePath;
   }
 
   async revokeCertificate(certificateId: string): Promise<any> {
