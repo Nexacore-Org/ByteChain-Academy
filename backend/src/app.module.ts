@@ -21,6 +21,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { DAOModule } from './dao/dao.module';
 import { EmailModule } from './email/email.module';
+import { CurrenciesModule } from './currencies/currencies.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { EmailModule } from './email/email.module';
     ScheduleModule.forRoot(),
     DAOModule,
     EmailModule,
+    CurrenciesModule,
   ],
   controllers: [AppController],
   providers: [

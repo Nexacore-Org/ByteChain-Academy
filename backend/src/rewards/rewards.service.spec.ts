@@ -15,8 +15,9 @@ describe('RewardsService', () => {
   let service: RewardsService;
   let userRepository: {
     findOneOrFail: jest.Mock;
+    find: jest.Mock;
   };
-  let rewardHistoryRepository: { count: jest.Mock };
+  let rewardHistoryRepository: { count: jest.Mock; find: jest.Mock };
   let badgeRepository: {
     findOne: jest.Mock;
     find: jest.Mock;
@@ -34,9 +35,11 @@ describe('RewardsService', () => {
   beforeEach(async () => {
     userRepository = {
       findOneOrFail: jest.fn(),
+      find: jest.fn().mockResolvedValue([]),
     };
     rewardHistoryRepository = {
       count: jest.fn().mockResolvedValue(0),
+      find: jest.fn().mockResolvedValue([]),
     };
     badgeRepository = {
       findOne: jest.fn().mockResolvedValue(null),
@@ -146,17 +149,17 @@ describe('RewardsService', () => {
   });
 
   describe('checkAndAwardBadges', () => {
+    const allBadgeMocks = BADGE_MILESTONES.map((m, i) => ({
+      id: `badge-${i}`,
+      key: m.key,
+      name: m.name,
+      description: m.description,
+      xpThreshold: m.rule.kind === 'xp' ? m.rule.min : 0,
+      iconUrl: m.iconUrl,
+    }));
+
     beforeEach(() => {
-      badgeRepository.find.mockResolvedValue(
-        BADGE_MILESTONES.map((m, i) => ({
-          id: `badge-${i}`,
-          key: m.key,
-          name: m.name,
-          description: m.description,
-          xpThreshold: m.rule.kind === 'xp' ? m.rule.min : 0,
-          iconUrl: m.iconUrl,
-        })),
-      );
+      badgeRepository.find.mockResolvedValue(allBadgeMocks);
     });
 
     it('awards xp_500 when user reaches 500 XP', async () => {
@@ -173,6 +176,36 @@ describe('RewardsService', () => {
 
       expect(earned.map((b) => b.key)).toContain('xp_500');
       expect(userBadgeRepository.save).toHaveBeenCalled();
+    });
+
+    it('awards first_lesson badge when user completed 1 lesson', async () => {
+      userRepository.findOneOrFail.mockResolvedValue({
+        id: 'user-1',
+        xp: 10,
+        lessonsCompleted: 1,
+        coursesCompleted: 0,
+      });
+      rewardHistoryRepository.count.mockResolvedValue(0);
+      userBadgeRepository.find.mockResolvedValue([]);
+
+      const earned = await service.checkAndAwardBadges('user-1');
+
+      expect(earned.map((b) => b.key)).toContain('first_lesson');
+    });
+
+    it('awards first_quiz_pass badge when user has 1 quiz pass in history', async () => {
+      userRepository.findOneOrFail.mockResolvedValue({
+        id: 'user-1',
+        xp: 25,
+        lessonsCompleted: 0,
+        coursesCompleted: 0,
+      });
+      rewardHistoryRepository.count.mockResolvedValue(1); // 1 quiz pass
+      userBadgeRepository.find.mockResolvedValue([]);
+
+      const earned = await service.checkAndAwardBadges('user-1');
+
+      expect(earned.map((b) => b.key)).toContain('first_quiz_pass');
     });
 
     it('does not award badges already earned', async () => {
@@ -202,6 +235,99 @@ describe('RewardsService', () => {
       const earned = await service.checkAndAwardBadges('user-1');
 
       expect(earned).toHaveLength(0);
+    });
+  });
+
+  /* -------------------------------------------------------------------------- */
+  /*                                getLeaderboard                              */
+  /* -------------------------------------------------------------------------- */
+
+  describe('getLeaderboard', () => {
+    it('should return top users sorted by XP descending', async () => {
+      userRepository.find = jest.fn().mockResolvedValue([
+        { username: 'alice', name: null, xp: 500 },
+        { username: null, name: 'Bob', xp: 300 },
+        { username: null, name: null, xp: 100 },
+      ]);
+
+      const result = await service.getLeaderboard();
+
+      expect(userRepository.find).toHaveBeenCalledWith({
+        select: ['username', 'name', 'xp'],
+        order: { xp: 'DESC' },
+        take: 10,
+      });
+      expect(result).toHaveLength(3);
+      expect(result[0]).toEqual({ username: 'alice', xp: 500 });
+      expect(result[1]).toEqual({ username: 'Bob', xp: 300 });
+      expect(result[2]).toEqual({ username: null, xp: 100 });
+    });
+
+    it('should treat null xp as 0', async () => {
+      userRepository.find = jest.fn().mockResolvedValue([
+        { username: 'charlie', name: null, xp: null },
+      ]);
+
+      const result = await service.getLeaderboard();
+
+      expect(result[0].xp).toBe(0);
+    });
+  });
+
+  /* -------------------------------------------------------------------------- */
+  /*                                getMyRewards                                */
+  /* -------------------------------------------------------------------------- */
+
+  describe('getMyRewards', () => {
+    it('should return xp, earned badges, and recent history', async () => {
+      const mockBadge = { id: 'badge-1', key: 'first_lesson', name: 'First Lesson' };
+      const mockHistory = [{ id: 'hist-1', userId: 'user-1', amount: 10 }];
+
+      userRepository.findOneOrFail.mockResolvedValue({ xp: 10 });
+      userBadgeRepository.find.mockResolvedValue([
+        { badge: mockBadge, awardedAt: new Date() },
+      ]);
+      rewardHistoryRepository.find = jest.fn().mockResolvedValue(mockHistory);
+
+      const result = await service.getMyRewards('user-1');
+
+      expect(result.xp).toBe(10);
+      expect(result.badges).toHaveLength(1);
+      expect(result.badges[0].badge.key).toBe('first_lesson');
+      expect(result.recentHistory).toHaveLength(1);
+    });
+  });
+
+  /* -------------------------------------------------------------------------- */
+  /*                               getEarnedBadges                              */
+  /* -------------------------------------------------------------------------- */
+
+  describe('getEarnedBadges', () => {
+    it('should return badges with awardedAt timestamps', async () => {
+      const awardedAt = new Date('2025-01-01');
+      const mockBadge = { id: 'badge-1', key: 'first_lesson', name: 'First Lesson' };
+      userBadgeRepository.find.mockResolvedValue([
+        { badge: mockBadge, awardedAt },
+      ]);
+
+      const result = await service.getEarnedBadges('user-1');
+
+      expect(userBadgeRepository.find).toHaveBeenCalledWith({
+        where: { userId: 'user-1' },
+        relations: { badge: true },
+        order: { awardedAt: 'ASC' },
+      });
+      expect(result).toHaveLength(1);
+      expect(result[0].badge.key).toBe('first_lesson');
+      expect(result[0].awardedAt).toBe(awardedAt);
+    });
+
+    it('should return empty array when user has no badges', async () => {
+      userBadgeRepository.find.mockResolvedValue([]);
+
+      const result = await service.getEarnedBadges('user-1');
+
+      expect(result).toHaveLength(0);
     });
   });
 });
