@@ -37,9 +37,7 @@ export class LessonsController {
   }
 
   @Get()
-  async findAll(
-    @Query() pagination: PaginationDto,
-  ): Promise<{
+  async findAll(@Query() pagination: PaginationDto): Promise<{
     data: LessonResponseDto[];
     total: number;
     page: number;

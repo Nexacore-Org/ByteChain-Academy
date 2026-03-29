@@ -6,6 +6,8 @@ import { Certificate } from './entities/certificate.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Course } from 'src/courses/entities/course.entity';
 import { NotificationsService } from 'src/notifications/notifications.service';
+import { ConfigService } from '@nestjs/config';
+import { EmailService } from 'src/email/email.service';
 
 const now = new Date();
 
@@ -65,6 +67,14 @@ describe('CertificateService', () => {
         { provide: getRepositoryToken(User), useValue: userRepo },
         { provide: getRepositoryToken(Course), useValue: courseRepo },
         { provide: NotificationsService, useValue: notificationsService },
+        {
+          provide: EmailService,
+          useValue: { sendCertificateEmail: jest.fn().mockResolvedValue(undefined) },
+        },
+        {
+          provide: ConfigService,
+          useValue: { get: jest.fn().mockReturnValue('http://localhost:3000') },
+        },
       ],
     }).compile();
 

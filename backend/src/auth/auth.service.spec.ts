@@ -1,9 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { ConflictException, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { UserService } from 'src/users/users.service';
 import { UserRole } from 'src/users/entities/user.entity';
+import { EmailService } from 'src/email/email.service';
 
 const mockUser = {
   id: 'user-uuid-1',
@@ -39,6 +41,14 @@ describe('AuthService', () => {
         AuthService,
         { provide: UserService, useValue: userService },
         { provide: JwtService, useValue: jwtService },
+        { provide: ConfigService, useValue: { get: jest.fn() } },
+        {
+          provide: EmailService,
+          useValue: {
+            sendWelcomeEmail: jest.fn().mockResolvedValue(undefined),
+            sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
+          },
+        },
       ],
     }).compile();
 
@@ -149,7 +159,7 @@ describe('AuthService', () => {
   /* -------------------------------------------------------------------------- */
 
   describe('forgotPassword', () => {
-    it('should return a message and reset token on success', async () => {
+    it('should return a message and send a password reset email', async () => {
       userService.createResetToken.mockResolvedValue('raw-reset-token-abc123');
 
       const result = await service.forgotPassword({ email: mockUser.email });
@@ -157,7 +167,6 @@ describe('AuthService', () => {
       expect(userService.createResetToken).toHaveBeenCalledWith(mockUser.email);
       expect(result).toEqual({
         message: 'Password reset link sent to your email',
-        resetToken: 'raw-reset-token-abc123',
       });
     });
 

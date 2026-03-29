@@ -1,10 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import {
-  BADGE_MILESTONES,
-  MilestoneRule,
-} from './badge-milestones';
+import { BADGE_MILESTONES, MilestoneRule } from './badge-milestones';
 import { User } from 'src/users/entities/user.entity';
 import { Badge } from './entities/badge.entity';
 import {
@@ -53,8 +50,7 @@ export class RewardsService {
 
   async ensureBadgeCatalog(): Promise<void> {
     for (const milestone of BADGE_MILESTONES) {
-      const xpThreshold =
-        milestone.rule.kind === 'xp' ? milestone.rule.min : 0;
+      const xpThreshold = milestone.rule.kind === 'xp' ? milestone.rule.min : 0;
 
       const existing = await this.badgeRepository.findOne({
         where: { key: milestone.key },
@@ -129,8 +125,7 @@ export class RewardsService {
         throw new NotFoundException('User not found');
       }
 
-      const baseXp =
-        (user.xp ?? 0) > 0 ? user.xp! : (user.points ?? 0);
+      const baseXp = (user.xp ?? 0) > 0 ? user.xp : (user.points ?? 0);
       const nextXp = baseXp + amount;
       user.xp = nextXp;
       user.points = nextXp;

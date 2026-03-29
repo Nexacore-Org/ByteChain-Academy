@@ -36,15 +36,22 @@ const makeRegRepo = () => ({
   save: jest.fn(),
 });
 
+const makeLessonRepo = () => ({ count: jest.fn() });
+const makeProgressRepo = () => ({ count: jest.fn() });
+
 describe('CoursesService', () => {
   let service: CoursesService;
   let courseRepo: ReturnType<typeof makeCourseRepo>;
   let regRepo: ReturnType<typeof makeRegRepo>;
+  let lessonRepo: ReturnType<typeof makeLessonRepo>;
+  let progressRepo: ReturnType<typeof makeProgressRepo>;
   let paginationService: { paginate: jest.Mock };
 
   beforeEach(async () => {
     courseRepo = makeCourseRepo();
     regRepo = makeRegRepo();
+    lessonRepo = makeLessonRepo();
+    progressRepo = makeProgressRepo();
     paginationService = {
       paginate: jest.fn().mockResolvedValue(paginatedEmpty),
     };
@@ -54,6 +61,8 @@ describe('CoursesService', () => {
         CoursesService,
         { provide: getRepositoryToken(Course), useValue: courseRepo },
         { provide: getRepositoryToken(CourseRegistration), useValue: regRepo },
+        { provide: getRepositoryToken(Lesson), useValue: lessonRepo },
+        { provide: getRepositoryToken(Progress), useValue: progressRepo },
         { provide: PaginationService, useValue: paginationService },
       ],
     }).compile();
@@ -203,69 +212,92 @@ describe('CoursesService', () => {
   });
 
   /* -------------------------------------------------------------------------- */
-  /*                                 enrollUser                                 */
+  /*                                   enroll                                   */
   /* -------------------------------------------------------------------------- */
 
-  describe('enrollUser', () => {
+  describe('enroll', () => {
     it('should create a registration when user is not yet enrolled', async () => {
       courseRepo.findOne.mockResolvedValue(mockCourse);
       regRepo.findOne.mockResolvedValue(null);
-      const reg = { userId: 'user-1', courseId: mockCourse.id };
+      const reg = {
+        id: 'reg-1',
+        userId: 'user-1',
+        courseId: mockCourse.id,
+        enrolledAt: now,
+      };
       regRepo.create.mockReturnValue(reg);
       regRepo.save.mockResolvedValue(reg);
 
-      await service.enrollUser('user-1', mockCourse.id);
+      const result = await service.enroll('user-1', mockCourse.id);
 
       expect(regRepo.create).toHaveBeenCalledWith({
         userId: 'user-1',
         courseId: mockCourse.id,
       });
       expect(regRepo.save).toHaveBeenCalledWith(reg);
+      expect(result.userId).toBe('user-1');
+      expect(result.courseId).toBe(mockCourse.id);
     });
 
     it('should not create a duplicate registration if user is already enrolled', async () => {
       courseRepo.findOne.mockResolvedValue(mockCourse);
-      regRepo.findOne.mockResolvedValue({ userId: 'user-1', courseId: mockCourse.id });
+      const existing = {
+        id: 'reg-1',
+        userId: 'user-1',
+        courseId: mockCourse.id,
+        enrolledAt: now,
+      };
+      regRepo.findOne.mockResolvedValue(existing);
 
-      await service.enrollUser('user-1', mockCourse.id);
+      const result = await service.enroll('user-1', mockCourse.id);
 
       expect(regRepo.create).not.toHaveBeenCalled();
       expect(regRepo.save).not.toHaveBeenCalled();
+      expect(result.id).toBe(existing.id);
     });
 
     it('should throw NotFoundException when course does not exist', async () => {
       courseRepo.findOne.mockResolvedValue(null);
 
       await expect(
-        service.enrollUser('user-1', 'nonexistent'),
+        service.enroll('user-1', 'nonexistent'),
       ).rejects.toThrow(NotFoundException);
     });
   });
 
   /* -------------------------------------------------------------------------- */
-  /*                              findUserCourses                               */
+  /*                            getEnrolledCourses                              */
   /* -------------------------------------------------------------------------- */
 
-  describe('findUserCourses', () => {
-    it('should return mapped CourseResponseDtos for user registrations', async () => {
+  describe('getEnrolledCourses', () => {
+    it('should return enrolled courses with progress for user registrations', async () => {
       regRepo.find.mockResolvedValue([
-        { userId: 'user-1', courseId: mockCourse.id, course: mockCourse },
+        {
+          userId: 'user-1',
+          courseId: mockCourse.id,
+          course: mockCourse,
+          enrolledAt: now,
+        },
       ]);
+      lessonRepo.count.mockResolvedValue(4);
+      progressRepo.count.mockResolvedValue(2);
 
-      const result = await service.findUserCourses('user-1');
+      const result = await service.getEnrolledCourses('user-1');
 
       expect(regRepo.find).toHaveBeenCalledWith({
         where: { userId: 'user-1' },
         relations: ['course'],
+        order: { enrolledAt: 'DESC' },
       });
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(mockCourse.id);
+      expect(result[0].progressPercent).toBe(50);
     });
 
     it('should return an empty array when user has no courses', async () => {
       regRepo.find.mockResolvedValue([]);
 
-      const result = await service.findUserCourses('user-1');
+      const result = await service.getEnrolledCourses('user-1');
 
       expect(result).toHaveLength(0);
     });

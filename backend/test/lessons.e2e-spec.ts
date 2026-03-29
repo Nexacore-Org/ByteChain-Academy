@@ -184,7 +184,9 @@ describe('LessonsController (e2e)', () => {
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBeGreaterThanOrEqual(3);
       // Should be ordered by order ASC
-      expect(response.body[0].order).toBeLessThanOrEqual(response.body[1].order);
+      expect(response.body[0].order).toBeLessThanOrEqual(
+        response.body[1].order,
+      );
       expect(response.body[0]).toHaveProperty('id');
       expect(response.body[0]).toHaveProperty('title');
       expect(response.body[0]).toHaveProperty('content');
@@ -253,7 +255,9 @@ describe('LessonsController (e2e)', () => {
         .expect(200);
 
       expect(response.body.title).toBe('Updated Lesson Title');
-      expect(response.body.videoUrl).toBe('https://example.com/updated-video.mp4');
+      expect(response.body.videoUrl).toBe(
+        'https://example.com/updated-video.mp4',
+      );
       expect(response.body.videoStartTimestamp).toBe(60);
     });
 

@@ -9,7 +9,9 @@ export class CreateProposalDto {
   @MaxLength(100)
   title: string;
 
-  @ApiProperty({ example: 'Introduce advanced React patterns to the frontend course.' })
+  @ApiProperty({
+    example: 'Introduce advanced React patterns to the frontend course.',
+  })
   @IsNotEmpty()
   @IsString()
   @MinLength(20)

@@ -21,6 +21,8 @@ import { IssueCertificateDto } from './dto/issue-certificate.dto';
 import { VerifyCertificateDto } from './dto/verify-certificate.dto';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { NotificationType } from 'src/notifications/entities/notification.entity';
+import { ConfigService } from '@nestjs/config';
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class CertificateService {
@@ -32,6 +34,8 @@ export class CertificateService {
     @InjectRepository(Course)
     private readonly courseRepository: Repository<Course>,
     private readonly notificationsService: NotificationsService,
+    private readonly emailService: EmailService,
+    private readonly configService: ConfigService,
   ) {}
 
   /* -------------------------------------------------------------------------- */
@@ -271,6 +275,20 @@ export class CertificateService {
       `You received a certificate for ${course.title}.`,
       '/certificates',
     );
+
+    const clientBaseUrl =
+      this.configService.get<string>('CLIENT_URL') ?? 'http://localhost:3000';
+    const downloadUrl = `${clientBaseUrl}/certificates/${savedCertificate.certificateHash}`;
+    const username = user.name || user.username || user.email.split('@')[0];
+
+    await this.emailService.sendCertificateEmail(
+      user.email,
+      username,
+      course.title,
+      savedCertificate.certificateHash,
+      downloadUrl,
+    );
+
     return savedCertificate;
   }
 
