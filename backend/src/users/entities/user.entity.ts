@@ -60,6 +60,12 @@ export class User {
   @Column({ type: 'int', default: 0 })
   streak: number;
 
+  @Column({ type: 'int', default: 0 })
+  longestStreak: number;
+
+  @Column({ type: 'datetime', nullable: true })
+  lastActiveAt: Date;
+
   @Column({ nullable: true })
   @Exclude()
   resetToken: string;
