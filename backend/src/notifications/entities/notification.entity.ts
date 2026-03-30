@@ -15,6 +15,7 @@ export enum NotificationType {
   QUIZ_PASSED = 'QUIZ_PASSED',
   COURSE_COMPLETE = 'COURSE_COMPLETE',
   NEW_CONTENT = 'NEW_CONTENT',
+  STREAK_MILESTONE = 'STREAK_MILESTONE',
 }
 
 @Entity('notifications')

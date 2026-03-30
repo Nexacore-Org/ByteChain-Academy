@@ -18,6 +18,7 @@ import { NotificationType } from 'src/notifications/entities/notification.entity
 import { RewardsService } from 'src/rewards/rewards.service';
 import { XP_QUIZ_PASS } from 'src/rewards/rewards.service';
 import { XpRewardReason } from 'src/rewards/entities/reward-history.entity';
+import { StreakService } from 'src/users/streak.service';
 
 @Injectable()
 export class QuizzesService {
@@ -32,6 +33,7 @@ export class QuizzesService {
     private quizSubmissionRepository: Repository<QuizSubmission>,
     private readonly notificationsService: NotificationsService,
     private readonly rewardsService: RewardsService,
+    private readonly streakService: StreakService,
   ) {}
 
   async create(createQuizDto: CreateQuizDto): Promise<Quiz> {
@@ -234,6 +236,7 @@ export class QuizzesService {
         `You passed the quiz "${quiz.title}".`,
         `/courses/lessons/${quiz.lessonId}`,
       );
+      await this.streakService.updateStreak(userId);
     }
 
     return savedSubmission;
