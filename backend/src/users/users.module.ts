@@ -1,7 +1,9 @@
 // src/users/users.module.ts
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CacheModule } from '@nestjs/cache-manager';
 import { UserService } from './users.service';
+import { WalletService } from './wallet.service';
 import { UsersController } from './users.controller';
 import { User } from './entities/user.entity';
 import { CertificatesModule } from '../certificates/certificates.module';
@@ -19,6 +21,10 @@ import { StreakService } from './streak.service';
       UserBadge,
       CourseRegistration,
     ]),
+    CacheModule.register({
+      ttl: 300,
+      max: 500,
+    }),
     CertificatesModule,
     forwardRef(() => CoursesModule),
   ],
