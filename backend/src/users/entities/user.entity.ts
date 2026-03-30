@@ -33,7 +33,7 @@ export class User {
   @Column({ nullable: true })
   bio: string;
 
-  @Column({ nullable: true })
+  @Column({ unique: true, nullable: true })
   walletAddress: string;
 
   @Column({ nullable: true })
