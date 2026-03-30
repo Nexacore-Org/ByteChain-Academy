@@ -70,5 +70,35 @@ export class UsersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async unlinkWallet(@Request() req): Promise<void> {
     return this.walletService.unlink(req.user.id as string);
+  async deleteProfile(@Request() req): Promise<void> {
+    await this.userService.deleteProfile(req.user.id);
+  }
+
+  @Get('me/stats')
+  async getMyStats(@Request() req): Promise<{
+    courseCount: number;
+    completedCourseCount: number;
+    certificateCount: number;
+    xp: number;
+    streak: number;
+    longestStreak: number;
+    lastActiveAt: Date | null;
+    badgesCount: number;
+    rank: number;
+  }> {
+    return this.userService.getMyStats(req.user.id as string);
+  }
+
+  @Get(':id/public')
+  async getPublicProfile(@Param('id') id: string): Promise<{
+    id: string;
+    username: string | null;
+    xp: number;
+    badgesCount: number;
+    coursesCompleted: number;
+    avatarUrl: string | null;
+    bio: string | null;
+  }> {
+    return this.userService.getPublicProfile(id);
   }
 }

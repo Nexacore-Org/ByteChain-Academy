@@ -11,6 +11,7 @@ import { CoursesModule } from '../courses/courses.module';
 import { Certificate } from '../certificates/entities/certificate.entity';
 import { UserBadge } from '../rewards/entities/user-badge.entity';
 import { CourseRegistration } from '../courses/entities/course-registration.entity';
+import { StreakService } from './streak.service';
 
 @Module({
   imports: [
@@ -28,7 +29,7 @@ import { CourseRegistration } from '../courses/entities/course-registration.enti
     forwardRef(() => CoursesModule),
   ],
   controllers: [UsersController],
-  providers: [UserService, WalletService],
-  exports: [UserService],
+  providers: [UserService, StreakService],
+  exports: [UserService, StreakService],
 })
 export class UsersModule {}
