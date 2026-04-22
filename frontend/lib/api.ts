@@ -126,17 +126,23 @@ export async function apiFetch<T>(
 }
 
 export const api = {
-  get: <T>(path: string) => apiFetch<T>(path, { method: "GET" }),
-  post: <T>(path: string, body: unknown) =>
+  get: <T>(path: string, params?: Record<string, string>) => {
+    if (params) {
+      const qs = new URLSearchParams(params).toString();
+      path = qs ? `${path}?${qs}` : path;
+    }
+    return apiFetch<T>(path, { method: "GET" });
+  },
+  post: <T>(path: string, body?: unknown) =>
     apiFetch<T>(path, {
       method: "POST",
-      body: JSON.stringify(body),
+      body: body ? JSON.stringify(body) : undefined,
       headers: { "Content-Type": "application/json" },
     }),
-  patch: <T>(path: string, body: unknown) =>
+  patch: <T>(path: string, body?: unknown) =>
     apiFetch<T>(path, {
       method: "PATCH",
-      body: JSON.stringify(body),
+      body: body ? JSON.stringify(body) : undefined,
       headers: { "Content-Type": "application/json" },
     }),
   delete: <T>(path: string) => apiFetch<T>(path, { method: "DELETE" }),
