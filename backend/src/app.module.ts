@@ -1,3 +1,4 @@
+import * as Joi from 'joi';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -27,6 +28,37 @@ import { CurrenciesModule } from './currencies/currencies.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      validationSchema: Joi.object({
+        NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
+        PORT: Joi.number().default(3001),
+
+        JWT_SECRET: Joi.string().min(32).required(),
+        JWT_EXPIRES_IN: Joi.string().default('7d'),
+
+        DB_HOST: Joi.string().default('localhost'),
+        DB_PORT: Joi.number().default(5432),
+        DB_USERNAME: Joi.string().default('postgres'),
+        DB_PASSWORD: Joi.string().default(''),
+        DB_NAME: Joi.string().default('bytechain'),
+
+        FRONTEND_URL: Joi.string().uri().default('http://localhost:3000'),
+        APP_URL: Joi.string().uri().default('http://localhost:3001'),
+
+        THROTTLE_TTL: Joi.number().default(60),
+        THROTTLE_LIMIT: Joi.number().default(60),
+
+        SMTP_HOST: Joi.string().optional().allow(''),
+        SMTP_PORT: Joi.number().default(587),
+        SMTP_USER: Joi.string().optional().allow(''),
+        SMTP_PASS: Joi.string().optional().allow(''),
+        SMTP_FROM_NAME: Joi.string().default('ByteChain Academy'),
+        SMTP_FROM_EMAIL: Joi.string().email().default('noreply@bytechain.academy'),
+
+        AVATAR_UPLOAD_PATH: Joi.string().default('uploads/avatars'),
+        MAX_AVATAR_SIZE_MB: Joi.number().default(2),
+        CERTIFICATE_STORAGE_PATH: Joi.string().default('uploads/certificates'),
+      }),
+      validationOptions: { abortEarly: false },
     }),
     TypeOrmModule.forRoot({
       type: 'sqlite',
