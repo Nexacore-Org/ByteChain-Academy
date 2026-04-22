@@ -11,6 +11,7 @@ import {
   UseInterceptors,
   ClassSerializerInterceptor,
   Post,
+  Param,
 } from '@nestjs/common';
 import { UserProfileResponseDto } from '../users/dto/user-profile-response.dto';
 import { VerifyWalletDto } from '../users/dto/verify-wallet.dto';
@@ -70,6 +71,10 @@ export class UsersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async unlinkWallet(@Request() req): Promise<void> {
     return this.walletService.unlink(req.user.id as string);
+  }
+
+  @Delete('me')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async deleteProfile(@Request() req): Promise<void> {
     await this.userService.deleteProfile(req.user.id);
   }
