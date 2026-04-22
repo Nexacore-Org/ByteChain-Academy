@@ -25,19 +25,19 @@ export class User {
   password: string;
 
   @Column({ nullable: true })
-  name: string;
+  name: string | null;
 
   @Column({ nullable: true })
-  username: string;
+  username: string | null;
 
   @Column({ nullable: true })
-  bio: string;
+  bio: string | null;
 
   @Column({ unique: true, nullable: true })
-  walletAddress: string;
+  walletAddress: string | null;
 
   @Column({ nullable: true })
-  avatarUrl: string;
+  avatarUrl: string | null;
 
   @Column({
     type: 'varchar',
@@ -64,15 +64,15 @@ export class User {
   longestStreak: number;
 
   @Column({ type: 'datetime', nullable: true })
-  lastActiveAt: Date;
+  lastActiveAt: Date | null;
 
   @Column({ nullable: true })
   @Exclude()
-  resetToken: string;
+  resetToken: string | null;
 
   @Column({ nullable: true })
   @Exclude()
-  resetTokenExpires: Date;
+  resetTokenExpires: Date | null;
 
   @CreateDateColumn()
   createdAt: Date;
