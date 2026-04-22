@@ -36,9 +36,6 @@ export class UsersController {
     return plainToInstance(UserProfileResponseDto, user);
   }
 
-  @Get('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-
   @Post('me/wallet/challenge')
   @HttpCode(HttpStatus.OK)
   async generateWalletChallenge(
