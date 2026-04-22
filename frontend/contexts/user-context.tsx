@@ -189,7 +189,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setUserStatsLoading(true);
     setUserStatsError(false);
     try {
-      const data = await api.get<UserStats>("/users/me/stats");
+      const data = await api.get<{
+        courseCount: number;
+        certificateCount: number;
+        xp: number;
+      }>("/users/me/stats");
       setUserStats(data);
     } catch {
       setUserStatsError(true);

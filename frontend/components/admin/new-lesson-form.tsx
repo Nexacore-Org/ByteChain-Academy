@@ -17,7 +17,7 @@ interface NewLessonFormProps {
   courseId: string
   open: boolean
   onClose: () => void
-  onSaved: (id?: string) => void
+  onSaved: () => void
   onQuizClick: (lessonId: string, title: string) => void
 }
 
