@@ -14,15 +14,15 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as PDFDocument from 'pdfkit';
 import * as QRCode from 'qrcode';
-import { Course } from 'src/courses/entities/course.entity';
-import { User } from 'src/users/entities/user.entity';
+import { Course } from '../courses/entities/course.entity';
+import { User } from '../users/entities/user.entity';
 import { CertificateVerificationResultDto } from './dto/certificate-response.dto';
 import { IssueCertificateDto } from './dto/issue-certificate.dto';
 import { VerifyCertificateDto } from './dto/verify-certificate.dto';
-import { NotificationsService } from 'src/notifications/notifications.service';
-import { NotificationType } from 'src/notifications/entities/notification.entity';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/entities/notification.entity';
 import { ConfigService } from '@nestjs/config';
-import { EmailService } from 'src/email/email.service';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class CertificateService {

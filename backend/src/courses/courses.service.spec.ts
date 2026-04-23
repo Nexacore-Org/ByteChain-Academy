@@ -4,9 +4,9 @@ import { NotFoundException } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { Course } from './entities/course.entity';
 import { CourseRegistration } from './entities/course-registration.entity';
-import { PaginationService } from 'src/common/services/pagination.service';
-import { Lesson } from 'src/lessons/entities/lesson.entity';
-import { Progress } from 'src/progress/entities/progress.entity';
+import { PaginationService } from '../common/services/pagination.service';
+import { Lesson } from '../lessons/entities/lesson.entity';
+import { Progress } from '../progress/entities/progress.entity';
 
 const now = new Date();
 
