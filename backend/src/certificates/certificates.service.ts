@@ -125,7 +125,7 @@ export class CertificateService {
         .fillColor('#1a3c5e')
         .fontSize(26)
         .font('Helvetica-Bold')
-        .text(certificate.recipientName, 0, 220, { align: 'center' });
+        .text(certificate.recipientName ?? 'Valued Student', 0, 220, { align: 'center' });
 
       doc
         .moveTo(160, 256)
@@ -398,7 +398,7 @@ export class CertificateService {
       message: 'Certificate is valid and verified.',
       certificate: {
         id: certificate.id,
-        recipientName: certificate.recipientName,
+        recipientName: certificate.recipientName ?? 'Valued Student',
         recipientEmail: certificate.recipientEmail,
         courseOrProgram: certificate.courseOrProgram,
         issuedAt: certificate.issuedAt,
@@ -491,7 +491,7 @@ export class CertificateService {
 
     return {
       valid: true,
-      recipientName: certificate.recipientName,
+      recipientName: certificate.recipientName ?? 'Valued Student',
       courseOrProgram: certificate.courseOrProgram,
       issuedAt: certificate.issuedAt,
     };
