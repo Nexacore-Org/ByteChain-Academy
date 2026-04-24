@@ -8,6 +8,7 @@ import {
   UseGuards,
   BadRequestException,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { Request } from 'express';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { ProgressService } from './progress.service';
@@ -17,6 +18,8 @@ interface RequestWithUser extends Request {
   user: { id: string; email: string; role: string };
 }
 
+@ApiTags('Progress')
+@ApiBearerAuth('access-token')
 @Controller('progress')
 export class ProgressController {
   constructor(private readonly progressService: ProgressService) {}
@@ -27,6 +30,10 @@ export class ProgressController {
    */
   @Post('lesson')
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Mark lesson as complete' })
+  @ApiResponse({ status: 201, description: 'Lesson marked as complete successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async completeLesson(
     @Req() req: RequestWithUser,
     @Body() dto: CompleteLessonDto,
@@ -43,6 +50,10 @@ export class ProgressController {
    */
   @Get('course/:courseId')
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get course progress' })
+  @ApiResponse({ status: 200, description: 'Course progress retrieved successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request - courseId required' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getCourseProgress(
     @Req() req: RequestWithUser,
     @Param('courseId') courseId: string,

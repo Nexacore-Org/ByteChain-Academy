@@ -12,8 +12,10 @@ export class CreateProposalDto {
   @ApiProperty({
     example: 'Introduce advanced React patterns to the frontend course.',
   })
+  @ApiProperty({ example: 'A concise description of the resource.', description: 'description field' })
   @IsNotEmpty()
   @IsString()
   @MinLength(20)
   description: string;
 }
+
