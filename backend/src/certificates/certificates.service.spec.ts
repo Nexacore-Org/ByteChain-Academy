@@ -9,7 +9,6 @@ import { NotificationsService } from 'src/notifications/notifications.service';
 import { ConfigService } from '@nestjs/config';
 import { EmailService } from 'src/email/email.service';
 
-const mockRepo = () => ({
 const now = new Date();
 
 const mockUser = {
@@ -42,7 +41,6 @@ const makeCertRepo = () => ({
   find: jest.fn(),
   create: jest.fn(),
   save: jest.fn(),
-});
   createQueryBuilder: jest.fn(),
 });
 

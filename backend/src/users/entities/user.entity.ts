@@ -34,7 +34,7 @@ export class User {
   bio: string;
 
   @Column({ unique: true, nullable: true })
-  walletAddress: string;
+  walletAddress: string | null;
 
   @Column({ nullable: true })
   avatarUrl: string;
