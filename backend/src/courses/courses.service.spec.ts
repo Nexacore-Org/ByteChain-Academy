@@ -59,25 +59,6 @@ describe('CoursesService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CoursesService,
-        { provide: getRepositoryToken(Course), useValue: mockRepo() },
-        {
-          provide: getRepositoryToken(CourseRegistration),
-          useValue: mockRepo(),
-        },
-        { provide: getRepositoryToken(Lesson), useValue: mockRepo() },
-        { provide: getRepositoryToken(Progress), useValue: mockRepo() },
-        {
-          provide: PaginationService,
-          useValue: {
-            paginate: jest.fn().mockResolvedValue({
-              data: [],
-              total: 0,
-              page: 1,
-              limit: 10,
-              totalPages: 0,
-            }),
-          },
-        },
         { provide: getRepositoryToken(Course), useValue: courseRepo },
         { provide: getRepositoryToken(CourseRegistration), useValue: regRepo },
         { provide: getRepositoryToken(Lesson), useValue: lessonRepo },

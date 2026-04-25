@@ -26,7 +26,7 @@ export class Certificate {
   /**
    * Recipient info (denormalized for easy access & PDF rendering)
    */
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   recipientName: string | null;
 
   @Column()
@@ -57,10 +57,10 @@ export class Certificate {
   /**
    * Certificate lifecycle
    */
-  @Column()
+  @Column({ type: 'datetime' })
   issuedAt: Date;
 
-  @Column({ nullable: true })
+  @Column({ type: 'datetime', nullable: true })
   expiresAt: Date;
 
   @Column({ default: true })
@@ -69,7 +69,7 @@ export class Certificate {
   /**
    * Optional PDF path
    */
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   certificatePath?: string;
 
   /**

@@ -30,7 +30,7 @@ describe('RewardsService', () => {
     create: jest.Mock;
     save: jest.Mock;
   };
-  let dataSource: { transaction: jest.Mock };
+  let dataSource: { transaction: jest.Mock; options: { type: string } };
 
   beforeEach(async () => {
     userRepository = {
@@ -55,6 +55,7 @@ describe('RewardsService', () => {
     };
 
     dataSource = {
+      options: { type: 'postgres' },
       transaction: jest.fn(async (cb: (m: unknown) => Promise<void>) => {
         const manager = {
           findOne: jest.fn(),

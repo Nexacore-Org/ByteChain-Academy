@@ -1,12 +1,20 @@
+process.env.JWT_SECRET = 'test_secret_at_least_32_characters_long';
+process.env.NODE_ENV = 'test';
+process.env.SMTP_HOST = '';
+process.env.SMTP_USER = '';
+process.env.SMTP_PASS = '';
+process.env.APP_URL = 'http://localhost:3001';
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { DataSource } from 'typeorm';
-import { User } from '../src/entities/user.entity';
-import { Course } from '../src/entities/course.entity';
-import { Lesson } from '../src/entities/lesson.entity';
+import { User } from '../src/users/entities/user.entity';
+import { UserRole } from '../src/common/enums/user-role.enum';
+import { Course } from '../src/courses/entities/course.entity';
+import { Lesson } from '../src/lessons/entities/lesson.entity';
 
 describe('LessonsController (e2e)', () => {
   let app: INestApplication<App>;
@@ -22,6 +30,7 @@ describe('LessonsController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
     dataSource = moduleFixture.get<DataSource>(DataSource);
     await app.init();
 
@@ -35,6 +44,9 @@ describe('LessonsController (e2e)', () => {
 
     authToken = registerResponse.body.token;
     userId = registerResponse.body.user.id;
+
+    // Promote to admin
+    await dataSource.getRepository(User).update(userId, { role: UserRole.ADMIN });
 
     // Create test course
     const courseResponse = await request(app.getHttpServer())
@@ -119,9 +131,9 @@ describe('LessonsController (e2e)', () => {
         .post('/lessons')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          title: 'Test Lesson',
-          content: 'Test content',
-          courseId: 'non-existent-course-id',
+          title: 'Lesson 1',
+          content: 'Content',
+          courseId: '00000000-0000-0000-0000-000000000000',
         })
         .expect(404);
     });
@@ -181,16 +193,17 @@ describe('LessonsController (e2e)', () => {
         .get(`/lessons/course/${courseId}`)
         .expect(200);
 
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body.length).toBeGreaterThanOrEqual(3);
+      expect(response.body).toHaveProperty('data');
+      expect(Array.isArray(response.body.data)).toBe(true);
+      expect(response.body.data.length).toBeGreaterThanOrEqual(3);
       // Should be ordered by order ASC
-      expect(response.body[0].order).toBeLessThanOrEqual(
-        response.body[1].order,
+      expect(response.body.data[0].order).toBeLessThanOrEqual(
+        response.body.data[1].order,
       );
-      expect(response.body[0]).toHaveProperty('id');
-      expect(response.body[0]).toHaveProperty('title');
-      expect(response.body[0]).toHaveProperty('content');
-      expect(response.body[0]).toHaveProperty('courseId', courseId);
+      expect(response.body.data[0]).toHaveProperty('id');
+      expect(response.body.data[0]).toHaveProperty('title');
+      expect(response.body.data[0]).toHaveProperty('content');
+      expect(response.body.data[0]).toHaveProperty('courseId', courseId);
     });
 
     it('should return empty array for course with no lessons', async () => {
@@ -209,8 +222,9 @@ describe('LessonsController (e2e)', () => {
         .get(`/lessons/course/${newCourseId}`)
         .expect(200);
 
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body.length).toBe(0);
+      expect(response.body).toHaveProperty('data');
+      expect(Array.isArray(response.body.data)).toBe(true);
+      expect(response.body.data.length).toBe(0);
 
       // Cleanup
       await dataSource.getRepository(Course).delete({ id: newCourseId });

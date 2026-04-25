@@ -119,7 +119,7 @@ export class RewardsService {
     await this.dataSource.transaction(async (manager) => {
       const user = await manager.findOne(User, {
         where: { id: userId },
-        lock: { mode: 'pessimistic_write' },
+        lock: this.dataSource.options.type === 'sqlite' ? undefined : { mode: 'pessimistic_write' },
       });
       if (!user) {
         throw new NotFoundException('User not found');

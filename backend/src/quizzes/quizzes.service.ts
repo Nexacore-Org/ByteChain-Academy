@@ -60,16 +60,16 @@ export class QuizzesService {
     });
 
     const savedQuiz = await this.quizRepository.save(quiz);
+    let quizId = savedQuiz.id;
 
     if (createQuizDto.questions && createQuizDto.questions.length > 0) {
       const questions = createQuizDto.questions.map((q) =>
         this.questionRepository.create({ ...q, quizId: savedQuiz.id }),
       );
       await this.questionRepository.save(questions);
-      savedQuiz.questions = questions;
     }
 
-    return savedQuiz;
+    return this.findOne(quizId);
   }
 
   async findByLessonId(lessonId: string): Promise<Quiz> {

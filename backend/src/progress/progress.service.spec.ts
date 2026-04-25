@@ -6,6 +6,7 @@ import { Lesson } from 'src/lessons/entities/lesson.entity';
 import { CertificateService } from 'src/certificates/certificates.service';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { RewardsService } from 'src/rewards/rewards.service';
+import { StreakService } from 'src/users/streak.service';
 
 const makeProgressRepo = () => ({
   findOne: jest.fn(),
@@ -26,6 +27,7 @@ describe('ProgressService', () => {
   let certificateService: { issueCertificateForCourse: jest.Mock };
   let notificationsService: { createNotification: jest.Mock };
   let rewardsService: { awardXP: jest.Mock };
+  let streakService: { updateStreak: jest.Mock };
 
   beforeEach(async () => {
     progressRepo = makeProgressRepo();
@@ -33,6 +35,7 @@ describe('ProgressService', () => {
     certificateService = { issueCertificateForCourse: jest.fn().mockResolvedValue({}) };
     notificationsService = { createNotification: jest.fn().mockResolvedValue(undefined) };
     rewardsService = { awardXP: jest.fn().mockResolvedValue({ xp: 10, newlyAwardedBadges: [] }) };
+    streakService = { updateStreak: jest.fn().mockResolvedValue(undefined) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -42,6 +45,7 @@ describe('ProgressService', () => {
         { provide: CertificateService, useValue: certificateService },
         { provide: NotificationsService, useValue: notificationsService },
         { provide: RewardsService, useValue: rewardsService },
+        { provide: StreakService, useValue: streakService },
       ],
     }).compile();
 

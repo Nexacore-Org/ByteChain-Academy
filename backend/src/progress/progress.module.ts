@@ -7,6 +7,7 @@ import { Lesson } from 'src/lessons/entities/lesson.entity';
 import { CertificatesModule } from 'src/certificates/certificates.module';
 import { NotificationsModule } from 'src/notifications/notifications.module';
 import { RewardsModule } from 'src/rewards/rewards.module';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { RewardsModule } from 'src/rewards/rewards.module';
     CertificatesModule,
     NotificationsModule,
     RewardsModule,
+    UsersModule,
   ],
   controllers: [ProgressController],
   providers: [ProgressService],
