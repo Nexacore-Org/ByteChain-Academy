@@ -13,7 +13,9 @@ import {
   Gift,
   FileCheck,
   Shield,
-  LayoutDashboard
+  LayoutDashboard,
+  Vote,
+  Landmark
 } from "lucide-react";
 
 export function AccountDropdown() {
@@ -158,6 +160,24 @@ export function AccountDropdown() {
             >
               <FileCheck className="w-4 h-4" />
               Verify Certificate
+            </button>
+
+            <button
+              onClick={() => handleNavigate("/dao")}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+              role="menuitem"
+            >
+              <Vote className="w-4 h-4" />
+              DAO Governance
+            </button>
+
+            <button
+              onClick={() => handleNavigate("/currencies")}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+              role="menuitem"
+            >
+              <Landmark className="w-4 h-4" />
+              Currencies Hub
             </button>
 
             <button
