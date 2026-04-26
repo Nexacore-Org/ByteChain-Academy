@@ -1,5 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { RegisterDto } from './dto/register.dto';
@@ -8,6 +11,7 @@ import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UserService } from 'src/users/users.service';
 import { EmailService } from 'src/email/email.service';
+import { UserRole } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -49,6 +53,10 @@ export class AuthService {
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (user.suspended) {
+      throw new ForbiddenException('Your account has been suspended');
     }
 
     const token = this.generateToken(user);
@@ -94,7 +102,7 @@ export class AuthService {
     };
   }
 
-  private generateToken(user: any) {
+  private generateToken(user: { id: string; email: string; role: UserRole }) {
     const payload = {
       sub: user.id,
       email: user.email,
