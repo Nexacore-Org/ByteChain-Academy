@@ -59,7 +59,8 @@ export function QuizManagerPanel({
   open,
   onClose,
   lessonTitle,
-  lessonId: _lessonId, // kept in interface for callers, prefixed to suppress unused-var
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  lessonId: _lessonId,
   quiz,
   loading,
   error,
