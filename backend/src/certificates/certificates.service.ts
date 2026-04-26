@@ -22,7 +22,10 @@ import { VerifyCertificateDto } from './dto/verify-certificate.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
 import { ConfigService } from '@nestjs/config';
+<<<<<<< HEAD
 import { EmailService } from '../email/email.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
+import { WebhookEvent } from '../webhooks/dto/create-webhook.dto';
 
 @Injectable()
 export class CertificateService {
@@ -36,6 +39,7 @@ export class CertificateService {
     private readonly notificationsService: NotificationsService,
     private readonly emailService: EmailService,
     private readonly configService: ConfigService,
+    private readonly webhooksService: WebhooksService,
   ) {}
 
   /* -------------------------------------------------------------------------- */
@@ -276,18 +280,32 @@ export class CertificateService {
       '/certificates',
     );
 
-    const clientBaseUrl =
-      this.configService.get<string>('CLIENT_URL') ?? 'http://localhost:3000';
-    const downloadUrl = `${clientBaseUrl}/certificates/${savedCertificate.certificateHash}`;
     const username = user.name || user.username || user.email.split('@')[0];
 
-    await this.emailService.sendCertificateEmail(
-      user.email,
-      username,
-      course.title,
-      savedCertificate.certificateHash,
-      downloadUrl,
-    );
+    // Send email with PDF attachment - non-fatal so a mail failure won't
+    // roll back certificate creation
+    try {
+      await this.emailService.sendCertificateEmail(
+        user.email,
+        username,
+        course.title,
+        savedCertificate.certificateHash,
+        savedCertificate.certificatePath,
+      );
+    } catch (error) {
+      console.error('Failed to send certificate email:', error);
+    }
+
+    // Dispatch webhook event
+    await this.webhooksService.dispatchEvent(WebhookEvent.CERTIFICATE_ISSUED, {
+      certificateId: savedCertificate.id,
+      userId: user.id,
+      courseId: course.id,
+      certificateHash: savedCertificate.certificateHash,
+      recipientName: savedCertificate.recipientName,
+      courseTitle: course.title,
+      issuedAt: savedCertificate.issuedAt,
+    });
 
     return savedCertificate;
   }

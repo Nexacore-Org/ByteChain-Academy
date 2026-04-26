@@ -9,11 +9,13 @@ import { PaginationService } from '../common/services/pagination.service';
 import { LessonsModule } from '../lessons/lessons.module';
 import { Lesson } from '../lessons/entities/lesson.entity';
 import { Progress } from '../progress/entities/progress.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Course, CourseRegistration, Lesson, Progress]),
     forwardRef(() => LessonsModule),
+    NotificationsModule,
   ],
   controllers: [CoursesController, AdminCoursesController],
   providers: [CoursesService, PaginationService],
