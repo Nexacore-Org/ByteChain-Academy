@@ -84,7 +84,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [notificationPreferences, setNotificationPreferences] =
     useState<NotificationPreferences>(defaultNotificationPreferences);
 
-  const loadUserData = () => {
+  const loadUserData = useCallback(() => {
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("auth_token");
       if (token) {
@@ -127,7 +127,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
       }
     }
-  };
+  }, []);
 
   const createDefaultUser = () => {
     const email = localStorage.getItem("user_email") || "student@bytechain.edu";
@@ -154,7 +154,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
+  }, [loadUserData]);
 
   const updateProfile = (updates: Partial<UserProfile>) => {
     if (user) {

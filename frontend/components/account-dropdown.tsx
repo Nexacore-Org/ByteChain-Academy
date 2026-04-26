@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { useUser } from "@/contexts/user-context";
@@ -84,9 +85,11 @@ export function AccountDropdown() {
         {/* Avatar */}
         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#00ff88] to-[#00d88b] flex items-center justify-center text-[#002E20] text-sm font-bold">
           {user?.avatar ? (
-            <img
+            <Image
               src={user.avatar}
               alt={user.fullName}
+              width={32}
+              height={32}
               className="w-full h-full rounded-full object-cover"
             />
           ) : (

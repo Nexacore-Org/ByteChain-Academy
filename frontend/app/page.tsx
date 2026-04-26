@@ -7,7 +7,7 @@ import { SignUpModal } from "@/components/auth/signup-modal"
 import { LoginModal } from "@/components/auth/login-modal"
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
-import { Play, Book, Zap, BookOpenIcon } from "lucide-react"
+import { Play, Zap, BookOpenIcon } from "lucide-react"
 import Link from "next/link"
 
 export default function Home() {

@@ -71,7 +71,15 @@ export function QuizManagerPanel({
   onSuccess,
 }: QuizManagerPanelProps) {
   const [passingScore, setPassingScore] = useState(70)
-  const [questions, setQuestions] = useState<Array<QuizQuestionForm & { _sortId?: string }>>([])
+  const [questions, setQuestions] = useState<Array<QuizQuestionForm & { _sortId?: string }>>(() =>
+    quiz?.questions?.map((q) => ({
+      id: q.id,
+      text: q.text,
+      options: q.options || [],
+      correctAnswer: q.correctAnswer || "",
+      _sortId: q.id || nextSortId(),
+    })) ?? []
+  )
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
   const [successToast, setSuccessToast] = useState(false)
 
@@ -91,9 +99,7 @@ export function QuizManagerPanel({
     } else if (!quiz && open) {
       setQuestions([])
     }
-    // Sync quiz prop to local questions state
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-  }, [quiz, open])
+  }, [quiz?.questions, open])
 
   const addQuestion = () => {
     setQuestions((prev) => [
