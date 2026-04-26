@@ -20,6 +20,7 @@ import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { UserService } from './users.service';
 import { WalletService } from './wallet.service';
 import { RolesGuard } from 'src/common/guards/roles.guard';
+import { DeleteAccountDto } from './dto/delete-account.dto';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -28,7 +29,7 @@ export class UsersController {
   constructor(
     private readonly userService: UserService,
     private readonly walletService: WalletService,
-  ) {}
+  ) { }
 
   @Get('me')
   async getMyProfile(@Request() req): Promise<UserProfileResponseDto> {
@@ -72,8 +73,11 @@ export class UsersController {
 
   @Delete('me')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteProfile(@Request() req): Promise<void> {
-    await this.userService.deleteProfile(req.user.id);
+  async deleteProfile(
+    @Request() req,
+    @Body() dto: DeleteAccountDto,
+  ): Promise<void> {
+    await this.userService.deleteProfile(req.user.id, dto.password);
   }
 
   @Get('me/stats')

@@ -28,4 +28,28 @@ describe('UserService', () => {
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
+
+  it('should throw on wrong password', async () => {
+    await expect(
+      service.deleteProfile(user.id, 'wrong-password'),
+    ).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('should anonymise user on correct password', async () => {
+    await service.deleteProfile(user.id, validPassword);
+
+    const updated = await repo.findOne({ where: { id: user.id } });
+
+    expect(updated.email).toMatch(/^deleted-.*@bytechain\.invalid$/);
+    expect(updated.name).toBe('Deleted User');
+    expect(updated.username).toBeNull();
+  });
+
+  it('should prevent login after deletion', async () => {
+    await service.deleteProfile(user.id, validPassword);
+
+    await expect(
+      authService.validateUser(user.email, validPassword),
+    ).rejects.toThrow();
+  });
 });
