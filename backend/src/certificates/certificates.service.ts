@@ -276,18 +276,23 @@ export class CertificateService {
       '/certificates',
     );
 
-    const clientBaseUrl =
-      this.configService.get<string>('CLIENT_URL') ?? 'http://localhost:3000';
-    const downloadUrl = `${clientBaseUrl}/certificates/${savedCertificate.certificateHash}`;
     const username = user.name || user.username || user.email.split('@')[0];
 
-    await this.emailService.sendCertificateEmail(
-      user.email,
-      username,
-      course.title,
-      savedCertificate.certificateHash,
-      downloadUrl,
-    );
+    // Send email with PDF attachment - make it non-fatal
+    try {
+      await this.emailService.sendCertificateEmail(
+        user.email,
+        username,
+        course.title,
+        savedCertificate.certificateHash,
+        savedCertificate.certificatePath,
+      );
+    } catch (error) {
+      // Log error but don't prevent certificate creation
+      console.error('Failed to send certificate email:', error);
+      // Optionally, you could use a proper logger here
+      // this.logger.error('Failed to send certificate email', error);
+    }
 
     return savedCertificate;
   }
