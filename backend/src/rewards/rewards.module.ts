@@ -7,11 +7,13 @@ import { UserBadge } from './entities/user-badge.entity';
 import { RewardsController } from './rewards.controller';
 import { RewardsService } from './rewards.service';
 import { NotificationsModule } from 'src/notifications/notifications.module';
+import { WebhooksModule } from 'src/webhooks/webhooks.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Badge, UserBadge, RewardHistory]),
     NotificationsModule,
+    WebhooksModule,
   ],
   controllers: [RewardsController],
   providers: [RewardsService],

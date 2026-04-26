@@ -26,6 +26,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 import { MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { CurrenciesModule } from './currencies/currencies.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
 
 @Module({
   imports: [
@@ -117,6 +118,7 @@ import { CurrenciesModule } from './currencies/currencies.module';
     DAOModule,
     EmailModule,
     CurrenciesModule,
+    WebhooksModule,
   ],
   controllers: [AppController],
   providers: [

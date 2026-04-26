@@ -8,6 +8,7 @@ import { CertificatesModule } from 'src/certificates/certificates.module';
 import { NotificationsModule } from 'src/notifications/notifications.module';
 import { RewardsModule } from 'src/rewards/rewards.module';
 import { UsersModule } from 'src/users/users.module';
+import { WebhooksModule } from 'src/webhooks/webhooks.module';
 
 
 @Module({
@@ -17,6 +18,7 @@ import { UsersModule } from 'src/users/users.module';
     NotificationsModule,
     RewardsModule,
     UsersModule,
+    WebhooksModule,
   ],
 
   controllers: [ProgressController],
