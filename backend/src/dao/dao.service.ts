@@ -52,6 +52,7 @@ export class DAOService {
     const query = this.proposalRepository
       .createQueryBuilder('proposal')
       .leftJoinAndSelect('proposal.proposer', 'proposer')
+      .leftJoinAndSelect('proposal.moderator', 'moderator')
       .orderBy('proposal.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
@@ -67,7 +68,7 @@ export class DAOService {
   async getProposalById(id: string): Promise<DAOProposal> {
     const proposal = await this.proposalRepository.findOne({
       where: { id },
-      relations: ['proposer'],
+      relations: ['proposer', 'moderator'],
     });
 
     if (!proposal) {
