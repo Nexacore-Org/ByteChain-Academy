@@ -1,12 +1,15 @@
 /**
  * API client for ByteChain backend.
- * Uses NEXT_PUBLIC_API_URL or falls back to http://localhost:3001/api/v1.
+ * Uses NEXT_PUBLIC_API_URL or falls back to http://localhost:3001.
  */
-
-const API_BASE =
+const RAW_API_BASE =
   typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL
     ? process.env.NEXT_PUBLIC_API_URL
-    : "http://localhost:3001/api/v1";
+    : "http://localhost:3001";
+
+const API_BASE = RAW_API_BASE.endsWith("/api/v1")
+  ? RAW_API_BASE
+  : `${RAW_API_BASE.replace(/\/$/, "")}/api/v1`;
 
 function getAuthHeaders(): HeadersInit {
   if (typeof window === "undefined") return {};

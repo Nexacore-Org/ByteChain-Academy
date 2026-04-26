@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/auth-context";
 import { LearningProvider } from "@/contexts/learning-context";
+import { Providers } from "@/components/providers";
 import { UserProvider } from "@/contexts/user-context";
 
 const geistSans = Geist({
@@ -34,13 +35,14 @@ export default function RootLayout({
       >
         <AuthProvider>
           <UserProvider>
-            <LearningProvider>
-              {children}
-              <Toaster theme="dark" position="top-center" richColors />
-            </LearningProvider>
+            <Providers>
+              <LearningProvider>
+                {children}
+                <Toaster theme="dark" position="top-center" richColors />
+              </LearningProvider>
+            </Providers>
           </UserProvider>
         </AuthProvider>
-        <Toaster theme="dark" position="top-center" richColors />
       </body>
     </html>
   );

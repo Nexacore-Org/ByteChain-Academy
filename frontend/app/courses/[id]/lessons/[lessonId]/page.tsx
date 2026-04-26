@@ -1,6 +1,6 @@
 "use client"
 
-import { use, useState } from "react"
+import { use } from "react"
 import { Header } from "@/components/header"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import { ArrowLeft, CheckCircle2, ChevronRight, ChevronLeft, FileQuestion } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
+import { toast } from "sonner"
 
 export default function LessonPage({
   params,
@@ -16,10 +17,9 @@ export default function LessonPage({
   params: Promise<{ id: string; lessonId: string }>
 }) {
   const { id, lessonId } = use(params)
-  const { courses, markLessonComplete, getQuiz } = useLearning()
+  const { courses, markLessonComplete, isCompletingLesson } = useLearning()
   const { isAuthenticated } = useAuth()
   const router = useRouter()
-  const [isCompleting, setIsCompleting] = useState(false)
 
   const course = courses.find((c) => c.id === id)
   const lesson = course?.lessons.find((l) => l.id === lessonId)
@@ -58,11 +58,10 @@ export default function LessonPage({
   const prevLesson = currentIndex > 0 ? sortedLessons[currentIndex - 1] : null
 
   const handleMarkComplete = async () => {
-    setIsCompleting(true)
-    // Simulate a brief delay for better UX
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    markLessonComplete(course.id, lesson.id)
-    setIsCompleting(false)
+    const didComplete = await markLessonComplete(course.id, lesson.id)
+    if (didComplete) {
+      toast.success("Lesson marked as complete.")
+    }
   }
 
   const handleNextLesson = () => {
@@ -128,10 +127,10 @@ export default function LessonPage({
                 {!lesson.completed ? (
                   <Button
                     onClick={handleMarkComplete}
-                    disabled={isCompleting}
+                    disabled={isCompletingLesson}
                     className="bg-[#00ff88] text-[#002E20] flex-1"
                   >
-                    {isCompleting ? "Marking..." : "Mark as Complete"}
+                    {isCompletingLesson ? "Marking..." : "Mark as Complete"}
                   </Button>
                 ) : (
                   <Button
