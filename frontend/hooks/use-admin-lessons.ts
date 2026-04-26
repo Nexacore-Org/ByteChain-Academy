@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { api } from "@/lib/api"
 
 export interface AdminLesson {
@@ -22,46 +22,100 @@ export interface AdminCourse {
 }
 
 export function useAdminLessons(courseId: string | null) {
-  const [lessons, setLessons] = useState<AdminLesson[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const queryClient = useQueryClient()
+  const lessonsKey = ["lessons", courseId]
 
-  const fetchLessons = useCallback(async () => {
-    if (!courseId) return
-    setLoading(true)
-    setError(null)
-    try {
-      const list = await api.get<{ id: string; title: string; content: string; videoUrl: string | null; videoStartTimestamp: number | null; order: number; courseId: string }[]>(
-        `/lessons/course/${courseId}`
-      )
+  const lessonsQuery = useQuery({
+    queryKey: lessonsKey,
+    enabled: Boolean(courseId),
+    queryFn: async () => {
+      const list = await api.get<
+        {
+          id: string
+          title: string
+          content: string
+          videoUrl: string | null
+          videoStartTimestamp: number | null
+          order: number
+          courseId: string
+        }[]
+      >(`/lessons/course/${courseId}`)
+
       const withQuiz = await Promise.all(
-        list.map(async (l) => {
+        list.map(async (lesson) => {
           try {
-            await api.get(`/quizzes/lesson/${l.id}`)
-            return { ...l, hasQuiz: true }
+            await api.get(`/quizzes/lesson/${lesson.id}`)
+            return { ...lesson, hasQuiz: true }
           } catch {
-            return { ...l, hasQuiz: false }
+            return { ...lesson, hasQuiz: false }
           }
         })
       )
-      setLessons(withQuiz.sort((a, b) => a.order - b.order))
-    } catch {
-      setError("Failed to load lessons")
-      setLessons([])
-    } finally {
-      setLoading(false)
-    }
-  }, [courseId])
+      return withQuiz.sort((a, b) => a.order - b.order)
+    },
+  })
 
-  useEffect(() => {
-    fetchLessons()
-  }, [fetchLessons])
+  const deleteLessonMutation = useMutation({
+    mutationFn: async (lessonId: string) => {
+      await api.delete(`/lessons/${lessonId}`)
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: lessonsKey })
+    },
+  })
 
-  const updateLessonHasQuiz = useCallback((lessonId: string, hasQuiz: boolean) => {
-    setLessons((prev) =>
-      prev.map((l) => (l.id === lessonId ? { ...l, hasQuiz } : l))
+  const createLessonMutation = useMutation({
+    mutationFn: async (payload: {
+      title: string
+      content: string
+      videoUrl?: string | null
+      videoStartTimestamp?: number | null
+    }) => {
+      if (!courseId) return null
+      return api.post<AdminLesson>("/lessons", {
+        ...payload,
+        courseId,
+      })
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: lessonsKey })
+    },
+  })
+
+  const updateLessonMutation = useMutation({
+    mutationFn: async (payload: {
+      lessonId: string
+      title?: string
+      content?: string
+      videoUrl?: string | null
+      videoStartTimestamp?: number | null
+      order?: number
+    }) => {
+      const { lessonId, ...body } = payload
+      return api.patch<AdminLesson>(`/lessons/${lessonId}`, body)
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: lessonsKey })
+    },
+  })
+
+  const updateLessonHasQuiz = (lessonId: string, hasQuiz: boolean) => {
+    queryClient.setQueryData<AdminLesson[]>(lessonsKey, (prev = []) =>
+      prev.map((lesson) => (lesson.id === lessonId ? { ...lesson, hasQuiz } : lesson))
     )
-  }, [])
+  }
 
-  return { lessons, loading, error, refetch: fetchLessons, updateLessonHasQuiz }
+  return {
+    lessons: lessonsQuery.data ?? [],
+    loading: lessonsQuery.isLoading,
+    error: lessonsQuery.isError ? "Failed to load lessons" : null,
+    refetch: lessonsQuery.refetch,
+    deleteLesson: deleteLessonMutation.mutateAsync,
+    createLesson: createLessonMutation.mutateAsync,
+    updateLesson: updateLessonMutation.mutateAsync,
+    isDeletingLesson: deleteLessonMutation.isPending,
+    isCreatingLesson: createLessonMutation.isPending,
+    isUpdatingLesson: updateLessonMutation.isPending,
+    updateLessonHasQuiz,
+  }
 }
