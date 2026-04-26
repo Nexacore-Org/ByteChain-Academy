@@ -56,6 +56,19 @@ export class DAOProposal {
   @CreateDateColumn()
   createdAt: Date;
 
+  @Column({ nullable: true })
+  moderationReason: string | null;
+
+  @Column({ type: 'datetime', nullable: true })
+  moderatedAt: Date | null;
+
+  @Column({ nullable: true })
+  moderatorId: string | null;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'moderatorId' })
+  moderator: User;
+
   @OneToMany(() => DAOVote, (vote) => vote.proposal)
   votes: DAOVote[];
 }
