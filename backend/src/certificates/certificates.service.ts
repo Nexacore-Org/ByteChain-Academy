@@ -23,6 +23,8 @@ import { NotificationsService } from 'src/notifications/notifications.service';
 import { NotificationType } from 'src/notifications/entities/notification.entity';
 import { ConfigService } from '@nestjs/config';
 import { EmailService } from 'src/email/email.service';
+import { WebhooksService } from 'src/webhooks/webhooks.service';
+import { WebhookEvent } from 'src/webhooks/dto/create-webhook.dto';
 
 @Injectable()
 export class CertificateService {
@@ -36,6 +38,7 @@ export class CertificateService {
     private readonly notificationsService: NotificationsService,
     private readonly emailService: EmailService,
     private readonly configService: ConfigService,
+    private readonly webhooksService: WebhooksService,
   ) {}
 
   /* -------------------------------------------------------------------------- */
@@ -288,6 +291,17 @@ export class CertificateService {
       savedCertificate.certificateHash,
       downloadUrl,
     );
+    
+    // Dispatch webhook event
+    await this.webhooksService.dispatchEvent(WebhookEvent.CERTIFICATE_ISSUED, {
+      certificateId: savedCertificate.id,
+      userId: user.id,
+      courseId: course.id,
+      certificateHash: savedCertificate.certificateHash,
+      recipientName: savedCertificate.recipientName,
+      courseTitle: course.title,
+      issuedAt: savedCertificate.issuedAt,
+    });
 
     return savedCertificate;
   }
