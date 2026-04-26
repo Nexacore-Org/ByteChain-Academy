@@ -1,84 +1,104 @@
-# 🤝 Contributing to ByteChain Academy
+# Contributing to ByteChain Academy
 
-We welcome and appreciate contributions from the community! Here’s how to get involved:
+Thank you for contributing to ByteChain Academy.
 
-## 📦 How to Contribute
+This guide follows the Drips Wave contribution workflow used for community-led delivery.
 
-1. **Fork the repository** to your GitHub account.
-2. **Clone your forked repo:**
-   ```bash
-   git clone https://github.com/your-username/ByteChain-Academy.git
-   ```
-3. **Create a new branch:**
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-4. Make your changes and **commit** using clear messages.
-5. **Push to your branch** and open a **Pull Request** to the `main` branch.
+## Drips Wave contribution guide
 
-## ⚠️ Avoid Generic Comments
+1. Pick one issue and confirm scope before writing code.
+2. Share a short plan (problem, approach, ETA) in the issue thread.
+3. Wait for assignment or maintainer approval before starting implementation.
+4. Keep the PR narrowly scoped to the assigned issue.
+5. Ship with passing checks and clear documentation updates.
 
-Comments such as:
+## Issue assignment process
 
-- 🚫 "Can I help with this?"
-- 🚫 "I’d love to contribute!"
-- 🚫 "Check out my profile!"
-- 🚫 "Can I work on this?"
+1. Comment on the issue with:
+  - your approach in 3-6 lines
+  - expected completion time
+  - any blockers/dependencies
+2. A maintainer assigns the issue.
+3. Start implementation only after assignment.
+4. If you stop working on it, unassign yourself or notify maintainers quickly.
 
-...will not be considered.
+## Branch naming conventions
 
-Instead, please provide:
+Use one of these prefixes:
 
-- A brief **introduction** about yourself
-- A concise **plan (3–6 lines max)** outlining how you’ll solve the issue
-- Your **estimated completion time (ETA)**
+- `feat/<short-description>`
+- `fix/<short-description>`
+- `ci/<short-description>`
+- `docs/<short-description>`
 
-## 📢 Join the Community
+Examples:
 
-All contributors **must** join our official Telegram group to stay in sync:
-👉 [https://t.me/ByteChainAcademy](https://t.me/ByteChainAcademy)
+- `feat/dao-voting-history`
+- `fix/auth-refresh-loop`
+- `ci/add-backend-cache`
+- `docs/deployment-readme`
 
-## 🧪 Code of Conduct
+## Development workflow
 
-Please review our [Code of Conduct](CODE_OF_CONDUCT.md) to help us create a welcoming environment for everyone.
+1. Fork and clone:
 
-## 🔧 Development Standards
+```bash
+git clone https://github.com/<your-username>/ByteChain-Academy.git
+cd ByteChain-Academy
+```
 
-- Follow our coding standards (ESLint + Prettier configured).
-- Follow the project structure and naming conventions.
-- Include meaningful commit messages:
-  ```bash
-  feat: Add quiz timer component
-  fix: Resolve routing bug on lesson pages
-  docs: Update README with new instructions
-  ```
+2. Create a branch:
 
-## 🧵 Branch Naming Convention
+```bash
+git checkout -b docs/your-change
+```
 
-| Type    | Prefix     | Example                    |
-| ------- | ---------- | -------------------------- |
-| Feature | `feature/` | `feature/add-profile-tab`  |
-| Bugfix  | `fix/`     | `fix/login-validation`     |
-| Docs    | `docs/`    | `docs/update-contributing` |
+3. Make changes with focused commits.
 
-## ✅ Opening Issues
+4. Run relevant checks:
 
-- Check if the issue already exists.
-- Use a clear title and description.
-- Add relevant labels if possible (bug, feature, enhancement).
+```bash
+# backend
+cd backend
+npm run lint
+npm run test
+npm run build
 
-## 🧪 Testing Guidelines
+# frontend
+cd ../frontend
+npm run lint
+npm run build
+```
 
-- Run all tests before submitting a PR:
-  ```bash
-  npm run test
-  ```
-- Add new tests if introducing new functionality.
+## PR standards
 
-## 🛡️ Security
+Every pull request should include:
 
-If you discover a security vulnerability, please **do not open an issue**. Instead, email us directly at [contact@nexacore.org](mailto:nexacore.org@gmail.com).
+- a clear title using conventional style (`feat:`, `fix:`, `docs:`, `ci:`)
+- linked issue number (for example, `Closes #295`)
+- short summary of what changed and why
+- testing evidence (commands run and outcomes)
+- screenshots for frontend/UI changes when relevant
 
----
+PR quality requirements:
 
-Thank you for helping make ByteChain Academy better! 🙌
+- one concern per PR
+- no unrelated refactors
+- no secrets in commits
+- updated docs when behavior/config changes
+
+## Commit message style
+
+Recommended format:
+
+- `feat: add certificate verification endpoint`
+- `fix: handle missing auth token in dashboard`
+- `docs: expand backend deployment guide`
+- `ci: add node cache for frontend workflow`
+
+## Code of conduct and security
+
+- Be respectful in discussions and reviews.
+- Report security issues privately to maintainers instead of opening a public issue.
+
+Thanks for helping improve ByteChain Academy.
