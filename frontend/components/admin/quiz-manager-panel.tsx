@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState } from "react"
 import {
   DndContext,
   closestCenter,
@@ -59,7 +59,7 @@ export function QuizManagerPanel({
   open,
   onClose,
   lessonTitle,
-  lessonId: _lessonId,
+  lessonId: _lessonId, // kept in interface for callers, prefixed to suppress unused-var
   quiz,
   loading,
   error,
@@ -85,24 +85,8 @@ export function QuizManagerPanel({
 
   const isEditMode = !!quiz
 
-  useEffect(() => {
-    if (quiz?.questions?.length) {
-      setQuestions(
-        quiz.questions.map((q) => ({
-          id: q.id,
-          text: q.text,
-          options: q.options || [],
-          correctAnswer: q.correctAnswer || "",
-          _sortId: q.id || nextSortId(),
-        }))
-      )
-    } else if (!quiz && open) {
-      setQuestions([])
-    }
-  }, [quiz?.questions, open])
-
   const addQuestion = () => {
-    setQuestions((prev) => [
+    setQuestions((prev: Array<QuizQuestionForm & { _sortId?: string }>) => [
       ...prev,
       {
         text: "",
@@ -114,7 +98,7 @@ export function QuizManagerPanel({
   }
 
   const updateQuestion = (idx: number, q: QuizQuestionForm) => {
-    setQuestions((prev) => {
+    setQuestions((prev: Array<QuizQuestionForm & { _sortId?: string }>) => {
       const next = [...prev]
       next[idx] = { ...q, _sortId: next[idx]._sortId }
       return next
@@ -122,16 +106,16 @@ export function QuizManagerPanel({
   }
 
   const removeQuestion = (idx: number) => {
-    setQuestions((prev) => prev.filter((_, i) => i !== idx))
+    setQuestions((prev: Array<QuizQuestionForm & { _sortId?: string }>) => prev.filter((_: QuizQuestionForm & { _sortId?: string }, i: number) => i !== idx))
   }
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {}
-    questions.forEach((q, i) => {
+    questions.forEach((q: QuizQuestionForm & { _sortId?: string }, i: number) => {
       if (!q.text?.trim()) {
         errs[`q${i}-text`] = "Question text is required"
       }
-      const opts = q.options.filter((o) => o.trim())
+      const opts = q.options.filter((o: string) => o.trim())
       if (opts.length < 2) {
         errs[`q${i}-options`] = "At least 2 options are required"
       }
@@ -152,11 +136,11 @@ export function QuizManagerPanel({
       title: `Quiz — ${lessonTitle}`,
       description: `Passing score: ${passingScore}%`,
       questions: questions
-        .filter((q) => q.text.trim())
-        .map((q) => ({
+        .filter((q: QuizQuestionForm & { _sortId?: string }) => q.text.trim())
+        .map((q: QuizQuestionForm & { _sortId?: string }) => ({
           id: q.id,
           text: q.text.trim(),
-          options: q.options.filter((o) => o.trim()),
+          options: q.options.filter((o: string) => o.trim()),
           correctAnswer: q.correctAnswer.trim(),
         })),
     }
@@ -190,13 +174,13 @@ export function QuizManagerPanel({
 
   const handleDragEnd = (event: { active: { id: string }; over: { id: string } | null }) => {
     if (!event.over) return
-    const oldIdx = questions.findIndex((q) => (q._sortId || q.id) === event.active.id)
-    const newIdx = questions.findIndex((q) => (q._sortId || q.id) === event.over!.id)
+    const oldIdx = questions.findIndex((q: QuizQuestionForm & { _sortId?: string }) => (q._sortId || q.id) === event.active.id)
+    const newIdx = questions.findIndex((q: QuizQuestionForm & { _sortId?: string }) => (q._sortId || q.id) === event.over!.id)
     if (oldIdx === -1 || newIdx === -1 || oldIdx === newIdx) return
-    setQuestions((prev) => arrayMove(prev, oldIdx, newIdx))
+    setQuestions((prev: Array<QuizQuestionForm & { _sortId?: string }>) => arrayMove(prev, oldIdx, newIdx))
   }
 
-  const sortIds = questions.map((q) => q._sortId || q.id || "").filter(Boolean)
+  const sortIds = questions.map((q: QuizQuestionForm & { _sortId?: string }) => q._sortId || q.id || "").filter(Boolean)
 
   return (
     <Sheet open={open} onClose={onClose}>
@@ -267,7 +251,7 @@ export function QuizManagerPanel({
                   min={1}
                   max={100}
                   value={passingScore}
-                  onChange={(e) => setPassingScore(Number(e.target.value) || 70)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassingScore(Number(e.target.value) || 70)}
                   className="bg-white/5 border-white/10 w-24"
                 />
               </div>
@@ -299,7 +283,7 @@ export function QuizManagerPanel({
                 >
                   <SortableContext items={sortIds} strategy={verticalListSortingStrategy}>
                     <div className="space-y-4">
-                      {questions.map((q, i) => (
+                      {questions.map((q: QuizQuestionForm & { _sortId?: string }, i: number) => (
                         <QuizQuestionBlock
                           key={(q as { _sortId?: string })._sortId || q.id || i}
                           question={q}
