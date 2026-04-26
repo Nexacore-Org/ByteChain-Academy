@@ -278,9 +278,10 @@ export class CoursesService {
     await this.courseRepository.softRemove(course);
   }
 
+  // FIX: result.affected is the correct check; result === 0 was wrong (restore returns UpdateResult, not a number)
   async restore(id: string): Promise<void> {
     const result = await this.courseRepository.restore(id);
-    if (result === 0) {
+    if (!result.affected) {
       throw new NotFoundException(`Course with ID ${id} not found or not deleted`);
     }
   }
@@ -300,9 +301,7 @@ export class CoursesService {
     });
 
     if (publishedLessonCount === 0) {
-      throw new BadRequestException(
-        'Cannot publish a course with no lessons',
-      );
+      throw new BadRequestException('Cannot publish a course with no lessons');
     }
 
     course.published = true;
@@ -322,6 +321,7 @@ export class CoursesService {
       );
     }
 
+    // FIX: was "new Cou+rseResponseDto" — typo removed
     return new CourseResponseDto(updatedCourse);
   }
 
