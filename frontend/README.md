@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ByteChain Academy Frontend
 
-## Getting Started
+Next.js frontend for the ByteChain Academy platform.
 
-First, run the development server:
+## Prerequisites
+
+- Node.js 20+
+- npm 10+
+- Running backend API (local or deployed)
+
+## Local setup
+
+### 1) Install dependencies
+
+```bash
+npm install
+```
+
+### 2) Configure environment
+
+```bash
+cp .env.example .env.local
+```
+
+Set:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3001
+```
+
+The frontend API client automatically appends `/api/v1` if you provide only the host URL.
+
+### 3) Start dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Quality checks
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Lint
+npm run lint
 
-## Learn More
+# Production build
+npm run build
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Deploy to Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 1) Import repository
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Go to Vercel dashboard.
+2. Import this repository.
+3. Select the `frontend/` directory as project root.
 
-## Deploy on Vercel
+### 2) Configure environment variables
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Add:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `NEXT_PUBLIC_API_URL=https://<your-backend-domain>`
+
+Use your deployed backend base URL (without trailing slash).
+
+### 3) Build settings
+
+Vercel defaults are compatible:
+
+- Build command: `npm run build`
+- Output: Next.js default
+
+### 4) Deploy and verify
+
+After deployment:
+
+1. Open the Vercel URL.
+2. Test login and any authenticated flow.
+3. Confirm frontend can reach backend endpoints through configured `NEXT_PUBLIC_API_URL`.

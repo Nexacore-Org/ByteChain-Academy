@@ -1,102 +1,143 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# ByteChain Academy Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+NestJS backend powering authentication, courses, lessons, progress, DAO voting, certificates, notifications, and analytics.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Prerequisites
 
-## Description
+- Node.js 20+
+- npm 10+
+- PostgreSQL 15+ (or Docker Compose from project root)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Local setup
 
-## Project setup
+### 1) Install dependencies
 
 ```bash
-$ npm install
+npm install
 ```
 
-## Compile and run the project
+### 2) Configure environment
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+cp .env.example .env
 ```
 
-## Run tests
+Update `.env` values as needed.
+
+### 3) Start the backend
 
 ```bash
-# unit tests
-$ npm run test
+npm run start:dev
+```
+
+Backend runs on `http://localhost:3001` by default.
+
+## Environment variables
+
+All variables below match `.env.example` exactly.
+
+| Variable | Required | Example | Description |
+| --- | --- | --- | --- |
+| `NODE_ENV` | Yes | `development` | Runtime environment (`development`, `production`, `test`). |
+| `PORT` | Yes | `3001` | HTTP port for the API server. |
+| `JWT_SECRET` | Yes | `change_me_to_a_random_secret_at_least_32_chars` | Secret key used to sign JWTs (minimum 32 chars). |
+| `JWT_EXPIRES_IN` | Yes | `7d` | Access token expiration. |
+| `DB_HOST` | Yes | `localhost` | PostgreSQL host for deployment-ready DB config. |
+| `DB_PORT` | Yes | `5432` | PostgreSQL port. |
+| `DB_USERNAME` | Yes | `postgres` | PostgreSQL username. |
+| `DB_PASSWORD` | Yes | `postgres` | PostgreSQL password. |
+| `DB_NAME` | Yes | `bytechain` | PostgreSQL database name. |
+| `FRONTEND_URL` | Yes | `http://localhost:3000` | Allowed frontend origin(s) for CORS. Multiple origins can be comma-separated. |
+| `APP_URL` | Yes | `http://localhost:3001` | Public backend base URL used in generated links (for example certificate links). |
+| `THROTTLE_TTL` | Yes | `60` | Rate limit window in seconds. |
+| `THROTTLE_LIMIT` | Yes | `60` | Max requests allowed per TTL window. |
+| `SMTP_HOST` | Optional | `smtp.sendgrid.net` | SMTP server host. Empty means email is logged instead of sent. |
+| `SMTP_PORT` | Yes | `587` | SMTP server port. |
+| `SMTP_USER` | Optional | `apikey` | SMTP username. |
+| `SMTP_PASS` | Optional | `your_smtp_secret` | SMTP password or API key. |
+| `SMTP_FROM_NAME` | Yes | `ByteChain Academy` | From display name for outbound emails. |
+| `SMTP_FROM_EMAIL` | Yes | `noreply@bytechain.academy` | From email for outbound emails. |
+| `AVATAR_UPLOAD_PATH` | Yes | `uploads/avatars` | Relative/absolute path for avatar files. |
+| `MAX_AVATAR_SIZE_MB` | Yes | `2` | Maximum avatar upload size in MB. |
+| `CERTIFICATE_STORAGE_PATH` | Yes | `uploads/certificates` | Path where generated certificate files are stored. |
+
+## API docs
+
+Swagger UI is available at:
+
+- `http://localhost:3001/api/v1/docs`
+
+## Test and quality checks
+
+```bash
+# Lint
+npm run lint
+
+# Unit tests
+npm run test
 
 # e2e tests
-$ npm run test:e2e
+npm run test:e2e
 
-# test coverage
-$ npm run test:cov
+# Coverage
+npm run test:cov
+
+# Production build
+npm run build
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## PostgreSQL with Docker Compose (from repo root)
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+docker compose up -d postgres
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Recommended `.env` values for local Compose:
 
-## Resources
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+DB_NAME=bytechain
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+## Production deployment on Railway
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### 1) Create services
 
-## Support
+1. Create a new Railway project.
+2. Add a PostgreSQL service.
+3. Add a backend service from this repository, rooted at `backend/`.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### 2) Configure environment variables
 
-## Stay in touch
+Set all variables from `.env.example` in Railway backend service.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Use values from Railway PostgreSQL plugin for:
 
-## License
+- `DB_HOST`
+- `DB_PORT`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `DB_NAME`
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Set production-specific values for:
 
-## 🔌 Ports
+- `NODE_ENV=production`
+- `APP_URL=https://<your-backend-domain>`
+- `FRONTEND_URL=https://<your-frontend-domain>`
+- `JWT_SECRET=<strong-random-secret>`
 
-- **Backend:** runs on port 3001 (http://localhost:3001)
+### 3) Build and start commands
+
+- Build command: `npm run build`
+- Start command: `npm run start:prod`
+
+### 4) Verify deployment
+
+After deploy, verify:
+
+- `GET /api/v1/docs` loads successfully
+- Auth endpoints work
+- CORS allows the production frontend domain
