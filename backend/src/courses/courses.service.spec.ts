@@ -27,6 +27,8 @@ const makeCourseRepo = () => ({
   create: jest.fn(),
   save: jest.fn(),
   remove: jest.fn(),
+  softRemove: jest.fn(),
+  restore: jest.fn(),
 });
 
 const makeRegRepo = () => ({
@@ -59,25 +61,6 @@ describe('CoursesService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CoursesService,
-        { provide: getRepositoryToken(Course), useValue: mockRepo() },
-        {
-          provide: getRepositoryToken(CourseRegistration),
-          useValue: mockRepo(),
-        },
-        { provide: getRepositoryToken(Lesson), useValue: mockRepo() },
-        { provide: getRepositoryToken(Progress), useValue: mockRepo() },
-        {
-          provide: PaginationService,
-          useValue: {
-            paginate: jest.fn().mockResolvedValue({
-              data: [],
-              total: 0,
-              page: 1,
-              limit: 10,
-              totalPages: 0,
-            }),
-          },
-        },
         { provide: getRepositoryToken(Course), useValue: courseRepo },
         { provide: getRepositoryToken(CourseRegistration), useValue: regRepo },
         { provide: getRepositoryToken(Lesson), useValue: lessonRepo },
@@ -212,19 +195,41 @@ describe('CoursesService', () => {
   /* -------------------------------------------------------------------------- */
 
   describe('remove', () => {
-    it('should remove an existing course', async () => {
+    it('should soft-remove an existing course', async () => {
       courseRepo.findOne.mockResolvedValue(mockCourse);
-      courseRepo.remove.mockResolvedValue(undefined);
+      courseRepo.softRemove.mockResolvedValue(undefined);
 
       await service.remove(mockCourse.id);
 
-      expect(courseRepo.remove).toHaveBeenCalledWith(mockCourse);
+      expect(courseRepo.softRemove).toHaveBeenCalledWith(mockCourse);
     });
 
     it('should throw NotFoundException when course does not exist', async () => {
       courseRepo.findOne.mockResolvedValue(null);
 
       await expect(service.remove('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  /* -------------------------------------------------------------------------- */
+  /*                                   restore                                  */
+  /* -------------------------------------------------------------------------- */
+
+  describe('restore', () => {
+    it('should restore a soft-deleted course', async () => {
+      courseRepo.restore.mockResolvedValue(1);
+
+      await service.restore(mockCourse.id);
+
+      expect(courseRepo.restore).toHaveBeenCalledWith(mockCourse.id);
+    });
+
+    it('should throw NotFoundException when course does not exist or not deleted', async () => {
+      courseRepo.restore.mockResolvedValue(0);
+
+      await expect(service.restore('nonexistent')).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -343,6 +348,12 @@ describe('CoursesService', () => {
       await service.findAllAdmin(1, 10, 'blockchain');
       const call = paginationService.paginate.mock.calls[0];
       expect(call[2].where).toBeDefined();
+    });
+
+    it('should include soft-deleted courses when includeDeleted is true', async () => {
+      await service.findAllAdmin(1, 10, undefined, undefined, true);
+      const call = paginationService.paginate.mock.calls[0];
+      expect(call[2]).toMatchObject({ withDeleted: true });
     });
   });
 });

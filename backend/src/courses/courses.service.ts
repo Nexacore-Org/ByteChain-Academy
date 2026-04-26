@@ -232,6 +232,7 @@ export class CoursesService {
     limit: number,
     search?: string,
     status?: 'published' | 'draft' | '',
+    includeDeleted?: boolean,
   ): Promise<PaginatedResult<CourseResponseDto>> {
     const where: Record<string, unknown>[] = [];
 
@@ -256,6 +257,7 @@ export class CoursesService {
             ? statusFilter
             : undefined,
         order: { createdAt: 'DESC' },
+        withDeleted: includeDeleted,
       },
     );
 
@@ -270,6 +272,12 @@ export class CoursesService {
     if (!course) {
       throw new NotFoundException(`Course with ID ${id} not found`);
     }
-    await this.courseRepository.remove(course);
+    await this.courseRepository.softRemove(course);
   }
-}
+
+  async restore(id: string): Promise<void> {
+    const result = await this.courseRepository.restore(id);
+    if (result === 0) {
+      throw new NotFoundException(`Course with ID ${id} not found or not deleted`);
+    }
+  }
