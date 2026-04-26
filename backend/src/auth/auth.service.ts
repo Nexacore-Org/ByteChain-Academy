@@ -46,18 +46,30 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      const minutesRemaining = Math.ceil(
+        (user.lockedUntil.getTime() - Date.now()) / 60000,
+      );
+      throw new UnauthorizedException(
+        `Account is temporarily locked. Please try again in ${minutesRemaining} minute(s).`,
+      );
+    }
+
     const isPasswordValid = await this.userService.validatePassword(
       loginDto.password,
       user.password,
     );
 
     if (!isPasswordValid) {
+      await this.userService.incrementFailedLoginAttempts(user.id);
       throw new UnauthorizedException('Invalid credentials');
     }
 
     if (user.suspended) {
       throw new ForbiddenException('Your account has been suspended');
     }
+
+    await this.userService.resetFailedLoginAttempts(user.id);
 
     const token = this.generateToken(user);
 

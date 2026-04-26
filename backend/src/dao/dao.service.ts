@@ -11,6 +11,8 @@ import { DAOProposal, ProposalStatus } from './entities/dao-proposal.entity';
 import { DAOVote, VoteType } from './entities/dao-vote.entity';
 import { CreateProposalDto } from './dto/create-proposal.dto';
 import { User } from '../users/entities/user.entity';
+import { WebhooksService } from 'src/webhooks/webhooks.service';
+import { WebhookEvent } from 'src/webhooks/dto/create-webhook.dto';
 
 @Injectable()
 export class DAOService {
@@ -22,6 +24,7 @@ export class DAOService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private dataSource: DataSource,
+    private readonly webhooksService: WebhooksService,
   ) {}
 
   async createProposal(
@@ -167,6 +170,18 @@ export class DAOService {
       }
 
       await this.proposalRepository.save(proposal);
+
+      if (proposal.status === ProposalStatus.PASSED) {
+        // Dispatch webhook event
+        await this.webhooksService.dispatchEvent(WebhookEvent.DAO_PROPOSAL_PASSED, {
+          proposalId: proposal.id,
+          title: proposal.title,
+          yesVotes: proposal.yesVotes,
+          noVotes: proposal.noVotes,
+          proposerId: proposal.proposerId,
+          passedAt: new Date(),
+        });
+      }
     }
   }
 }
