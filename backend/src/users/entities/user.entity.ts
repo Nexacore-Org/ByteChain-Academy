@@ -77,6 +77,14 @@ export class User {
   @Exclude()
   resetTokenExpires: Date | null;
 
+  @Column({ type: 'int', default: 0 })
+  @Exclude()
+  failedLoginAttempts: number;
+
+  @Column({ type: 'datetime', nullable: true })
+  @Exclude()
+  lockedUntil: Date | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

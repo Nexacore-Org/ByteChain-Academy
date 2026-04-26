@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, In, Repository } from 'typeorm';
 import { CourseRegistration } from '../courses/entities/course-registration.entity';
@@ -15,6 +15,8 @@ import {
   EnrollmentStatusResponseDto,
   EnrolledCourseResponseDto,
 } from './dto/enrollment-response.dto';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/entities/notification.entity';
 
 @Injectable()
 export class CoursesService {
@@ -28,6 +30,7 @@ export class CoursesService {
     @InjectRepository(Progress)
     private progressRepository: Repository<Progress>,
     private readonly paginationService: PaginationService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(createCourseDto: CreateCourseDto): Promise<CourseResponseDto> {
@@ -281,3 +284,60 @@ export class CoursesService {
       throw new NotFoundException(`Course with ID ${id} not found or not deleted`);
     }
   }
+
+  async publishCourse(id: string): Promise<CourseResponseDto> {
+    const course = await this.courseRepository.findOne({ where: { id } });
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${id} not found`);
+    }
+
+    if (course.published) {
+      return new CourseResponseDto(course);
+    }
+
+    const publishedLessonCount = await this.lessonRepository.count({
+      where: { courseId: id },
+    });
+
+    if (publishedLessonCount === 0) {
+      throw new BadRequestException(
+        'Cannot publish a course with no lessons',
+      );
+    }
+
+    course.published = true;
+    const updatedCourse = await this.courseRepository.save(course);
+
+    const enrolledUsers = await this.courseRegistrationRepository.find({
+      where: { courseId: id },
+      select: ['userId'],
+    });
+
+    for (const enrollment of enrolledUsers) {
+      await this.notificationsService.createNotification(
+        enrollment.userId,
+        NotificationType.NEW_CONTENT,
+        `New content available in course: ${course.title}`,
+        `/courses/${id}`,
+      );
+    }
+
+    return new CourseResponseDto(updatedCourse);
+  }
+
+  async unpublishCourse(id: string): Promise<CourseResponseDto> {
+    const course = await this.courseRepository.findOne({ where: { id } });
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${id} not found`);
+    }
+
+    if (!course.published) {
+      return new CourseResponseDto(course);
+    }
+
+    course.published = false;
+    const updatedCourse = await this.courseRepository.save(course);
+
+    return new CourseResponseDto(updatedCourse);
+  }
+}
