@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
+import { toast } from "sonner"
 
 export default function QuizPage({
   params,
@@ -16,11 +17,10 @@ export default function QuizPage({
   params: Promise<{ id: string; quizId: string }>
 }) {
   const { id, quizId } = use(params)
-  const { courses, getQuiz, submitQuiz } = useLearning()
+  const { courses, getQuiz, submitQuiz, isSubmittingQuiz } = useLearning()
   const { isAuthenticated } = useAuth()
   const router = useRouter()
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const course = courses.find((c) => c.id === id)
   const quiz = getQuiz(quizId)
@@ -64,20 +64,13 @@ export default function QuizPage({
     // Check if all questions are answered
     const allAnswered = quiz.questions.every((q) => selectedAnswers[q.id] !== undefined)
     if (!allAnswered) {
-      alert("Please answer all questions before submitting.")
+      toast.error("Please answer all questions before submitting.")
       return
     }
 
-    setIsSubmitting(true)
-    try {
-      const result = submitQuiz(quiz.id, selectedAnswers)
-      // Navigate to results page
+    const result = await submitQuiz(quiz.id, selectedAnswers)
+    if (result) {
       router.push(`/courses/${id}/quizzes/${quizId}/result`)
-    } catch (error) {
-      console.error("Error submitting quiz:", error)
-      alert("An error occurred while submitting the quiz. Please try again.")
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -166,10 +159,10 @@ export default function QuizPage({
               </div>
               <Button
                 onClick={handleSubmit}
-                disabled={!allAnswered || isSubmitting}
+                  disabled={!allAnswered || isSubmittingQuiz}
                 className="bg-[#00ff88] text-[#002E20]"
               >
-                {isSubmitting ? "Submitting..." : "Submit Quiz"}
+                  {isSubmittingQuiz ? "Submitting..." : "Submit Quiz"}
               </Button>
             </div>
           </CardContent>

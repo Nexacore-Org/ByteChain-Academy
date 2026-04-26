@@ -22,7 +22,11 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { DAOModule } from './dao/dao.module';
 import { EmailModule } from './email/email.module';
+import { LoggerModule } from 'nestjs-pino';
+import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
+import { MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { CurrenciesModule } from './currencies/currencies.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
 
 @Module({
   imports: [
@@ -90,6 +94,27 @@ import { CurrenciesModule } from './currencies/currencies.module';
         };
       },
     }),
+    LoggerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        const isProd = config.get('NODE_ENV') === 'production';
+        return {
+          pinoHttp: {
+            customProps: (req) => ({
+              correlationId: (req as any).correlationId,
+            }),
+            transport: isProd
+              ? undefined
+              : {
+                  target: 'pino-pretty',
+                  options: {
+                    singleLine: true,
+                  },
+                },
+          },
+        };
+      },
+    }),
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -117,6 +142,7 @@ import { CurrenciesModule } from './currencies/currencies.module';
     DAOModule,
     EmailModule,
     CurrenciesModule,
+    WebhooksModule,
   ],
   controllers: [AppController],
   providers: [
@@ -127,4 +153,8 @@ import { CurrenciesModule } from './currencies/currencies.module';
     },
   ],
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CorrelationIdMiddleware).forRoutes('*');
+  }
+}

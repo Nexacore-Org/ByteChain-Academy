@@ -16,6 +16,7 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiQuery,
+  ApiResponse,
 } from '@nestjs/swagger';
 import { CoursesService } from '../courses/courses.service';
 import { LessonsService } from '../lessons/lessons.service';
@@ -52,17 +53,20 @@ export class AdminCoursesController {
     required: false,
     enum: ['published', 'draft', ''],
   })
+  @ApiQuery({ name: 'includeDeleted', required: false, type: Boolean })
   async findAll(
     @Query('page') page = 1,
     @Query('limit') limit = 10,
     @Query('search') search?: string,
     @Query('status') status?: 'published' | 'draft' | '',
+    @Query('includeDeleted') includeDeleted?: string,
   ): Promise<PaginatedResult<CourseResponseDto>> {
     return this.coursesService.findAllAdmin(
       Number(page),
       Number(limit),
       search,
       status,
+      includeDeleted === 'true',
     );
   }
 
@@ -95,6 +99,13 @@ export class AdminCoursesController {
     return this.coursesService.remove(id);
   }
 
+  @Patch(':id/restore')
+  @ApiOperation({ summary: 'Restore a soft-deleted course by ID (admin)' })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async restore(@Param('id') id: string): Promise<void> {
+    return this.coursesService.restore(id);
+  }
+
   @Patch(':id/lessons/reorder')
   @ApiOperation({ summary: 'Reorder lessons within a course (admin)' })
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -103,5 +114,22 @@ export class AdminCoursesController {
     @Body() body: ReorderLessonsDto,
   ): Promise<void> {
     return this.lessonsService.reorderLessons(courseId, body.orderedIds);
+  }
+
+  @Patch(':id/publish')
+  @ApiOperation({ summary: 'Publish a course (admin)' })
+  @ApiResponse({ status: 200, description: 'Course published successfully', type: CourseResponseDto })
+  @ApiResponse({ status: 400, description: 'Cannot publish a course with no lessons' })
+  @ApiResponse({ status: 404, description: 'Course not found' })
+  async publish(@Param('id') id: string): Promise<CourseResponseDto> {
+    return this.coursesService.publishCourse(id);
+  }
+
+  @Patch(':id/unpublish')
+  @ApiOperation({ summary: 'Unpublish a course (admin)' })
+  @ApiResponse({ status: 200, description: 'Course unpublished successfully', type: CourseResponseDto })
+  @ApiResponse({ status: 404, description: 'Course not found' })
+  async unpublish(@Param('id') id: string): Promise<CourseResponseDto> {
+    return this.coursesService.unpublishCourse(id);
   }
 }

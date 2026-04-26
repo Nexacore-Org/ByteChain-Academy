@@ -23,6 +23,8 @@ describe('AuthService', () => {
     validatePassword: jest.Mock;
     createResetToken: jest.Mock;
     resetPassword: jest.Mock;
+    incrementFailedLoginAttempts: jest.Mock;
+    resetFailedLoginAttempts: jest.Mock;
   };
   let jwtService: { sign: jest.Mock };
 
@@ -33,6 +35,8 @@ describe('AuthService', () => {
       validatePassword: jest.fn(),
       createResetToken: jest.fn(),
       resetPassword: jest.fn(),
+      incrementFailedLoginAttempts: jest.fn(),
+      resetFailedLoginAttempts: jest.fn(),
     };
     jwtService = { sign: jest.fn().mockReturnValue('signed-jwt-token') };
 
@@ -151,6 +155,51 @@ describe('AuthService', () => {
       ).rejects.toThrow(new UnauthorizedException('Invalid credentials'));
 
       expect(jwtService.sign).not.toHaveBeenCalled();
+    });
+
+    it('should increment failed login attempts on wrong password', async () => {
+      userService.findByEmail.mockResolvedValue(mockUser);
+      userService.validatePassword.mockResolvedValue(false);
+
+      await expect(
+        service.login({ email: mockUser.email, password: 'wrong-password' }),
+      ).rejects.toThrow(UnauthorizedException);
+
+      expect(userService.incrementFailedLoginAttempts).toHaveBeenCalledWith(
+        mockUser.id,
+      );
+    });
+
+    it('should throw UnauthorizedException with minutes remaining when account is locked', async () => {
+      const lockedUser = {
+        ...mockUser,
+        lockedUntil: new Date(Date.now() + 15 * 60000), // 15 minutes from now
+      };
+      userService.findByEmail.mockResolvedValue(lockedUser);
+
+      await expect(
+        service.login({ email: mockUser.email, password: 'any-password' }),
+      ).rejects.toThrow(
+        new UnauthorizedException(
+          'Account is temporarily locked. Please try again in 15 minute(s).',
+        ),
+      );
+
+      expect(userService.validatePassword).not.toHaveBeenCalled();
+    });
+
+    it('should reset failed login attempts on successful login', async () => {
+      userService.findByEmail.mockResolvedValue(mockUser);
+      userService.validatePassword.mockResolvedValue(true);
+
+      await service.login({
+        email: mockUser.email,
+        password: 'correct-password',
+      });
+
+      expect(userService.resetFailedLoginAttempts).toHaveBeenCalledWith(
+        mockUser.id,
+      );
     });
   });
 

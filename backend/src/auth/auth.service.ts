@@ -1,5 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { RegisterDto } from './dto/register.dto';
@@ -8,6 +11,7 @@ import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UserService } from 'src/users/users.service';
 import { EmailService } from 'src/email/email.service';
+import { UserRole } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -42,14 +46,30 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      const minutesRemaining = Math.ceil(
+        (user.lockedUntil.getTime() - Date.now()) / 60000,
+      );
+      throw new UnauthorizedException(
+        `Account is temporarily locked. Please try again in ${minutesRemaining} minute(s).`,
+      );
+    }
+
     const isPasswordValid = await this.userService.validatePassword(
       loginDto.password,
       user.password,
     );
 
     if (!isPasswordValid) {
+      await this.userService.incrementFailedLoginAttempts(user.id);
       throw new UnauthorizedException('Invalid credentials');
     }
+
+    if (user.suspended) {
+      throw new ForbiddenException('Your account has been suspended');
+    }
+
+    await this.userService.resetFailedLoginAttempts(user.id);
 
     const token = this.generateToken(user);
 
@@ -94,7 +114,7 @@ export class AuthService {
     };
   }
 
-  private generateToken(user: any) {
+  private generateToken(user: { id: string; email: string; role: UserRole }) {
     const payload = {
       sub: user.id,
       email: user.email,

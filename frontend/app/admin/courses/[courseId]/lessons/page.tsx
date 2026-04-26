@@ -6,10 +6,10 @@ import { LessonRow } from "@/components/admin/lesson-row"
 import { QuizManagerPanel } from "@/components/admin/quiz-manager-panel"
 import { useAdminLessons } from "@/hooks/use-admin-lessons"
 import { useLessonQuiz } from "@/hooks/use-lesson-quiz"
-import { api } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { NewLessonForm } from "@/components/admin/new-lesson-form"
 import { EditLessonForm } from "@/components/admin/edit-lesson-form"
+import { toast } from "sonner"
 
 export default function AdminLessonsPage({
   params,
@@ -17,7 +17,7 @@ export default function AdminLessonsPage({
   params: Promise<{ courseId: string }>
 }) {
   const { courseId } = use(params)
-  const { lessons, loading, error, refetch, updateLessonHasQuiz } =
+  const { lessons, loading, error, refetch, updateLessonHasQuiz, deleteLesson } =
     useAdminLessons(courseId)
 
   const [newFormOpen, setNewFormOpen] = useState(false)
@@ -81,11 +81,10 @@ export default function AdminLessonsPage({
               onDelete={async () => {
                 if (!confirm("Delete this lesson?")) return
                 try {
-                  await api.delete(`/lessons/${lesson.id}`)
+                  await deleteLesson(lesson.id)
                   if (editLessonId === lesson.id) setEditLessonId(null)
-                  refetch()
                 } catch {
-                  // Error - could show toast
+                  toast.error("Failed to delete lesson")
                 }
               }}
             />

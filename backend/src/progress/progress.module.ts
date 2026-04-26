@@ -16,7 +16,9 @@ import { UsersModule } from 'src/users/users.module';
     NotificationsModule,
     RewardsModule,
     UsersModule,
+    WebhooksModule,
   ],
+
   controllers: [ProgressController],
   providers: [ProgressService],
   exports: [ProgressService],

@@ -11,6 +11,8 @@ import {
 import { UserBadge } from './entities/user-badge.entity';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { NotificationType } from 'src/notifications/entities/notification.entity';
+import { WebhooksService } from 'src/webhooks/webhooks.service';
+import { WebhookEvent } from 'src/webhooks/dto/create-webhook.dto';
 
 export const XP_LESSON_COMPLETE = 10;
 export const XP_QUIZ_PASS = 25;
@@ -46,6 +48,7 @@ export class RewardsService {
     @InjectRepository(RewardHistory)
     private rewardHistoryRepository: Repository<RewardHistory>,
     private readonly notificationsService: NotificationsService,
+    private readonly webhooksService: WebhooksService,
   ) {}
 
   async ensureBadgeCatalog(): Promise<void> {
@@ -205,6 +208,14 @@ export class RewardsService {
           `You earned a new badge: ${badge.name}.`,
           '/rewards',
         );
+        
+        // Dispatch webhook event
+        await this.webhooksService.dispatchEvent(WebhookEvent.BADGE_EARNED, {
+          userId,
+          badgeId: badge.id,
+          badgeName: badge.name,
+          awardedAt: new Date(),
+        });
       } catch {
         // Unique constraint race: ignore
       }
