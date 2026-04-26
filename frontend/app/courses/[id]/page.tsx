@@ -8,11 +8,9 @@ import { useLearning } from "@/contexts/learning-context"
 import { useRouter } from "next/navigation"
 import { 
   ArrowLeft, 
-  PlayCircle, 
   CheckCircle2, 
   FileQuestion, 
   CirclePlay,
-  Play,
   BookOpen,
   Clock,
   Star,
@@ -24,7 +22,7 @@ import { useAuth } from "@/contexts/auth-context"
 
 export default function CourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { courses, getQuiz } = useLearning()
+  const { courses } = useLearning()
   const { isAuthenticated } = useAuth()
   const router = useRouter()
   const course = courses.find((c) => c.id === id)
