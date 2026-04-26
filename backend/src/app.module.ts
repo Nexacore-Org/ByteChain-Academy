@@ -44,6 +44,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
         DB_USERNAME: Joi.string().default('postgres'),
         DB_PASSWORD: Joi.string().default(''),
         DB_NAME: Joi.string().default('bytechain'),
+        DB_SSL: Joi.boolean().default(false),
 
         FRONTEND_URL: Joi.string().uri().default('http://localhost:3000'),
         APP_URL: Joi.string().uri().default('http://localhost:3001'),
@@ -64,11 +65,34 @@ import { WebhooksModule } from './webhooks/webhooks.module';
       }),
       validationOptions: { abortEarly: false },
     }),
-    TypeOrmModule.forRoot({
-      type: 'sqlite',
-      database: 'database.sqlite',
-      autoLoadEntities: true,
-      synchronize: true,
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const isTest = configService.get<string>('NODE_ENV') === 'test';
+
+        if (isTest) {
+          return {
+            type: 'sqlite',
+            database: ':memory:',
+            autoLoadEntities: true,
+            synchronize: true,
+          };
+        }
+
+        return {
+          type: 'postgres',
+          host: configService.get<string>('DB_HOST'),
+          port: configService.get<number>('DB_PORT'),
+          username: configService.get<string>('DB_USERNAME'),
+          password: configService.get<string>('DB_PASSWORD'),
+          database: configService.get<string>('DB_NAME'),
+          autoLoadEntities: true,
+          synchronize: configService.get<string>('NODE_ENV') !== 'production',
+          ssl: configService.get<boolean>('DB_SSL')
+            ? { rejectUnauthorized: false }
+            : false,
+        };
+      },
     }),
     LoggerModule.forRootAsync({
       inject: [ConfigService],

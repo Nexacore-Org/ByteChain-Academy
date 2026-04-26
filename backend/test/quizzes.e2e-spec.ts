@@ -1,16 +1,24 @@
+process.env.JWT_SECRET = 'test_secret_at_least_32_characters_long';
+process.env.NODE_ENV = 'test';
+process.env.SMTP_HOST = '';
+process.env.SMTP_USER = '';
+process.env.SMTP_PASS = '';
+process.env.APP_URL = 'http://localhost:3001';
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { DataSource } from 'typeorm';
-import { User } from '../src/entities/user.entity';
-import { Course } from '../src/entities/course.entity';
-import { Lesson } from '../src/entities/lesson.entity';
+import { User } from '../src/users/entities/user.entity';
+import { Course } from '../src/courses/entities/course.entity';
+import { Lesson } from '../src/lessons/entities/lesson.entity';
 import { Quiz } from '../src/quizzes/entities/quiz.entity';
 import { Question } from '../src/quizzes/entities/question.entity';
 import { QuizSubmission } from '../src/quizzes/entities/quiz-submission.entity';
 import { QuestionType } from '../src/quizzes/entities/question.entity';
+import { UserRole } from '../src/common/enums/user-role.enum';
 
 describe('QuizzesController (e2e)', () => {
   let app: INestApplication<App>;
@@ -29,6 +37,7 @@ describe('QuizzesController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
     dataSource = moduleFixture.get<DataSource>(DataSource);
     await app.init();
 
@@ -42,6 +51,9 @@ describe('QuizzesController (e2e)', () => {
 
     authToken = registerResponse.body.token;
     userId = registerResponse.body.user.id;
+
+    // Promote to admin
+    await dataSource.getRepository(User).update(userId, { role: UserRole.ADMIN });
 
     // Create test course
     const courseResponse = await request(app.getHttpServer())
@@ -149,6 +161,9 @@ describe('QuizzesController (e2e)', () => {
 
     it('should reject duplicate submission', async () => {
       // Create a new quiz for this test
+      await dataSource.getRepository(Question).delete({ quizId: quizId });
+      await dataSource.getRepository(Quiz).delete({ id: quizId });
+      
       const newQuizResponse = await request(app.getHttpServer())
         .post('/quizzes')
         .set('Authorization', `Bearer ${authToken}`)
@@ -217,7 +232,8 @@ describe('QuizzesController (e2e)', () => {
               correctAnswer: 'A',
             },
           ],
-        });
+        })
+        .expect(201);
 
       const newQuizId = newQuizResponse.body.id;
       const newQuestion1Id = newQuizResponse.body.questions[0].id;
@@ -234,6 +250,8 @@ describe('QuizzesController (e2e)', () => {
         .expect(400);
 
       // Cleanup
+      await dataSource.getRepository(QuizSubmission).delete({ quizId: newQuizId });
+      await dataSource.getRepository(Question).delete({ quizId: newQuizId });
       await dataSource.getRepository(Quiz).delete({ id: newQuizId });
     });
 
@@ -259,7 +277,8 @@ describe('QuizzesController (e2e)', () => {
               correctAnswer: 'A',
             },
           ],
-        });
+        })
+        .expect(201);
 
       const newQuizId = newQuizResponse.body.id;
       const newQuestion1Id = newQuizResponse.body.questions[0].id;
@@ -281,9 +300,8 @@ describe('QuizzesController (e2e)', () => {
       expect(response.body.passed).toBe(false);
 
       // Cleanup
-      await dataSource
-        .getRepository(QuizSubmission)
-        .delete({ quizId: newQuizId });
+      await dataSource.getRepository(QuizSubmission).delete({ quizId: newQuizId });
+      await dataSource.getRepository(Question).delete({ quizId: newQuizId });
       await dataSource.getRepository(Quiz).delete({ id: newQuizId });
     });
 
@@ -309,7 +327,8 @@ describe('QuizzesController (e2e)', () => {
               correctAnswer: 'A',
             },
           ],
-        });
+        })
+        .expect(201);
 
       const newQuizId = newQuizResponse.body.id;
       const newQuestion1Id = newQuizResponse.body.questions[0].id;
@@ -331,9 +350,8 @@ describe('QuizzesController (e2e)', () => {
       expect(response.body.passed).toBe(false); // Below 70% threshold
 
       // Cleanup
-      await dataSource
-        .getRepository(QuizSubmission)
-        .delete({ quizId: newQuizId });
+      await dataSource.getRepository(QuizSubmission).delete({ quizId: newQuizId });
+      await dataSource.getRepository(Question).delete({ quizId: newQuizId });
       await dataSource.getRepository(Quiz).delete({ id: newQuizId });
     });
   });
@@ -356,7 +374,8 @@ describe('QuizzesController (e2e)', () => {
               correctAnswer: 'A',
             },
           ],
-        });
+        })
+        .expect(201);
 
       const newQuizId = newQuizResponse.body.id;
       const newQuestionId = newQuizResponse.body.questions[0].id;
@@ -368,7 +387,8 @@ describe('QuizzesController (e2e)', () => {
           answers: {
             [newQuestionId]: 'A',
           },
-        });
+        })
+        .expect(201);
 
       // Get the submission
       const response = await request(app.getHttpServer())
@@ -383,9 +403,8 @@ describe('QuizzesController (e2e)', () => {
       expect(response.body).toHaveProperty('submittedAt');
 
       // Cleanup
-      await dataSource
-        .getRepository(QuizSubmission)
-        .delete({ quizId: newQuizId });
+      await dataSource.getRepository(QuizSubmission).delete({ quizId: newQuizId });
+      await dataSource.getRepository(Question).delete({ quizId: newQuizId });
       await dataSource.getRepository(Quiz).delete({ id: newQuizId });
     });
 
@@ -405,7 +424,8 @@ describe('QuizzesController (e2e)', () => {
               correctAnswer: 'A',
             },
           ],
-        });
+        })
+        .expect(201);
 
       const newQuizId = newQuizResponse.body.id;
 
@@ -414,9 +434,10 @@ describe('QuizzesController (e2e)', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
-      expect(response.body).toBeNull();
+      expect(Object.keys(response.body).length).toBe(0);
 
       // Cleanup
+      await dataSource.getRepository(Question).delete({ quizId: newQuizId });
       await dataSource.getRepository(Quiz).delete({ id: newQuizId });
     });
   });
@@ -439,7 +460,8 @@ describe('QuizzesController (e2e)', () => {
               correctAnswer: 'A',
             },
           ],
-        });
+        })
+        .expect(201);
 
       const quiz1Id = quiz1Response.body.id;
       const quiz1QuestionId = quiz1Response.body.questions[0].id;
@@ -451,7 +473,8 @@ describe('QuizzesController (e2e)', () => {
           answers: {
             [quiz1QuestionId]: 'A',
           },
-        });
+        })
+        .expect(201);
 
       const response = await request(app.getHttpServer())
         .get('/quizzes/submissions/my')
@@ -465,9 +488,8 @@ describe('QuizzesController (e2e)', () => {
       expect(response.body[0]).toHaveProperty('score');
 
       // Cleanup
-      await dataSource
-        .getRepository(QuizSubmission)
-        .delete({ quizId: quiz1Id });
+      await dataSource.getRepository(QuizSubmission).delete({ quizId: quiz1Id });
+      await dataSource.getRepository(Question).delete({ quizId: quiz1Id });
       await dataSource.getRepository(Quiz).delete({ id: quiz1Id });
     });
   });

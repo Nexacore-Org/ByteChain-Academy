@@ -24,19 +24,19 @@ export class User {
   @Exclude()
   password: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   name: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   username: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   bio: string | null;
 
-  @Column({ unique: true, nullable: true })
+  @Column({ type: 'varchar', unique: true, nullable: true })
   walletAddress: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   avatarUrl: string | null;
 
   @Column({
@@ -69,11 +69,11 @@ export class User {
   @Column({ type: 'datetime', nullable: true })
   lastActiveAt: Date | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   @Exclude()
   resetToken: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'datetime', nullable: true })
   @Exclude()
   resetTokenExpires: Date | null;
 

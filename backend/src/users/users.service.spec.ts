@@ -2,7 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { UserService } from './users.service';
 import { User } from './entities/user.entity';
-import { NotFoundException } from '@nestjs/common';
+import { Certificate } from '../certificates/entities/certificate.entity';
+import { UserBadge } from '../rewards/entities/user-badge.entity';
+import { CourseRegistration } from '../courses/entities/course-registration.entity';
 
 describe('UserService', () => {
   let service: UserService;
@@ -24,7 +26,32 @@ describe('UserService', () => {
         UserService,
         {
           provide: getRepositoryToken(User),
-          useValue: mockUserRepository,
+          useValue: {
+            findOne: jest.fn(),
+            create: jest.fn(),
+            save: jest.fn(),
+            find: jest.fn(),
+            update: jest.fn(),
+            count: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(Certificate),
+          useValue: {
+            count: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(UserBadge),
+          useValue: {
+            count: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(CourseRegistration),
+          useValue: {
+            count: jest.fn(),
+          },
         },
       ],
     }).compile();

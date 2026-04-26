@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   OneToOne,
+  JoinColumn,
 } from 'typeorm';
 
 @Entity('lessons')
@@ -30,10 +31,11 @@ export class Lesson {
   @Column({ default: 0 })
   order: number;
 
-  @Column()
+  @Column({ type: 'varchar' })
   courseId: string;
 
   @ManyToOne(() => Course, (course) => course.lessons, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'courseId' })
   course: Course;
 
   @OneToOne(() => Quiz, (quiz) => quiz.lesson)

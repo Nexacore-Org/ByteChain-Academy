@@ -15,6 +15,7 @@ import { QuestionType } from '../quizzes/entities/question.entity';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { RewardsService } from 'src/rewards/rewards.service';
+import { StreakService } from 'src/users/streak.service';
 
 describe('QuizzesService', () => {
   let service: QuizzesService;
@@ -73,6 +74,10 @@ describe('QuizzesService', () => {
         {
           provide: RewardsService,
           useValue: { awardXP: jest.fn().mockResolvedValue({ xp: 0 }) },
+        },
+        {
+          provide: StreakService,
+          useValue: { updateStreak: jest.fn() },
         },
       ],
     }).compile();
