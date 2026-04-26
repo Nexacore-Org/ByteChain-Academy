@@ -16,6 +16,7 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiQuery,
+  ApiResponse,
 } from '@nestjs/swagger';
 import { CoursesService } from '../courses/courses.service';
 import { LessonsService } from '../lessons/lessons.service';
@@ -103,5 +104,22 @@ export class AdminCoursesController {
     @Body() body: ReorderLessonsDto,
   ): Promise<void> {
     return this.lessonsService.reorderLessons(courseId, body.orderedIds);
+  }
+
+  @Patch(':id/publish')
+  @ApiOperation({ summary: 'Publish a course (admin)' })
+  @ApiResponse({ status: 200, description: 'Course published successfully', type: CourseResponseDto })
+  @ApiResponse({ status: 400, description: 'Cannot publish a course with no lessons' })
+  @ApiResponse({ status: 404, description: 'Course not found' })
+  async publish(@Param('id') id: string): Promise<CourseResponseDto> {
+    return this.coursesService.publishCourse(id);
+  }
+
+  @Patch(':id/unpublish')
+  @ApiOperation({ summary: 'Unpublish a course (admin)' })
+  @ApiResponse({ status: 200, description: 'Course unpublished successfully', type: CourseResponseDto })
+  @ApiResponse({ status: 404, description: 'Course not found' })
+  async unpublish(@Param('id') id: string): Promise<CourseResponseDto> {
+    return this.coursesService.unpublishCourse(id);
   }
 }
