@@ -45,6 +45,9 @@ export class User {
   })
   role: UserRole;
 
+  @Column({ default: false })
+  suspended: boolean;
+
   @Column({ type: 'int', default: 0 })
   lessonsCompleted: number;
 
