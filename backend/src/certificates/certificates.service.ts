@@ -279,19 +279,22 @@ export class CertificateService {
       '/certificates',
     );
 
-    const clientBaseUrl =
-      this.configService.get<string>('CLIENT_URL') ?? 'http://localhost:3000';
-    const downloadUrl = `${clientBaseUrl}/certificates/${savedCertificate.certificateHash}`;
     const username = user.name || user.username || user.email.split('@')[0];
 
-    await this.emailService.sendCertificateEmail(
-      user.email,
-      username,
-      course.title,
-      savedCertificate.certificateHash,
-      downloadUrl,
-    );
-    
+    // Send email with PDF attachment - non-fatal so a mail failure won't
+    // roll back certificate creation
+    try {
+      await this.emailService.sendCertificateEmail(
+        user.email,
+        username,
+        course.title,
+        savedCertificate.certificateHash,
+        savedCertificate.certificatePath,
+      );
+    } catch (error) {
+      console.error('Failed to send certificate email:', error);
+    }
+
     // Dispatch webhook event
     await this.webhooksService.dispatchEvent(WebhookEvent.CERTIFICATE_ISSUED, {
       certificateId: savedCertificate.id,
