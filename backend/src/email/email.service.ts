@@ -11,11 +11,6 @@ type EmailPayload = {
   to: string;
   subject: string;
   html: string;
-  attachments?: Array<{
-    filename: string;
-    path: string;
-    contentType: string;
-  }>;
 };
 
 @Injectable()
@@ -82,14 +77,15 @@ export class EmailService {
     username: string,
     courseName: string,
     certificateHash: string,
-    pdfPath: string,
+    downloadUrl: string,
   ): Promise<void> {
     const { subject, html } = certificateTemplate(
       username,
       courseName,
       certificateHash,
+      downloadUrl,
     );
-    await this.sendEmail({ to, subject, html, attachments: [{ filename: `ByteChain-Certificate-${courseName.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`, path: pdfPath, contentType: 'application/pdf' }] });
+    await this.sendEmail({ to, subject, html });
   }
 
   async sendStreakReminderEmail(
@@ -101,11 +97,10 @@ export class EmailService {
     await this.sendEmail({ to, subject, html });
   }
 
-  private async sendEmail({ to, subject, html, attachments }: EmailPayload): Promise<void> {
+  private async sendEmail({ to, subject, html }: EmailPayload): Promise<void> {
     if (!this.transporter) {
-      const attachmentInfo = attachments ? attachments.map(a => a.filename).join(', ') : 'none';
       this.logger.log(
-        `Email fallback -> to: ${to}, subject: ${subject}, attachments: ${attachmentInfo}, html: ${html}`,
+        `Email fallback -> to: ${to}, subject: ${subject}, html: ${html}`,
       );
       return;
     }
@@ -115,7 +110,6 @@ export class EmailService {
       to,
       subject,
       html,
-      attachments,
     });
   }
 }

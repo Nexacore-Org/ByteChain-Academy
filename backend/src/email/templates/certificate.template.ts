@@ -2,6 +2,7 @@ export function certificateTemplate(
   username: string,
   courseName: string,
   certificateHash: string,
+  downloadUrl: string,
 ): { subject: string; html: string } {
   const safeUsername = username?.trim() || 'Learner';
 
@@ -28,7 +29,9 @@ export function certificateTemplate(
                       Your certificate is now available for download and verification.
                     </p>
                     <p style="margin:0 0 12px;">
-                      <strong>Your certificate is attached to this email as a PDF file.</strong>
+                      <a href="${downloadUrl}" style="display:inline-block;background:#16a34a;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:8px;font-weight:700;">
+                        Download certificate
+                      </a>
                     </p>
                     <p style="margin:0;line-height:1.6;font-size:14px;color:#4b5563;">
                       Verification hash: <code style="background:#f3f4f6;padding:2px 4px;border-radius:4px;">${certificateHash}</code>
