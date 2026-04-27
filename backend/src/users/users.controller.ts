@@ -12,9 +12,12 @@ import {
   ClassSerializerInterceptor,
   Post,
   Param,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { UserProfileResponseDto } from '../users/dto/user-profile-response.dto';
 import { VerifyWalletDto } from '../users/dto/verify-wallet.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { plainToInstance } from 'class-transformer';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { UserService } from './users.service';
@@ -34,6 +37,22 @@ export class UsersController {
   async getMyProfile(@Request() req): Promise<UserProfileResponseDto> {
     const user = await this.userService.getMyProfile(req.user.id as string);
     return plainToInstance(UserProfileResponseDto, user);
+  }
+
+  @Patch('me')
+  async updateMyProfile(
+    @Request() req,
+    @Body() dto: UpdateProfileDto,
+  ): Promise<UserProfileResponseDto> {
+    await this.userService.updateProfile(req.user.id as string, dto);
+    const user = await this.userService.getMyProfile(req.user.id as string);
+    return plainToInstance(UserProfileResponseDto, user);
+  }
+
+  @Post('me/avatar')
+  @UseInterceptors(FileInterceptor('avatar'))
+  async uploadMyAvatar(@Request() req, @UploadedFile() file: Express.Multer.File) {
+    return this.userService.uploadAvatar(req.user.id as string, file);
   }
 
   @Post('me/wallet/challenge')
