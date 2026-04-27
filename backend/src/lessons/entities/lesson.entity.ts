@@ -21,6 +21,9 @@ export class Lesson {
   @Column('text')
   content: string;
 
+  @Column({ default: true })
+  published: boolean;
+
   @Column({ nullable: true })
   videoUrl: string; // External video URL
 

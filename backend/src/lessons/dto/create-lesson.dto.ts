@@ -6,6 +6,7 @@ import {
   IsNumber,
   Min,
   IsUrl,
+  IsBoolean,
 } from 'class-validator';
 
 export class CreateLessonDto {
@@ -20,6 +21,10 @@ export class CreateLessonDto {
   @IsUrl({}, { message: 'videoUrl must be a valid URL' })
   @IsOptional()
   videoUrl?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  published?: boolean;
 
   @IsNumber()
   @Min(0, { message: 'videoStartTimestamp must be a non-negative number' })
