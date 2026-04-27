@@ -4,9 +4,7 @@ import { CertificateService } from 'src/certificates/certificates.service';
 import { Repository } from 'typeorm';
 import { Progress } from './entities/progress.entity';
 import { Lesson } from 'src/lessons/entities/lesson.entity';
-import {
-  NotificationType,
-} from 'src/notifications/entities/notification.entity';
+import { NotificationType } from 'src/notifications/entities/notification.entity';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { RewardsService } from 'src/rewards/rewards.service';
 import {
@@ -14,6 +12,9 @@ import {
   XP_LESSON_COMPLETE,
 } from 'src/rewards/rewards.service';
 import { XpRewardReason } from 'src/rewards/entities/reward-history.entity';
+import { StreakService } from 'src/users/streak.service';
+import { WebhooksService } from 'src/webhooks/webhooks.service';
+import { WebhookEvent } from 'src/webhooks/dto/create-webhook.dto';
 
 @Injectable()
 export class ProgressService {
@@ -25,6 +26,8 @@ export class ProgressService {
     private readonly certificateService: CertificateService,
     private readonly notificationsService: NotificationsService,
     private readonly rewardsService: RewardsService,
+    private readonly streakService: StreakService,
+    private readonly webhooksService: WebhooksService,
   ) {}
 
   /**
@@ -72,6 +75,7 @@ export class ProgressService {
         'You completed a lesson.',
         `/courses/${courseId}/lessons/${lessonId}`,
       );
+      await this.streakService.updateStreak(userId);
     }
 
     const allLessonsCompleted = await this.checkAllLessonsCompleted(
@@ -92,6 +96,13 @@ export class ProgressService {
           'You completed a course.',
           `/courses/${courseId}`,
         );
+        
+        // Dispatch webhook event
+        await this.webhooksService.dispatchEvent(WebhookEvent.COURSE_COMPLETED, {
+          userId,
+          courseId,
+          completedAt: new Date(),
+        });
       }
       await this.certificateService.issueCertificateForCourse(userId, courseId);
     }

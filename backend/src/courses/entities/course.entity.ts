@@ -5,6 +5,7 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   OneToMany,
 } from 'typeorm';
 import { CourseRegistration } from './course-registration.entity';
@@ -34,4 +35,7 @@ export class Course {
 
   @UpdateDateColumn()
   updatedAt: Date;
-}
+
+  // Soft-delete field for admin restore functionality
+  @DeleteDateColumn({ nullable: true })
+  deletedAt: Date | null;

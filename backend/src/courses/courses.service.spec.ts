@@ -1,10 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { Course } from './entities/course.entity';
 import { CourseRegistration } from './entities/course-registration.entity';
 import { PaginationService } from 'src/common/services/pagination.service';
+import { Lesson } from 'src/lessons/entities/lesson.entity';
+import { Progress } from 'src/progress/entities/progress.entity';
+import { NotificationsService } from 'src/notifications/notifications.service';
 
 const now = new Date();
 
@@ -25,6 +28,8 @@ const makeCourseRepo = () => ({
   create: jest.fn(),
   save: jest.fn(),
   remove: jest.fn(),
+  softRemove: jest.fn(),
+  restore: jest.fn(),
 });
 
 const makeRegRepo = () => ({
@@ -34,17 +39,28 @@ const makeRegRepo = () => ({
   save: jest.fn(),
 });
 
+const makeLessonRepo = () => ({ count: jest.fn() });
+const makeProgressRepo = () => ({ count: jest.fn() });
+
 describe('CoursesService', () => {
   let service: CoursesService;
   let courseRepo: ReturnType<typeof makeCourseRepo>;
   let regRepo: ReturnType<typeof makeRegRepo>;
+  let lessonRepo: ReturnType<typeof makeLessonRepo>;
+  let progressRepo: ReturnType<typeof makeProgressRepo>;
   let paginationService: { paginate: jest.Mock };
+  let notificationsService: { createNotification: jest.Mock };
 
   beforeEach(async () => {
     courseRepo = makeCourseRepo();
     regRepo = makeRegRepo();
+    lessonRepo = makeLessonRepo();
+    progressRepo = makeProgressRepo();
     paginationService = {
       paginate: jest.fn().mockResolvedValue(paginatedEmpty),
+    };
+    notificationsService = {
+      createNotification: jest.fn().mockResolvedValue(undefined),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -52,7 +68,10 @@ describe('CoursesService', () => {
         CoursesService,
         { provide: getRepositoryToken(Course), useValue: courseRepo },
         { provide: getRepositoryToken(CourseRegistration), useValue: regRepo },
+        { provide: getRepositoryToken(Lesson), useValue: lessonRepo },
+        { provide: getRepositoryToken(Progress), useValue: progressRepo },
         { provide: PaginationService, useValue: paginationService },
+        { provide: NotificationsService, useValue: notificationsService },
       ],
     }).compile();
 
@@ -182,13 +201,13 @@ describe('CoursesService', () => {
   /* -------------------------------------------------------------------------- */
 
   describe('remove', () => {
-    it('should remove an existing course', async () => {
+    it('should soft-remove an existing course', async () => {
       courseRepo.findOne.mockResolvedValue(mockCourse);
-      courseRepo.remove.mockResolvedValue(undefined);
+      courseRepo.softRemove.mockResolvedValue(undefined);
 
       await service.remove(mockCourse.id);
 
-      expect(courseRepo.remove).toHaveBeenCalledWith(mockCourse);
+      expect(courseRepo.softRemove).toHaveBeenCalledWith(mockCourse);
     });
 
     it('should throw NotFoundException when course does not exist', async () => {
@@ -201,69 +220,114 @@ describe('CoursesService', () => {
   });
 
   /* -------------------------------------------------------------------------- */
-  /*                                 enrollUser                                 */
+  /*                                   restore                                  */
   /* -------------------------------------------------------------------------- */
 
-  describe('enrollUser', () => {
+  describe('restore', () => {
+    it('should restore a soft-deleted course', async () => {
+      courseRepo.restore.mockResolvedValue(1);
+
+      await service.restore(mockCourse.id);
+
+      expect(courseRepo.restore).toHaveBeenCalledWith(mockCourse.id);
+    });
+
+    it('should throw NotFoundException when course does not exist or not deleted', async () => {
+      courseRepo.restore.mockResolvedValue(0);
+
+      await expect(service.restore('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  /* -------------------------------------------------------------------------- */
+  /*                                   enroll                                   */
+  /* -------------------------------------------------------------------------- */
+
+  describe('enroll', () => {
     it('should create a registration when user is not yet enrolled', async () => {
       courseRepo.findOne.mockResolvedValue(mockCourse);
       regRepo.findOne.mockResolvedValue(null);
-      const reg = { userId: 'user-1', courseId: mockCourse.id };
+      const reg = {
+        id: 'reg-1',
+        userId: 'user-1',
+        courseId: mockCourse.id,
+        enrolledAt: now,
+      };
       regRepo.create.mockReturnValue(reg);
       regRepo.save.mockResolvedValue(reg);
 
-      await service.enrollUser('user-1', mockCourse.id);
+      const result = await service.enroll('user-1', mockCourse.id);
 
       expect(regRepo.create).toHaveBeenCalledWith({
         userId: 'user-1',
         courseId: mockCourse.id,
       });
       expect(regRepo.save).toHaveBeenCalledWith(reg);
+      expect(result.userId).toBe('user-1');
+      expect(result.courseId).toBe(mockCourse.id);
     });
 
     it('should not create a duplicate registration if user is already enrolled', async () => {
       courseRepo.findOne.mockResolvedValue(mockCourse);
-      regRepo.findOne.mockResolvedValue({ userId: 'user-1', courseId: mockCourse.id });
+      const existing = {
+        id: 'reg-1',
+        userId: 'user-1',
+        courseId: mockCourse.id,
+        enrolledAt: now,
+      };
+      regRepo.findOne.mockResolvedValue(existing);
 
-      await service.enrollUser('user-1', mockCourse.id);
+      const result = await service.enroll('user-1', mockCourse.id);
 
       expect(regRepo.create).not.toHaveBeenCalled();
       expect(regRepo.save).not.toHaveBeenCalled();
+      expect(result.id).toBe(existing.id);
     });
 
     it('should throw NotFoundException when course does not exist', async () => {
       courseRepo.findOne.mockResolvedValue(null);
 
       await expect(
-        service.enrollUser('user-1', 'nonexistent'),
+        service.enroll('user-1', 'nonexistent'),
       ).rejects.toThrow(NotFoundException);
     });
   });
 
   /* -------------------------------------------------------------------------- */
-  /*                              findUserCourses                               */
+  /*                            getEnrolledCourses                              */
   /* -------------------------------------------------------------------------- */
 
-  describe('findUserCourses', () => {
-    it('should return mapped CourseResponseDtos for user registrations', async () => {
+  describe('getEnrolledCourses', () => {
+    it('should return enrolled courses with progress for user registrations', async () => {
       regRepo.find.mockResolvedValue([
-        { userId: 'user-1', courseId: mockCourse.id, course: mockCourse },
+        {
+          userId: 'user-1',
+          courseId: mockCourse.id,
+          course: mockCourse,
+          enrolledAt: now,
+        },
       ]);
+      lessonRepo.count.mockResolvedValue(4);
+      progressRepo.count.mockResolvedValue(2);
 
-      const result = await service.findUserCourses('user-1');
+      const result = await service.getEnrolledCourses('user-1');
 
       expect(regRepo.find).toHaveBeenCalledWith({
         where: { userId: 'user-1' },
         relations: ['course'],
+        order: { enrolledAt: 'DESC' },
       });
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(mockCourse.id);
+      expect(result[0].progressPercent).toBe(50);
     });
 
     it('should return an empty array when user has no courses', async () => {
       regRepo.find.mockResolvedValue([]);
 
-      const result = await service.findUserCourses('user-1');
+      const result = await service.getEnrolledCourses('user-1');
 
       expect(result).toHaveLength(0);
     });
@@ -290,6 +354,107 @@ describe('CoursesService', () => {
       await service.findAllAdmin(1, 10, 'blockchain');
       const call = paginationService.paginate.mock.calls[0];
       expect(call[2].where).toBeDefined();
+    });
+
+    it('should include soft-deleted courses when includeDeleted is true', async () => {
+      await service.findAllAdmin(1, 10, undefined, undefined, true);
+      const call = paginationService.paginate.mock.calls[0];
+      expect(call[2]).toMatchObject({ withDeleted: true });
+    });
+  });
+
+  /* -------------------------------------------------------------------------- */
+  /*                                publishCourse                                */
+  /* -------------------------------------------------------------------------- */
+
+  describe('publishCourse', () => {
+    it('should publish a course with lessons and notify enrolled users', async () => {
+      const unpublishedCourse = { ...mockCourse, published: false };
+      courseRepo.findOne.mockResolvedValue(unpublishedCourse);
+      lessonRepo.count.mockResolvedValue(2);
+      courseRepo.save.mockResolvedValue({ ...unpublishedCourse, published: true });
+      regRepo.find.mockResolvedValue([
+        { userId: 'user-1' },
+        { userId: 'user-2' },
+      ]);
+
+      const result = await service.publishCourse(mockCourse.id);
+
+      expect(lessonRepo.count).toHaveBeenCalledWith({ where: { courseId: mockCourse.id } });
+      expect(courseRepo.save).toHaveBeenCalled();
+      expect(notificationsService.createNotification).toHaveBeenCalledTimes(2);
+      expect(notificationsService.createNotification).toHaveBeenCalledWith(
+        'user-1',
+        'NEW_CONTENT',
+        `New content available in course: ${mockCourse.title}`,
+        `/courses/${mockCourse.id}`,
+      );
+      expect(result.published).toBe(true);
+    });
+
+    it('should throw BadRequestException when course has no lessons', async () => {
+      const unpublishedCourse = { ...mockCourse, published: false };
+      courseRepo.findOne.mockResolvedValue(unpublishedCourse);
+      lessonRepo.count.mockResolvedValue(0);
+
+      await expect(service.publishCourse(mockCourse.id)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.publishCourse(mockCourse.id)).rejects.toThrow(
+        'Cannot publish a course with no lessons',
+      );
+    });
+
+    it('should return early if course is already published', async () => {
+      courseRepo.findOne.mockResolvedValue(mockCourse);
+
+      const result = await service.publishCourse(mockCourse.id);
+
+      expect(lessonRepo.count).not.toHaveBeenCalled();
+      expect(courseRepo.save).not.toHaveBeenCalled();
+      expect(result.published).toBe(true);
+    });
+
+    it('should throw NotFoundException when course does not exist', async () => {
+      courseRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.publishCourse('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  /* -------------------------------------------------------------------------- */
+  /*                              unpublishCourse                                */
+  /* -------------------------------------------------------------------------- */
+
+  describe('unpublishCourse', () => {
+    it('should unpublish a published course', async () => {
+      courseRepo.findOne.mockResolvedValue(mockCourse);
+      courseRepo.save.mockResolvedValue({ ...mockCourse, published: false });
+
+      const result = await service.unpublishCourse(mockCourse.id);
+
+      expect(courseRepo.save).toHaveBeenCalled();
+      expect(result.published).toBe(false);
+    });
+
+    it('should return early if course is already unpublished', async () => {
+      const unpublishedCourse = { ...mockCourse, published: false };
+      courseRepo.findOne.mockResolvedValue(unpublishedCourse);
+
+      const result = await service.unpublishCourse(mockCourse.id);
+
+      expect(courseRepo.save).not.toHaveBeenCalled();
+      expect(result.published).toBe(false);
+    });
+
+    it('should throw NotFoundException when course does not exist', async () => {
+      courseRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.unpublishCourse('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

@@ -1,10 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import {
-  BADGE_MILESTONES,
-  MilestoneRule,
-} from './badge-milestones';
+import { BADGE_MILESTONES, MilestoneRule } from './badge-milestones';
 import { User } from 'src/users/entities/user.entity';
 import { Badge } from './entities/badge.entity';
 import {
@@ -14,6 +11,8 @@ import {
 import { UserBadge } from './entities/user-badge.entity';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { NotificationType } from 'src/notifications/entities/notification.entity';
+import { WebhooksService } from 'src/webhooks/webhooks.service';
+import { WebhookEvent } from 'src/webhooks/dto/create-webhook.dto';
 
 export const XP_LESSON_COMPLETE = 10;
 export const XP_QUIZ_PASS = 25;
@@ -49,12 +48,12 @@ export class RewardsService {
     @InjectRepository(RewardHistory)
     private rewardHistoryRepository: Repository<RewardHistory>,
     private readonly notificationsService: NotificationsService,
+    private readonly webhooksService: WebhooksService,
   ) {}
 
   async ensureBadgeCatalog(): Promise<void> {
     for (const milestone of BADGE_MILESTONES) {
-      const xpThreshold =
-        milestone.rule.kind === 'xp' ? milestone.rule.min : 0;
+      const xpThreshold = milestone.rule.kind === 'xp' ? milestone.rule.min : 0;
 
       const existing = await this.badgeRepository.findOne({
         where: { key: milestone.key },
@@ -129,8 +128,7 @@ export class RewardsService {
         throw new NotFoundException('User not found');
       }
 
-      const baseXp =
-        (user.xp ?? 0) > 0 ? user.xp! : (user.points ?? 0);
+      const baseXp = (user.xp ?? 0) > 0 ? user.xp : (user.points ?? 0);
       const nextXp = baseXp + amount;
       user.xp = nextXp;
       user.points = nextXp;
@@ -210,6 +208,14 @@ export class RewardsService {
           `You earned a new badge: ${badge.name}.`,
           '/rewards',
         );
+        
+        // Dispatch webhook event
+        await this.webhooksService.dispatchEvent(WebhookEvent.BADGE_EARNED, {
+          userId,
+          badgeId: badge.id,
+          badgeName: badge.name,
+          awardedAt: new Date(),
+        });
       } catch {
         // Unique constraint race: ignore
       }

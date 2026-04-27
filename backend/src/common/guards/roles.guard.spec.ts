@@ -4,7 +4,11 @@ import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { UserRole } from '../enums/user-role.enum';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 
-function createMockContext(user: any, handler = {}, classRef = {}): ExecutionContext {
+function createMockContext(
+  user: any,
+  handler = {},
+  classRef = {},
+): ExecutionContext {
   return {
     getHandler: () => handler,
     getClass: () => classRef,
@@ -36,31 +40,49 @@ describe('RolesGuard', () => {
   });
 
   it('should allow access when user role matches required role', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([UserRole.ADMIN]);
-    const ctx = createMockContext({ id: '1', email: 'admin@test.com', role: UserRole.ADMIN });
+    jest
+      .spyOn(reflector, 'getAllAndOverride')
+      .mockReturnValue([UserRole.ADMIN]);
+    const ctx = createMockContext({
+      id: '1',
+      email: 'admin@test.com',
+      role: UserRole.ADMIN,
+    });
     expect(guard.canActivate(ctx)).toBe(true);
   });
 
   it('should deny access when user role does not match required role', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([UserRole.ADMIN]);
-    const ctx = createMockContext({ id: '2', email: 'user@test.com', role: UserRole.USER });
+    jest
+      .spyOn(reflector, 'getAllAndOverride')
+      .mockReturnValue([UserRole.ADMIN]);
+    const ctx = createMockContext({
+      id: '2',
+      email: 'user@test.com',
+      role: UserRole.USER,
+    });
     expect(() => guard.canActivate(ctx)).toThrow(ForbiddenException);
   });
 
   it('should deny access when user is missing from request', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([UserRole.ADMIN]);
+    jest
+      .spyOn(reflector, 'getAllAndOverride')
+      .mockReturnValue([UserRole.ADMIN]);
     const ctx = createMockContext(null);
     expect(() => guard.canActivate(ctx)).toThrow(ForbiddenException);
   });
 
   it('should deny access when user has no role field', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([UserRole.ADMIN]);
+    jest
+      .spyOn(reflector, 'getAllAndOverride')
+      .mockReturnValue([UserRole.ADMIN]);
     const ctx = createMockContext({ id: '3', email: 'user@test.com' });
     expect(() => guard.canActivate(ctx)).toThrow(ForbiddenException);
   });
 
   it('should use ROLES_KEY when reading metadata', () => {
-    const spy = jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([UserRole.ADMIN]);
+    const spy = jest
+      .spyOn(reflector, 'getAllAndOverride')
+      .mockReturnValue([UserRole.ADMIN]);
     const handler = {};
     const classRef = {};
     const ctx = createMockContext({ role: UserRole.ADMIN }, handler, classRef);

@@ -1,22 +1,33 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { RegisterDto } from './dto/ register.dto';
+import { ConfigService } from '@nestjs/config';
+import { RegisterDto } from './dto/register.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UserService } from 'src/users/users.service';
+import { EmailService } from 'src/email/email.service';
+import { UserRole } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    private configService: ConfigService,
+    private emailService: EmailService,
   ) {}
 
   async register(registerDto: RegisterDto) {
     const user = await this.userService.create(registerDto);
     const token = this.generateToken(user);
+    const username = user.username || user.name || user.email.split('@')[0];
+
+    await this.emailService.sendWelcomeEmail(user.email, username);
 
     return {
       user: {
@@ -35,14 +46,30 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      const minutesRemaining = Math.ceil(
+        (user.lockedUntil.getTime() - Date.now()) / 60000,
+      );
+      throw new UnauthorizedException(
+        `Account is temporarily locked. Please try again in ${minutesRemaining} minute(s).`,
+      );
+    }
+
     const isPasswordValid = await this.userService.validatePassword(
       loginDto.password,
       user.password,
     );
 
     if (!isPasswordValid) {
+      await this.userService.incrementFailedLoginAttempts(user.id);
       throw new UnauthorizedException('Invalid credentials');
     }
+
+    if (user.suspended) {
+      throw new ForbiddenException('Your account has been suspended');
+    }
+
+    await this.userService.resetFailedLoginAttempts(user.id);
 
     const token = this.generateToken(user);
 
@@ -60,12 +87,18 @@ export class AuthService {
     const resetToken = await this.userService.createResetToken(
       forgotPasswordDto.email,
     );
+    const clientBaseUrl =
+      this.configService.get<string>('CLIENT_URL') ?? 'http://localhost:3000';
+    const resetUrl = `${clientBaseUrl}/reset-password?email=${encodeURIComponent(forgotPasswordDto.email)}&token=${encodeURIComponent(resetToken)}`;
 
-    // In a real application, you would send an email here
-    // For now, we'll just return the token (in production, never do this)
+    await this.emailService.sendPasswordResetEmail(
+      forgotPasswordDto.email,
+      resetToken,
+      resetUrl,
+    );
+
     return {
       message: 'Password reset link sent to your email',
-      resetToken, // Only for development/testing
     };
   }
 
@@ -81,7 +114,7 @@ export class AuthService {
     };
   }
 
-  private generateToken(user: any) {
+  private generateToken(user: { id: string; email: string; role: UserRole }) {
     const payload = {
       sub: user.id,
       email: user.email,

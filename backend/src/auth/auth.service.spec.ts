@@ -1,9 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { ConflictException, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { UserService } from 'src/users/users.service';
 import { UserRole } from 'src/users/entities/user.entity';
+import { EmailService } from 'src/email/email.service';
 
 const mockUser = {
   id: 'user-uuid-1',
@@ -21,6 +23,8 @@ describe('AuthService', () => {
     validatePassword: jest.Mock;
     createResetToken: jest.Mock;
     resetPassword: jest.Mock;
+    incrementFailedLoginAttempts: jest.Mock;
+    resetFailedLoginAttempts: jest.Mock;
   };
   let jwtService: { sign: jest.Mock };
 
@@ -31,6 +35,8 @@ describe('AuthService', () => {
       validatePassword: jest.fn(),
       createResetToken: jest.fn(),
       resetPassword: jest.fn(),
+      incrementFailedLoginAttempts: jest.fn(),
+      resetFailedLoginAttempts: jest.fn(),
     };
     jwtService = { sign: jest.fn().mockReturnValue('signed-jwt-token') };
 
@@ -39,6 +45,14 @@ describe('AuthService', () => {
         AuthService,
         { provide: UserService, useValue: userService },
         { provide: JwtService, useValue: jwtService },
+        { provide: ConfigService, useValue: { get: jest.fn() } },
+        {
+          provide: EmailService,
+          useValue: {
+            sendWelcomeEmail: jest.fn().mockResolvedValue(undefined),
+            sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
+          },
+        },
       ],
     }).compile();
 
@@ -142,6 +156,51 @@ describe('AuthService', () => {
 
       expect(jwtService.sign).not.toHaveBeenCalled();
     });
+
+    it('should increment failed login attempts on wrong password', async () => {
+      userService.findByEmail.mockResolvedValue(mockUser);
+      userService.validatePassword.mockResolvedValue(false);
+
+      await expect(
+        service.login({ email: mockUser.email, password: 'wrong-password' }),
+      ).rejects.toThrow(UnauthorizedException);
+
+      expect(userService.incrementFailedLoginAttempts).toHaveBeenCalledWith(
+        mockUser.id,
+      );
+    });
+
+    it('should throw UnauthorizedException with minutes remaining when account is locked', async () => {
+      const lockedUser = {
+        ...mockUser,
+        lockedUntil: new Date(Date.now() + 15 * 60000), // 15 minutes from now
+      };
+      userService.findByEmail.mockResolvedValue(lockedUser);
+
+      await expect(
+        service.login({ email: mockUser.email, password: 'any-password' }),
+      ).rejects.toThrow(
+        new UnauthorizedException(
+          'Account is temporarily locked. Please try again in 15 minute(s).',
+        ),
+      );
+
+      expect(userService.validatePassword).not.toHaveBeenCalled();
+    });
+
+    it('should reset failed login attempts on successful login', async () => {
+      userService.findByEmail.mockResolvedValue(mockUser);
+      userService.validatePassword.mockResolvedValue(true);
+
+      await service.login({
+        email: mockUser.email,
+        password: 'correct-password',
+      });
+
+      expect(userService.resetFailedLoginAttempts).toHaveBeenCalledWith(
+        mockUser.id,
+      );
+    });
   });
 
   /* -------------------------------------------------------------------------- */
@@ -149,7 +208,7 @@ describe('AuthService', () => {
   /* -------------------------------------------------------------------------- */
 
   describe('forgotPassword', () => {
-    it('should return a message and reset token on success', async () => {
+    it('should return a message and send a password reset email', async () => {
       userService.createResetToken.mockResolvedValue('raw-reset-token-abc123');
 
       const result = await service.forgotPassword({ email: mockUser.email });
@@ -157,7 +216,6 @@ describe('AuthService', () => {
       expect(userService.createResetToken).toHaveBeenCalledWith(mockUser.email);
       expect(result).toEqual({
         message: 'Password reset link sent to your email',
-        resetToken: 'raw-reset-token-abc123',
       });
     });
 

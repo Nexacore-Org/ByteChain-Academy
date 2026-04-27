@@ -6,11 +6,15 @@ import { User } from 'src/users/entities/user.entity';
 import { CertificateController } from './certificates.controller';
 import { CertificateService } from './certificates.service';
 import { NotificationsModule } from 'src/notifications/notifications.module';
+import { EmailModule } from 'src/email/email.module';
+import { WebhooksModule } from 'src/webhooks/webhooks.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Certificate, User, Course]),
     NotificationsModule,
+    EmailModule,
+    WebhooksModule,
   ],
   controllers: [CertificateController],
   providers: [CertificateService],

@@ -1,6 +1,9 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect } from "react"
+import { toast } from "sonner"
+import { api } from "@/lib/api"
+import { PLACEHOLDER_VIDEO_URL } from "@/lib/constants"
 
 interface Lesson {
   id: string
@@ -43,17 +46,20 @@ interface Quiz {
 
 interface QuizResult {
   quizId: string
+  correctAnswers: number
   score: number
   totalQuestions: number
   passed: boolean
-  submittedAt: Date
+  submittedAt: string
 }
 
 interface LearningContextType {
   courses: Course[]
   quizResults: Record<string, QuizResult>
-  markLessonComplete: (courseId: string, lessonId: string) => void
-  submitQuiz: (quizId: string, answers: Record<string, number>) => QuizResult
+  isSubmittingQuiz: boolean
+  isCompletingLesson: boolean
+  markLessonComplete: (courseId: string, lessonId: string) => Promise<boolean>
+  submitQuiz: (quizId: string, answers: Record<string, number>) => Promise<QuizResult | null>
   getCourseProgress: (courseId: string) => number
   getQuiz: (quizId: string) => Quiz | undefined
 }
@@ -67,7 +73,7 @@ const mockLessons: Record<string, Lesson[]> = {
       id: "l1",
       title: "Introduction to Cryptocurrency",
       description: "Learn the basics of what cryptocurrency is and why it matters.",
-      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      videoUrl: PLACEHOLDER_VIDEO_URL,
       order: 1,
       completed: false,
       hasQuiz: true,
@@ -77,7 +83,7 @@ const mockLessons: Record<string, Lesson[]> = {
       id: "l2",
       title: "Understanding Bitcoin",
       description: "Deep dive into Bitcoin: how it works and why it was created.",
-      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      videoUrl: PLACEHOLDER_VIDEO_URL,
       order: 2,
       completed: false,
       hasQuiz: false,
@@ -86,7 +92,7 @@ const mockLessons: Record<string, Lesson[]> = {
       id: "l3",
       title: "Blockchain Technology",
       description: "Explore the technology behind cryptocurrencies.",
-      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      videoUrl: PLACEHOLDER_VIDEO_URL,
       order: 3,
       completed: false,
       hasQuiz: true,
@@ -98,7 +104,7 @@ const mockLessons: Record<string, Lesson[]> = {
       id: "l4",
       title: "Introduction to DeFi",
       description: "What is decentralized finance and why it matters.",
-      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      videoUrl: PLACEHOLDER_VIDEO_URL,
       order: 1,
       completed: false,
       hasQuiz: false,
@@ -107,7 +113,7 @@ const mockLessons: Record<string, Lesson[]> = {
       id: "l5",
       title: "Lending Protocols",
       description: "Learn about decentralized lending platforms.",
-      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      videoUrl: PLACEHOLDER_VIDEO_URL,
       order: 2,
       completed: false,
       hasQuiz: true,
@@ -331,6 +337,8 @@ export function LearningProvider({ children }: { children: React.ReactNode }) {
     }
     return {}
   })
+  const [isSubmittingQuiz, setIsSubmittingQuiz] = useState(false)
+  const [isCompletingLesson, setIsCompletingLesson] = useState(false)
 
   // Save to localStorage whenever courses or quizResults change
   useEffect(() => {
@@ -345,48 +353,108 @@ export function LearningProvider({ children }: { children: React.ReactNode }) {
     }
   }, [quizResults])
 
-  const markLessonComplete = (courseId: string, lessonId: string) => {
-    setCourses((prev) =>
-      prev.map((course) => {
-        if (course.id === courseId) {
-          const updatedLessons = course.lessons.map((lesson) =>
-            lesson.id === lessonId ? { ...lesson, completed: true } : lesson
-          )
-          const completedCount = updatedLessons.filter((l) => l.completed).length
-          const progress = (completedCount / updatedLessons.length) * 100
-          return { ...course, lessons: updatedLessons, progress }
+  const markLessonComplete = async (courseId: string, lessonId: string): Promise<boolean> => {
+    setIsCompletingLesson(true)
+    try {
+      try {
+        await api.post("/progress/complete", { courseId, lessonId })
+      } catch (error) {
+        const status = (error as { status?: number }).status
+        if (status === 404) {
+          await api.post("/progress/lesson", { courseId, lessonId })
+        } else {
+          throw error
         }
-        return course
-      })
-    )
+      }
+
+      const progressRows = await api.get<{ lessonId: string; completed: boolean }[]>(
+        `/progress/course/${courseId}`
+      )
+      const completedByLessonId = new Map(progressRows.map((row) => [row.lessonId, row.completed]))
+
+      setCourses((prev) =>
+        prev.map((course) => {
+          if (course.id !== courseId) {
+            return course
+          }
+          const updatedLessons = course.lessons.map((lesson) => ({
+            ...lesson,
+            completed: completedByLessonId.get(lesson.id) ?? lesson.completed,
+          }))
+          const completedCount = updatedLessons.filter((l) => l.completed).length
+          const progress = updatedLessons.length
+            ? (completedCount / updatedLessons.length) * 100
+            : 0
+          return { ...course, lessons: updatedLessons, progress }
+        })
+      )
+      return true
+    } catch (error) {
+      const status = (error as { status?: number }).status
+      toast.error(
+        status === 409
+          ? "This lesson was already marked as complete."
+          : "Unable to mark lesson complete. Please try again."
+      )
+      return false
+    } finally {
+      setIsCompletingLesson(false)
+    }
   }
 
-  const submitQuiz = (quizId: string, answers: Record<string, number>): QuizResult => {
+  const submitQuiz = async (
+    quizId: string,
+    answers: Record<string, number>
+  ): Promise<QuizResult | null> => {
     const quiz = mockQuizzes.find((q) => q.id === quizId)
     if (!quiz) {
       throw new Error("Quiz not found")
     }
 
-    let correctCount = 0
-    quiz.questions.forEach((question) => {
-      if (answers[question.id] === question.correctAnswer) {
-        correctCount++
+    const formattedAnswers = Object.entries(answers).reduce<Record<string, string>>(
+      (acc, [questionId, optionIndex]) => {
+        const question = quiz.questions.find((item) => item.id === questionId)
+        if (question && question.options[optionIndex] !== undefined) {
+          acc[questionId] = question.options[optionIndex]
+        }
+        return acc
+      },
+      {}
+    )
+
+    setIsSubmittingQuiz(true)
+    try {
+      const submission = await api.post<{
+        quizId: string
+        score: number
+        totalQuestions: number
+        correctAnswers: number
+        passed: boolean
+        submittedAt: string
+      }>(`/quizzes/${quizId}/submit`, { answers: formattedAnswers })
+
+      const result: QuizResult = {
+        quizId: submission.quizId,
+        score: submission.score,
+        totalQuestions: submission.totalQuestions,
+        correctAnswers: submission.correctAnswers,
+        passed: submission.passed,
+        submittedAt: submission.submittedAt,
       }
-    })
 
-    const score = (correctCount / quiz.questions.length) * 100
-    const passed = score >= 70
-
-    const result: QuizResult = {
-      quizId,
-      score,
-      totalQuestions: quiz.questions.length,
-      passed,
-      submittedAt: new Date(),
+      setQuizResults((prev) => ({ ...prev, [quizId]: result }))
+      return result
+    } catch (error) {
+      const status = (error as { status?: number }).status
+      if (status === 409) {
+        toast.error("You have already completed this quiz")
+      } else {
+        toast.error("Unable to submit quiz. Please check your connection and try again.")
+      }
+      return null
+    } finally {
+      setIsSubmittingQuiz(false)
     }
-
-    setQuizResults((prev) => ({ ...prev, [quizId]: result }))
-    return result
   }
 
   const getCourseProgress = (courseId: string): number => {
@@ -403,6 +471,8 @@ export function LearningProvider({ children }: { children: React.ReactNode }) {
       value={{
         courses,
         quizResults,
+        isSubmittingQuiz,
+        isCompletingLesson,
         markLessonComplete,
         submitQuiz,
         getCourseProgress,

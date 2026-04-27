@@ -6,6 +6,10 @@ import { Certificate } from './entities/certificate.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Course } from 'src/courses/entities/course.entity';
 import { NotificationsService } from 'src/notifications/notifications.service';
+import { ConfigService } from '@nestjs/config';
+import { EmailService } from 'src/email/email.service';
+
+const mockRepo = () => ({});
 
 const now = new Date();
 
@@ -65,6 +69,14 @@ describe('CertificateService', () => {
         { provide: getRepositoryToken(User), useValue: userRepo },
         { provide: getRepositoryToken(Course), useValue: courseRepo },
         { provide: NotificationsService, useValue: notificationsService },
+        {
+          provide: EmailService,
+          useValue: { sendCertificateEmail: jest.fn().mockResolvedValue(undefined) },
+        },
+        {
+          provide: ConfigService,
+          useValue: { get: jest.fn().mockReturnValue('http://localhost:3000') },
+        },
       ],
     }).compile();
 
@@ -132,6 +144,43 @@ describe('CertificateService', () => {
         '/certificates',
       );
       expect(result.id).toBe(mockCertificate.id);
+    });
+
+    it('should call sendCertificateEmail with correct pdfPath', async () => {
+      const mockEmailService = { sendCertificateEmail: jest.fn().mockResolvedValue(undefined) };
+      
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          CertificateService,
+          { provide: getRepositoryToken(Certificate), useValue: certRepo },
+          { provide: getRepositoryToken(User), useValue: userRepo },
+          { provide: getRepositoryToken(Course), useValue: courseRepo },
+          { provide: NotificationsService, useValue: notificationsService },
+          { provide: EmailService, useValue: mockEmailService },
+          {
+            provide: ConfigService,
+            useValue: { get: jest.fn().mockReturnValue('http://localhost:3000') },
+          },
+        ],
+      }).compile();
+
+      const testService = module.get<CertificateService>(CertificateService);
+      
+      certRepo.findOne.mockResolvedValue(null); // no duplicate
+      userRepo.findOneBy.mockResolvedValue(mockUser);
+      courseRepo.findOneBy.mockResolvedValue(mockCourse);
+      certRepo.create.mockReturnValue(mockCertificate);
+      certRepo.save.mockResolvedValue(mockCertificate);
+
+      await testService.issueCertificateForCourse(mockUser.id, mockCourse.id);
+
+      expect(mockEmailService.sendCertificateEmail).toHaveBeenCalledWith(
+        mockUser.email,
+        'Alice',
+        mockCourse.title,
+        mockCertificate.certificateHash,
+        expect.stringContaining('.pdf') // pdfPath
+      );
     });
 
     it('should return existing certificate without creating a duplicate', async () => {

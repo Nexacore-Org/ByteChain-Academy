@@ -12,6 +12,7 @@ export enum XpRewardReason {
   LESSON_COMPLETE = 'LESSON_COMPLETE',
   QUIZ_PASS = 'QUIZ_PASS',
   COURSE_COMPLETE = 'COURSE_COMPLETE',
+  STREAK_MILESTONE = 'STREAK_MILESTONE',
 }
 
 @Entity('reward_history')
