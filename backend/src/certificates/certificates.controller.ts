@@ -17,8 +17,8 @@ import { Response } from 'express';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CertificateService } from './certificates.service';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { UserRole } from 'src/users/entities/user.entity';
+import { Roles } from '../common/decorators/roles.decorator';
+import { UserRole } from '../users/entities/user.entity';
 import { CertificateVerificationResultDto } from './dto/certificate-response.dto';
 import { VerifyCertificateDto } from './dto/verify-certificate.dto';
 

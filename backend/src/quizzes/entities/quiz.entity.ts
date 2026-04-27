@@ -9,7 +9,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Question } from './question.entity';
-import { Lesson } from 'src/lessons/entities/lesson.entity';
+import { Lesson } from '../../lessons/entities/lesson.entity';
 
 @Entity('quizzes')
 export class Quiz {
