@@ -12,8 +12,8 @@ import {
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { QuizzesService } from './quizzes.service';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { UserRole } from 'src/users/entities/user.entity';
+import { Roles } from '../common/decorators/roles.decorator';
+import { UserRole } from '../users/entities/user.entity';
 import { CreateQuizDto } from './dto/create-quiz.dto';
 import {
   AdminQuizResponseDto,

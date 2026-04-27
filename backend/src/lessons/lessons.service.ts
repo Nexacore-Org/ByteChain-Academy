@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Course } from 'src/courses/entities/course.entity';
+import { Course } from '../courses/entities/course.entity';
 import { Lesson } from './entities/lesson.entity';
 import { Repository } from 'typeorm';
 import { PaginationService } from '../common/services/pagination.service';

@@ -5,7 +5,7 @@ import { DAOVote } from './entities/dao-vote.entity';
 import { User } from '../users/entities/user.entity';
 import { DAOService } from './dao.service';
 import { DAOController } from './dao.controller';
-import { WebhooksModule } from 'src/webhooks/webhooks.module';
+import { WebhooksModule } from '../webhooks/webhooks.module';
 
 @Module({
   imports: [

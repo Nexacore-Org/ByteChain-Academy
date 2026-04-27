@@ -19,10 +19,10 @@ import { UserProfileResponseDto } from '../users/dto/user-profile-response.dto';
 import { VerifyWalletDto } from '../users/dto/verify-wallet.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { plainToInstance } from 'class-transformer';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { UserService } from './users.service';
 import { WalletService } from './wallet.service';
-import { RolesGuard } from 'src/common/guards/roles.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
