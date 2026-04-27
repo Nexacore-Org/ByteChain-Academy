@@ -235,6 +235,7 @@ export class CoursesService {
     limit: number,
     search?: string,
     status?: 'published' | 'draft' | '',
+    includeDeleted?: boolean,
   ): Promise<PaginatedResult<CourseResponseDto>> {
     const where: Record<string, unknown>[] = [];
 
@@ -259,6 +260,7 @@ export class CoursesService {
             ? statusFilter
             : undefined,
         order: { createdAt: 'DESC' },
+        withDeleted: includeDeleted,
       },
     );
 
@@ -273,7 +275,15 @@ export class CoursesService {
     if (!course) {
       throw new NotFoundException(`Course with ID ${id} not found`);
     }
-    await this.courseRepository.remove(course);
+    await this.courseRepository.softRemove(course);
+  }
+
+  // FIX: result.affected is the correct check; result === 0 was wrong (restore returns UpdateResult, not a number)
+  async restore(id: string): Promise<void> {
+    const result = await this.courseRepository.restore(id);
+    if (!result.affected) {
+      throw new NotFoundException(`Course with ID ${id} not found or not deleted`);
+    }
   }
 
   async publishCourse(id: string): Promise<CourseResponseDto> {
@@ -291,9 +301,7 @@ export class CoursesService {
     });
 
     if (publishedLessonCount === 0) {
-      throw new BadRequestException(
-        'Cannot publish a course with no lessons',
-      );
+      throw new BadRequestException('Cannot publish a course with no lessons');
     }
 
     course.published = true;
@@ -313,6 +321,7 @@ export class CoursesService {
       );
     }
 
+    // FIX: was "new Cou+rseResponseDto" — typo removed
     return new CourseResponseDto(updatedCourse);
   }
 

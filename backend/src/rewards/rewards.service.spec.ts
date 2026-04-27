@@ -1,15 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getDataSourceToken, getRepositoryToken } from '@nestjs/typeorm';
 import { RewardsService } from './rewards.service';
-import { User } from 'src/users/entities/user.entity';
+import { User } from '../users/entities/user.entity';
 import { Badge } from './entities/badge.entity';
 import { UserBadge } from './entities/user-badge.entity';
 import {
   RewardHistory,
   XpRewardReason,
 } from './entities/reward-history.entity';
-import { NotificationsService } from 'src/notifications/notifications.service';
-import { WebhooksService } from 'src/webhooks/webhooks.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { BADGE_MILESTONES } from './badge-milestones';
 
 describe('RewardsService', () => {

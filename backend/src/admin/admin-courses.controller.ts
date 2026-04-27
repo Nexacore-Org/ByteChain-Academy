@@ -53,17 +53,20 @@ export class AdminCoursesController {
     required: false,
     enum: ['published', 'draft', ''],
   })
+  @ApiQuery({ name: 'includeDeleted', required: false, type: Boolean })
   async findAll(
     @Query('page') page = 1,
     @Query('limit') limit = 10,
     @Query('search') search?: string,
     @Query('status') status?: 'published' | 'draft' | '',
+    @Query('includeDeleted') includeDeleted?: string,
   ): Promise<PaginatedResult<CourseResponseDto>> {
     return this.coursesService.findAllAdmin(
       Number(page),
       Number(limit),
       search,
       status,
+      includeDeleted === 'true',
     );
   }
 
@@ -94,6 +97,13 @@ export class AdminCoursesController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string): Promise<void> {
     return this.coursesService.remove(id);
+  }
+
+  @Patch(':id/restore')
+  @ApiOperation({ summary: 'Restore a soft-deleted course by ID (admin)' })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async restore(@Param('id') id: string): Promise<void> {
+    return this.coursesService.restore(id);
   }
 
   @Patch(':id/lessons/reorder')
