@@ -84,6 +84,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [notificationPreferences, setNotificationPreferences] =
     useState<NotificationPreferences>(defaultNotificationPreferences);
 
+  const createDefaultUser = useCallback(() => {
+    const email = localStorage.getItem("user_email") || "student@bytechain.edu";
+    const name = localStorage.getItem("user_name") || "Alex Johnson";
+
+    const defaultUser: UserProfile = {
+      id: "user_" + Date.now(),
+      fullName: name,
+      email: email,
+      role: "Student",
+      createdAt: new Date(),
+    };
+    setUser(defaultUser);
+    localStorage.setItem("user_profile", JSON.stringify(defaultUser));
+  }, []);
+
+
   const loadUserData = useCallback(() => {
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("auth_token");
@@ -101,7 +117,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               createdAt: new Date(parsed.createdAt),
             });
           } catch {
-            // Use default user from localStorage data
             createDefaultUser();
           }
         } else {
@@ -127,22 +142,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
       }
     }
-  };
-
-  const createDefaultUser = () => {
-    const email = localStorage.getItem("user_email") || "student@bytechain.edu";
-    const name = localStorage.getItem("user_name") || "Alex Johnson";
-
-    const defaultUser: UserProfile = {
-      id: "user_" + Date.now(),
-      fullName: name,
-      email: email,
-      role: "Student",
-      createdAt: new Date(),
-    };
-    setUser(defaultUser);
-    localStorage.setItem("user_profile", JSON.stringify(defaultUser));
-  };
+  }, [createDefaultUser]);
 
   useEffect(() => {
     loadUserData();
@@ -189,11 +189,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setUserStatsLoading(true);
     setUserStatsError(false);
     try {
-      const data = await api.get<{
-        courseCount: number;
-        certificateCount: number;
-        xp: number;
-      }>("/users/me/stats");
+      const data = await api.get<UserStats>("/users/me/stats");
       setUserStats(data);
     } catch {
       setUserStatsError(true);
