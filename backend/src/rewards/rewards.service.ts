@@ -224,17 +224,24 @@ export class RewardsService {
     return newlyAwarded;
   }
 
+  private static readonly REASON_LABELS: Record<XpRewardReason, string> = {
+    [XpRewardReason.LESSON_COMPLETE]: 'Completed a lesson',
+    [XpRewardReason.QUIZ_PASS]: 'Passed a quiz',
+    [XpRewardReason.COURSE_COMPLETE]: 'Completed a course',
+    [XpRewardReason.STREAK_MILESTONE]: 'Streak milestone bonus',
+  };
+
   async getMyRewards(userId: string): Promise<{
     xp: number;
     badges: Array<{ badge: Badge; awardedAt: Date }>;
-    recentHistory: RewardHistory[];
+    recentHistory: Array<{ amount: number; reason: XpRewardReason; label: string; createdAt: Date }>;
   }> {
     const user = await this.userRepository.findOneOrFail({
       where: { id: userId },
       select: ['xp'],
     });
 
-    const [badges, recentHistory] = await Promise.all([
+    const [badges, history] = await Promise.all([
       this.getEarnedBadges(userId),
       this.rewardHistoryRepository.find({
         where: { userId },
@@ -246,22 +253,42 @@ export class RewardsService {
     return {
       xp: user.xp,
       badges,
-      recentHistory,
+      recentHistory: history.map((h) => ({
+        amount: h.amount,
+        reason: h.reason,
+        label: RewardsService.REASON_LABELS[h.reason] ?? h.reason,
+        createdAt: h.createdAt,
+      })),
     };
   }
 
   async getLeaderboard(): Promise<
-    Array<{ username: string | null; xp: number }>
+    Array<{ rank: number; username: string | null; xp: number; badgesCount: number }>
   > {
     const rows = await this.userRepository.find({
-      select: ['username', 'name', 'xp'],
+      select: ['id', 'username', 'name', 'xp'],
       order: { xp: 'DESC' },
       take: 10,
     });
 
-    return rows.map((u) => ({
+    const ids = rows.map((u) => u.id);
+    const badgeCounts = ids.length
+      ? await this.userBadgeRepository
+          .createQueryBuilder('ub')
+          .select('ub.userId', 'userId')
+          .addSelect('COUNT(ub.id)', 'count')
+          .where('ub.userId IN (:...ids)', { ids })
+          .groupBy('ub.userId')
+          .getRawMany<{ userId: string; count: string }>()
+      : [];
+
+    const countMap = new Map(badgeCounts.map((r) => [r.userId, parseInt(r.count, 10)]));
+
+    return rows.map((u, i) => ({
+      rank: i + 1,
       username: u.username ?? u.name ?? null,
       xp: u.xp ?? 0,
+      badgesCount: countMap.get(u.id) ?? 0,
     }));
   }
 }
