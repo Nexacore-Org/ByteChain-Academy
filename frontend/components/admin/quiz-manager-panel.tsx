@@ -8,6 +8,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  type DragEndEvent,
 } from "@dnd-kit/core"
 import {
   arrayMove,
@@ -182,10 +183,12 @@ export function QuizManagerPanel({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
-  const handleDragEnd = (event: { active: { id: string }; over: { id: string } | null }) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     if (!event.over) return
-    const oldIdx = questions.findIndex((q) => (q._sortId || q.id) === event.active.id)
-    const newIdx = questions.findIndex((q) => (q._sortId || q.id) === event.over!.id)
+    const activeId = String(event.active.id)
+    const overId = String(event.over.id)
+    const oldIdx = questions.findIndex((q) => (q._sortId || q.id) === activeId)
+    const newIdx = questions.findIndex((q) => (q._sortId || q.id) === overId)
     if (oldIdx === -1 || newIdx === -1 || oldIdx === newIdx) return
     setQuestions((prev) => arrayMove(prev, oldIdx, newIdx))
   }
