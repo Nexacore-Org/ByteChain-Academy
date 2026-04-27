@@ -16,6 +16,8 @@ export class LessonResponseDto {
   videoStartTimestamp: number | null;
   order: number;
   courseId: string;
+  hasQuiz: boolean;
+  quizId: string | null;
   createdAt: Date;
   updatedAt: Date;
 
@@ -27,6 +29,8 @@ export class LessonResponseDto {
     this.videoStartTimestamp = lesson.videoStartTimestamp || null;
     this.order = lesson.order;
     this.courseId = lesson.courseId;
+    this.hasQuiz = lesson.hasQuiz ?? false;
+    this.quizId = lesson.quizId ?? null;
     this.createdAt = lesson.createdAt;
     this.updatedAt = lesson.updatedAt;
   }

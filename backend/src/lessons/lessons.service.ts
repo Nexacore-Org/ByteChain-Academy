@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Course } from 'src/courses/entities/course.entity';
+import { Quiz } from 'src/quizzes/entities/quiz.entity';
 import { Lesson } from './entities/lesson.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { PaginationService } from '../common/services/pagination.service';
 import { PaginatedResult } from '../common/services/pagination.service';
 import { CreateLessonDto } from './dto/create-lesson.dto';
@@ -15,6 +16,8 @@ export class LessonsService {
     private lessonRepository: Repository<Lesson>,
     @InjectRepository(Course)
     private courseRepository: Repository<Course>,
+    @InjectRepository(Quiz)
+    private quizRepository: Repository<Quiz>,
     private readonly paginationService: PaginationService,
   ) {}
 
@@ -76,7 +79,7 @@ export class LessonsService {
     courseId: string,
     page: number,
     limit: number,
-  ): Promise<PaginatedResult<Lesson>> {
+  ): Promise<PaginatedResult<Lesson & { hasQuiz: boolean; quizId: string | null }>> {
     const course = await this.courseRepository.findOne({
       where: { id: courseId },
     });
@@ -85,7 +88,7 @@ export class LessonsService {
       throw new NotFoundException(`Course with ID ${courseId} not found`);
     }
 
-    return this.paginationService.paginate(
+    const result = await this.paginationService.paginate(
       this.lessonRepository,
       { page, limit },
       {
@@ -93,6 +96,21 @@ export class LessonsService {
         order: { order: 'ASC', createdAt: 'ASC' },
       },
     );
+
+    const lessonIds = result.data.map((l) => l.id);
+    const quizzes = lessonIds.length
+      ? await this.quizRepository.find({ where: { lessonId: In(lessonIds) }, select: ['id', 'lessonId'] })
+      : [];
+    const quizMap = new Map(quizzes.map((q) => [q.lessonId, q.id]));
+
+    return {
+      ...result,
+      data: result.data.map((l) => ({
+        ...l,
+        hasQuiz: quizMap.has(l.id),
+        quizId: quizMap.get(l.id) ?? null,
+      })),
+    };
   }
 
   async findOne(id: string): Promise<Lesson> {
@@ -106,6 +124,21 @@ export class LessonsService {
     }
 
     return lesson;
+  }
+
+  async findOneWithQuizFlag(id: string): Promise<Lesson & { hasQuiz: boolean; quizId: string | null }> {
+    const lesson = await this.lessonRepository.findOne({
+      where: { id },
+      relations: ['course'],
+    });
+
+    if (!lesson) {
+      throw new NotFoundException(`Lesson with ID ${id} not found`);
+    }
+
+    const quiz = await this.quizRepository.findOne({ where: { lessonId: id }, select: ['id'] });
+
+    return { ...lesson, hasQuiz: !!quiz, quizId: quiz?.id ?? null };
   }
 
   async update(id: string, updateLessonDto: UpdateLessonDto): Promise<Lesson> {

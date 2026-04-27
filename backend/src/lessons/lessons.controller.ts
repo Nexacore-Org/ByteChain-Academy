@@ -11,8 +11,8 @@ import {
   HttpStatus,
   Query,
 } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LessonsService } from './lessons.service';
-
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { PaginationDto } from '../common/dto/pagination.dto';
@@ -22,6 +22,7 @@ import { CreateLessonDto } from './dto/create-lesson.dto';
 import { LessonResponseDto } from './dto/lesson-response.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 
+@ApiTags('lessons')
 @Controller('lessons')
 export class LessonsController {
   constructor(private readonly lessonsService: LessonsService) {}
@@ -53,6 +54,7 @@ export class LessonsController {
     };
   }
 
+  // NOTE: /course/:courseId must be declared BEFORE /:id to avoid shadowing
   @Get('course/:courseId')
   async findByCourse(
     @Param('courseId') courseId: string,
@@ -78,8 +80,10 @@ export class LessonsController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get a lesson by ID with hasQuiz flag' })
   async findOne(@Param('id') id: string): Promise<LessonResponseDto> {
-    const lesson = await this.lessonsService.findOne(id);
+    const lesson = await this.lessonsService.findOneWithQuizFlag(id);
     return new LessonResponseDto(lesson);
   }
 
