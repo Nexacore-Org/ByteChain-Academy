@@ -10,7 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThan, Like } from 'typeorm';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
-import { RegisterDto } from 'src/auth/dto/register.dto';
+import { RegisterDto } from '../auth/dto/register.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { User, UserRole } from './entities/user.entity';
 import { Certificate } from '../certificates/entities/certificate.entity';
@@ -398,5 +398,29 @@ export class UserService {
     const user = await this.adminGetUser(userId);
     user.suspended = suspended;
     return this.userRepository.save(user);
+  }
+
+  async incrementFailedLoginAttempts(userId: string): Promise<void> {
+    const user = await this.getProfile(userId);
+    user.failedLoginAttempts = (user.failedLoginAttempts ?? 0) + 1;
+
+    if (user.failedLoginAttempts === 5) {
+      const lockedUntil = new Date();
+      lockedUntil.setMinutes(lockedUntil.getMinutes() + 15);
+      user.lockedUntil = lockedUntil;
+    } else if (user.failedLoginAttempts === 10) {
+      const lockedUntil = new Date();
+      lockedUntil.setMinutes(lockedUntil.getMinutes() + 60);
+      user.lockedUntil = lockedUntil;
+    }
+
+    await this.userRepository.save(user);
+  }
+
+  async resetFailedLoginAttempts(userId: string): Promise<void> {
+    await this.userRepository.update(userId, {
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+    });
   }
 }

@@ -67,6 +67,16 @@ Swagger UI is available at:
 
 - `http://localhost:3001/api/v1/docs`
 
+## Soft-Delete Behavior
+
+Courses support soft-deletion for data safety:
+
+- `DELETE /admin/courses/:id` - Soft-deletes a course (sets `deletedAt` timestamp)
+- `PATCH /admin/courses/:id/restore` - Restores a soft-deleted course
+- `GET /admin/courses?includeDeleted=true` - Includes soft-deleted courses in admin list
+
+Soft-deleted courses are hidden from public APIs but preserve all related data (progress, certificates, registrations).
+
 ## Test and quality checks
 
 ```bash

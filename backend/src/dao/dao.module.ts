@@ -5,9 +5,13 @@ import { DAOVote } from './entities/dao-vote.entity';
 import { User } from '../users/entities/user.entity';
 import { DAOService } from './dao.service';
 import { DAOController } from './dao.controller';
+import { WebhooksModule } from '../webhooks/webhooks.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([DAOProposal, DAOVote, User])],
+  imports: [
+    TypeOrmModule.forFeature([DAOProposal, DAOVote, User]),
+    WebhooksModule,
+  ],
   controllers: [DAOController],
   providers: [DAOService],
   exports: [DAOService],
