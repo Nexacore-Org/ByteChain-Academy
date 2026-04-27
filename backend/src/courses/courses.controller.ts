@@ -98,11 +98,7 @@ export class CoursesController {
   }
 
   @Get()
-  @UseGuards(OptionalJwtAuthGuard)
-  async findAll(
-    @Req() req: RequestWithUser,
-    @Query() pagination: PaginationDto,
-  ): Promise<{
+  async findAll(@Query() pagination: PaginationDto): Promise<{
     data: CourseResponseDto[];
     total: number;
     page: number;

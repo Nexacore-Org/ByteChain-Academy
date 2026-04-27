@@ -8,6 +8,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  type DragEndEvent,
 } from "@dnd-kit/core"
 import {
   arrayMove,
@@ -77,6 +78,7 @@ export function QuizManagerPanel({
 
   const isEditMode = !!quiz
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (quiz?.questions?.length) {
       setQuestions(
@@ -91,9 +93,8 @@ export function QuizManagerPanel({
     } else if (!quiz && open) {
       setQuestions([])
     }
-    // Sync quiz prop to local questions state
-    // eslint-disable-next-line react-hooks/set-state-in-effect
   }, [quiz, open])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const addQuestion = () => {
     setQuestions((prev) => [
@@ -182,10 +183,12 @@ export function QuizManagerPanel({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
-  const handleDragEnd = (event: { active: { id: string }; over: { id: string } | null }) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     if (!event.over) return
-    const oldIdx = questions.findIndex((q) => (q._sortId || q.id) === event.active.id)
-    const newIdx = questions.findIndex((q) => (q._sortId || q.id) === event.over!.id)
+    const activeId = String(event.active.id)
+    const overId = String(event.over.id)
+    const oldIdx = questions.findIndex((q) => (q._sortId || q.id) === activeId)
+    const newIdx = questions.findIndex((q) => (q._sortId || q.id) === overId)
     if (oldIdx === -1 || newIdx === -1 || oldIdx === newIdx) return
     setQuestions((prev) => arrayMove(prev, oldIdx, newIdx))
   }

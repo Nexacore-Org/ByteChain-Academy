@@ -38,11 +38,12 @@ export function SignUpModal({ open, onOpenChange, onSwitchToLogin }: SignUpModal
       setPassword("")
       // Navigate to dashboard page
       router.push("/dashboard")
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Signup error:", err)
+      const e = err as { status?: number; message?: string }
       if (!window.navigator.onLine) {
         setError("Unable to connect. Please check your connection and try again")
-      } else if (err.status === 409 || err.message?.includes("409")) {
+      } else if (e.status === 409 || e.message?.includes("409")) {
         setError("An account with this email already exists")
       } else {
         setError("Something went wrong. Please try again")

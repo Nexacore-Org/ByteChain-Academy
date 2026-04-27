@@ -2,14 +2,13 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { BADGE_MILESTONES, MilestoneRule } from './badge-milestones';
-import { User } from '../users/entities/user.entity';
+import { User } from 'src/users/entities/user.entity';
 import { Badge } from './entities/badge.entity';
 import {
   RewardHistory,
   XpRewardReason,
 } from './entities/reward-history.entity';
 import { UserBadge } from './entities/user-badge.entity';
-<<<<<<< HEAD
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
 import { WebhooksService } from '../webhooks/webhooks.service';

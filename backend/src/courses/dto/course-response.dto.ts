@@ -1,10 +1,4 @@
-import {
-  IsString,
-  IsNotEmpty,
-  IsBoolean,
-  IsDate,
-  IsOptional,
-} from 'class-validator';
+import { IsString, IsNotEmpty, IsBoolean, IsDate } from 'class-validator';
 
 export class CourseResponseDto {
   @IsString()

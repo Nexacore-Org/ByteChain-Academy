@@ -1,174 +1,137 @@
-"use client";
+"use client"
 
-import { use, useState, useEffect, useCallback } from "react";
-import Link from "next/link";
-import { Header } from "@/components/header";
-import { LessonRow } from "@/components/admin/LessonRow";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { ArrowLeft, Plus } from "lucide-react";
-import { fetchLessonsByCourse, reorderLessons, type AdminLesson } from "@/lib/api";
-import { toast } from "sonner";
+import { use, useState, useEffect } from "react"
+import { Plus } from "lucide-react"
+import { LessonRow } from "@/components/admin/lesson-row"
+import { QuizManagerPanel } from "@/components/admin/quiz-manager-panel"
+import { useAdminLessons } from "@/hooks/use-admin-lessons"
+import { useLessonQuiz } from "@/hooks/use-lesson-quiz"
+import { api } from "@/lib/api"
+import { Button } from "@/components/ui/button"
+import { NewLessonForm } from "@/components/admin/new-lesson-form"
+import { EditLessonForm } from "@/components/admin/edit-lesson-form"
 
-interface PageProps {
-  params: Promise<{ id: string }>;
-}
+export default function AdminLessonsPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id: courseId } = use(params)
+  const { lessons, loading, error, refetch, updateLessonHasQuiz } =
+    useAdminLessons(courseId)
 
-export default function AdminLessonsPage({ params }: PageProps) {
-  const { id: courseId } = use(params);
-  const [lessons, setLessons] = useState<AdminLesson[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isReordering, setIsReordering] = useState(false);
+  const [newFormOpen, setNewFormOpen] = useState(false)
+  const [editLessonId, setEditLessonId] = useState<string | null>(null)
 
-  const loadLessons = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const data = await fetchLessonsByCourse(courseId);
-      setLessons(data.sort((a, b) => a.order - b.order));
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to load lessons");
-      setLessons([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [courseId]);
+  const [quizPanel, setQuizPanel] = useState<{ lessonId: string; title: string } | null>(null)
+  const quiz = useLessonQuiz(quizPanel?.lessonId ?? null, quizPanel?.title ?? "")
+
+  const openQuizPanel = (lessonId: string, title: string) => {
+    setQuizPanel({ lessonId, title })
+  }
+
+  const closeQuizPanel = () => {
+    setQuizPanel(null)
+    quiz.close()
+  }
+
+  const handleQuizSuccess = (hasQuiz: boolean) => {
+    if (quizPanel?.lessonId) updateLessonHasQuiz(quizPanel.lessonId, hasQuiz)
+  }
 
   useEffect(() => {
-    loadLessons();
-  }, [loadLessons]);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    const oldIndex = lessons.findIndex((l) => l.id === active.id);
-    const newIndex = lessons.findIndex((l) => l.id === over.id);
-    if (oldIndex === -1 || newIndex === -1) return;
-
-    const newOrder = arrayMove(lessons, oldIndex, newIndex);
-    const previousOrder = [...lessons];
-
-    setLessons(newOrder);
-    setIsReordering(true);
-
-    try {
-      await reorderLessons(
-        courseId,
-        newOrder.map((l) => l.id)
-      );
-    } catch (err) {
-      setLessons(previousOrder);
-      toast.error(err instanceof Error ? err.message : "Failed to reorder lessons");
-    } finally {
-      setIsReordering(false);
+    if (quizPanel && !quiz.isOpen) {
+      quiz.open()
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- open when quizPanel is set
+  }, [quizPanel])
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
-      <Header />
-      <main className="container mx-auto px-6 py-12 max-w-4xl">
-        <div className="flex items-center gap-4 mb-8">
-          <Link href="/admin/courses">
-            <button
-              type="button"
-              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              Back to Courses
-            </button>
-          </Link>
-        </div>
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Lessons</h1>
+        <Button
+          onClick={() => setNewFormOpen(true)}
+          className="bg-[#00ff88] text-[#002E20] hover:bg-[#00ff88]/90"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          New Lesson
+        </Button>
+      </div>
 
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">Lessons</h1>
-          <Link href={`/admin/courses/${courseId}/lessons/new`}>
-            <button
-              type="button"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#00ff88] text-[#002E20] font-medium hover:bg-[#00d88b] transition-colors"
-            >
-              <Plus className="w-5 h-5" />
-              New Lesson
-            </button>
-          </Link>
-        </div>
+      {error && (
+        <p className="text-red-400 mb-4">{error}</p>
+      )}
 
-        <div className="rounded-xl border border-white/10 bg-[#0b1327]/30 overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-white/10 bg-white/5">
-                <th className="w-10 py-3 px-4" aria-hidden />
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
-                  #
-                </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
-                  Title
-                </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
-                  Order
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={4} className="py-12 text-center text-gray-400">
-                    Loading...
-                  </td>
-                </tr>
-              ) : lessons.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="py-12 text-center text-gray-400">
-                    No lessons yet
-                  </td>
-                </tr>
-              ) : (
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <SortableContext
-                    items={lessons.map((l) => l.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {lessons.map((lesson, index) => (
-                      <LessonRow
-                        key={lesson.id}
-                        lesson={lesson}
-                        index={index}
-                        disabled={isReordering}
-                      />
-                    ))}
-                  </SortableContext>
-                </DndContext>
-              )}
-            </tbody>
-          </table>
+      {loading ? (
+        <p className="text-gray-400">Loading lessons…</p>
+      ) : (
+        <div className="space-y-2">
+          {lessons.map((lesson) => (
+            <LessonRow
+              key={lesson.id}
+              lesson={{
+                id: lesson.id,
+                title: lesson.title,
+                order: lesson.order,
+                hasQuiz: lesson.hasQuiz,
+              }}
+              onQuizClick={() => openQuizPanel(lesson.id, lesson.title)}
+              onEdit={() => setEditLessonId(lesson.id)}
+              onDelete={async () => {
+                if (!confirm("Delete this lesson?")) return
+                try {
+                  await api.delete(`/lessons/${lesson.id}`)
+                  if (editLessonId === lesson.id) setEditLessonId(null)
+                  refetch()
+                } catch {
+                  // Error - could show toast
+                }
+              }}
+            />
+          ))}
         </div>
-      </main>
+      )}
+
+      <QuizManagerPanel
+        open={quiz.isOpen}
+        onClose={closeQuizPanel}
+        lessonTitle={quizPanel?.title ?? ""}
+        lessonId={quizPanel?.lessonId ?? ""}
+        quiz={quiz.quiz}
+        loading={quiz.loading}
+        error={quiz.error}
+        submitError={quiz.submitError}
+        submitLoading={quiz.submitLoading}
+        onRetry={quiz.fetchQuiz}
+        onCreateQuiz={quiz.createQuiz}
+        onUpdateQuiz={quiz.updateQuiz}
+        onSuccess={handleQuizSuccess}
+      />
+
+      <NewLessonForm
+        courseId={courseId}
+        open={newFormOpen}
+        onClose={() => setNewFormOpen(false)}
+        onSaved={() => {
+          setNewFormOpen(false)
+          refetch()
+        }}
+        onQuizClick={(lessonId, title) => openQuizPanel(lessonId, title)}
+      />
+
+      {editLessonId && (
+        <EditLessonForm
+          lessonId={editLessonId}
+          open={!!editLessonId}
+          onClose={() => setEditLessonId(null)}
+          onSaved={() => {
+            setEditLessonId(null)
+            refetch()
+          }}
+          onQuizClick={(lid, title) => openQuizPanel(lid, title)}
+        />
+      )}
     </div>
-  );
+  )
 }
