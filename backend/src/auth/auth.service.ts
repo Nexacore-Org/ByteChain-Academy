@@ -9,9 +9,10 @@ import { RegisterDto } from './dto/register.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { UserService } from 'src/users/users.service';
-import { EmailService } from 'src/email/email.service';
-import { UserRole } from 'src/users/entities/user.entity';
+<<<<<<< HEAD
+import { UserService } from '../users/users.service';
+import { EmailService } from '../email/email.service';
+import { UserRole } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {

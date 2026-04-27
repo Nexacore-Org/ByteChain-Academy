@@ -11,8 +11,8 @@ import { DAOProposal, ProposalStatus } from './entities/dao-proposal.entity';
 import { DAOVote, VoteType } from './entities/dao-vote.entity';
 import { CreateProposalDto } from './dto/create-proposal.dto';
 import { User } from '../users/entities/user.entity';
-import { WebhooksService } from 'src/webhooks/webhooks.service';
-import { WebhookEvent } from 'src/webhooks/dto/create-webhook.dto';
+import { WebhooksService } from '../webhooks/webhooks.service';
+import { WebhookEvent } from '../webhooks/dto/create-webhook.dto';
 
 @Injectable()
 export class DAOService {
