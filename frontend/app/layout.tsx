@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { QueryProvider } from "@/components/providers/query-provider";
 
 export const metadata: Metadata = {
   title: "ByteChain Academy",
@@ -16,10 +17,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className=''
-      >
-        {children}
+      <body className="">
+        <QueryProvider>{children}</QueryProvider>
       </body>
     </html>
   );
