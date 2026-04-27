@@ -1,94 +1,64 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { AlertTriangle } from "lucide-react";
-import { apiFetch } from "@/lib/api";
-import {
-  CertificateCard,
-  type Certificate,
-} from "@/components/MyCertificatesPage/Certificatecard";
-import { CertificateCardSkeleton } from "@/components/MyCertificatesPage/Certificatecardskeleton";
-import { CertificatesEmptyState } from "@/components/MyCertificatesPage/Certificatesemptystate";
-
-type FetchState = "loading" | "success" | "error";
-
-function getAuthToken(): string {
-  if (typeof window === "undefined") return "";
-  return localStorage.getItem("auth_token") ?? "";
-}
+import { AlertTriangle, Loader2, Award } from "lucide-react";
+import { CertificateCard } from "@/components/certificates/certificate-card";
+import { useCertificates } from "@/hooks/use-certificates";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export function MyCertificatesContent() {
-  const [fetchState, setFetchState] = useState<FetchState>("loading");
-  const [certificates, setCertificates] = useState<Certificate[]>([]);
-  const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") ?? "" : "";
+  const { data: certificates, isLoading, isError, refetch } = useCertificates();
 
-  const fetchCertificates = async () => {
-    setFetchState("loading");
-    try {
-      // Try the primary endpoint
-      const data = await api.get<any[]>('/certificates/my');
-
-      if (!Array.isArray(data)) {
-        throw new Error("Invalid response format");
-      }
-
-      const mapped: Certificate[] = data.map((item) => ({
-        id: item.id || Math.random().toString(),
-        courseName: item.courseOrProgram || item.courseTitle || "Unknown Course",
-        issuedAt: item.issuedAt || new Date().toISOString(),
-        verificationCode: item.certificateHash || item.hash || "",
-        status: 'active',
-      }));
-
-      mapped.sort(
-        (a, b) =>
-          new Date(b.issuedAt).getTime() - new Date(a.issuedAt).getTime(),
-      );
-      setCertificates(mapped);
-      setFetchState("success");
-    } catch (err) {
-      console.error("Failed to fetch certificates:", err);
-      setFetchState("error");
-      setCertificates([]);
-    }
-  };
-
-  useEffect(() => {
-    void fetchCertificates();
-  }, []);
-
-  if (fetchState === "loading") {
+  if (isLoading) {
     return (
       <div className="flex flex-col gap-4">
-        <CertificateCardSkeleton />
-        <CertificateCardSkeleton />
+        {[1, 2].map((i) => (
+          <div key={i} className="h-32 rounded-xl bg-white/5 animate-pulse border border-white/10" />
+        ))}
       </div>
     );
   }
 
-  if (fetchState === "error") {
+  if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
-        <AlertTriangle className="w-10 h-10 text-yellow-400" />
-        <p className="text-white font-semibold">Could not load your certificates.</p>
-        <button
-          onClick={() => void fetchCertificates()}
-          className="px-5 py-2 rounded-lg bg-green-500 hover:bg-green-400 text-white font-semibold text-sm transition-colors duration-150"
+      <div className="flex flex-col items-center justify-center gap-4 py-12 text-center bg-red-500/5 rounded-2xl border border-red-500/10">
+        <AlertTriangle className="w-10 h-10 text-red-500" />
+        <div className="space-y-1">
+          <p className="text-white font-bold">Could not load certificates</p>
+          <p className="text-gray-400 text-sm">Verify your connection and try again.</p>
+        </div>
+        <Button
+          onClick={() => void refetch()}
+          variant="outline"
+          className="border-white/10 hover:bg-white/5"
         >
           Try again
-        </button>
+        </Button>
       </div>
     );
   }
 
-  if (certificates.length === 0) {
-    return <CertificatesEmptyState />;
+  if (!certificates || certificates.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center space-y-4 bg-white/5 rounded-2xl border border-white/5">
+        <Award className="w-12 h-12 text-gray-600" />
+        <div className="space-y-1">
+          <p className="text-white font-semibold">No certificates earned yet</p>
+          <p className="text-gray-500 text-sm">Complete courses to see them here.</p>
+        </div>
+        <Link href="/courses">
+          <Button variant="default" className="text-green-500 hover:text-green-400">
+            Browse Courses
+          </Button>
+        </Link>
+      </div>
+    );
   }
 
   return (
     <div className="flex flex-col gap-4">
       {certificates.map((cert) => (
-        <CertificateCard key={cert.id} certificate={cert} token={token} />
+        <CertificateCard key={cert.id} certificate={cert} />
       ))}
     </div>
   );
