@@ -1,13 +1,13 @@
 import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Certificate } from 'src/certificates/entities/certificate.entity';
-import { CourseRegistration } from 'src/courses/entities/course-registration.entity';
-import { Course } from 'src/courses/entities/course.entity';
-import { Lesson } from 'src/lessons/entities/lesson.entity';
-import { Progress } from 'src/progress/entities/progress.entity';
-import { QuizSubmission } from 'src/quizzes/entities/quiz-submission.entity';
-import { User } from 'src/users/entities/user.entity';
+import { Certificate } from '../certificates/entities/certificate.entity';
+import { CourseRegistration } from '../courses/entities/course-registration.entity';
+import { Course } from '../courses/entities/course.entity';
+import { Lesson } from '../lessons/entities/lesson.entity';
+import { Progress } from '../progress/entities/progress.entity';
+import { QuizSubmission } from '../quizzes/entities/quiz-submission.entity';
+import { User } from '../users/entities/user.entity';
 import { AnalyticsController } from './analytics.controller';
 import { AnalyticsService } from './analytics.service';
 

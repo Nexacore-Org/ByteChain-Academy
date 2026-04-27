@@ -3,13 +3,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProgressService } from './progress.service';
 import { ProgressController } from './progress.controller';
 import { Progress } from './entities/progress.entity';
-import { Lesson } from 'src/lessons/entities/lesson.entity';
-import { CertificatesModule } from 'src/certificates/certificates.module';
-import { NotificationsModule } from 'src/notifications/notifications.module';
-import { RewardsModule } from 'src/rewards/rewards.module';
-import { UsersModule } from 'src/users/users.module';
-import { WebhooksModule } from 'src/webhooks/webhooks.module';
-
+<<<<<<< HEAD
+import { Lesson } from '../lessons/entities/lesson.entity';
+import { CertificatesModule } from '../certificates/certificates.module';
+import { NotificationsModule } from '../notifications/notifications.module';
+import { RewardsModule } from '../rewards/rewards.module';
+import { UsersModule } from '../users/users.module';
+import { WebhooksModule } from '../webhooks/webhooks.module';
 
 @Module({
   imports: [
