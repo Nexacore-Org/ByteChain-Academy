@@ -12,10 +12,10 @@ import { RateLimitGuard } from './rate-limit.guard';
 export class AuthThrottlerGuard extends RateLimitGuard {
   private readonly logger = new Logger(AuthThrottlerGuard.name);
 
-  protected async throwThrottlingException(
+  protected throwThrottlingException(
     context: ExecutionContext,
     throttlerLimitDetail: ThrottlerLimitDetail,
-  ): Promise<void> {
+  ): never {
     const request = context.switchToHttp().getRequest<{
       ip?: string;
       method?: string;
@@ -32,10 +32,13 @@ export class AuthThrottlerGuard extends RateLimitGuard {
 
     this.logger.warn(`429 Too Many Requests from ${ip} on ${route}`);
 
-    throw new HttpException({
-      statusCode: 429,
-      message: 'Too many requests',
-      retryAfter,
-    }, HttpStatus.TOO_MANY_REQUESTS);
+    throw new HttpException(
+      {
+        statusCode: 429,
+        message: 'Too many requests',
+        retryAfter,
+      },
+      HttpStatus.TOO_MANY_REQUESTS,
+    );
   }
 }

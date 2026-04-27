@@ -37,9 +37,7 @@ export class CoursesController {
   }
 
   @Get()
-  async findAll(
-    @Query() pagination: PaginationDto,
-  ): Promise<{
+  async findAll(@Query() pagination: PaginationDto): Promise<{
     data: CourseResponseDto[];
     total: number;
     page: number;

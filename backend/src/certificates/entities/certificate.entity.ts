@@ -8,7 +8,6 @@ import {
   UpdateDateColumn,
   ManyToOne,
   Index,
-  Unique,
 } from 'typeorm';
 
 @Entity('certificates')

@@ -8,7 +8,11 @@ import { LessonsService } from './lessons.service';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Lesson, Course]), PassportModule, AuthModule],
+  imports: [
+    TypeOrmModule.forFeature([Lesson, Course]),
+    PassportModule,
+    AuthModule,
+  ],
   controllers: [LessonsController],
   providers: [LessonsService],
   exports: [LessonsService],

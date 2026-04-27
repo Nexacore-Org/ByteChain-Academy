@@ -101,7 +101,7 @@ export default function QuizResultPage({
                     <CheckCircle2 className="w-12 h-12 text-[#00ff88]" />
                   </div>
                   <h2 className="text-3xl font-bold text-[#00ff88] mb-2">Quiz Passed!</h2>
-                  <p className="text-gray-400">Congratulations! You've successfully completed the quiz.</p>
+                  <p className="text-gray-400">Congratulations! You&apos;ve successfully completed the quiz.</p>
                 </div>
               ) : (
                 <div className="flex flex-col items-center">
@@ -110,7 +110,7 @@ export default function QuizResultPage({
                   </div>
                   <h2 className="text-3xl font-bold text-red-500 mb-2">Quiz Not Passed</h2>
                   <p className="text-gray-400">
-                    You need at least 70% to pass. Don't worry, you can retry!
+                    You need at least 70% to pass. Don&apos;t worry, you can retry!
                   </p>
                 </div>
               )}

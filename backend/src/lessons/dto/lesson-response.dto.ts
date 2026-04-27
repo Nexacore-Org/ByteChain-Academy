@@ -1,13 +1,3 @@
-import {
-  IsString,
-  IsNotEmpty,
-  IsOptional,
-  IsUUID,
-  IsNumber,
-  Min,
-  IsUrl,
-} from 'class-validator';
-
 export class LessonResponseDto {
   id: string;
   title: string;

@@ -36,11 +36,12 @@ export function LoginModal({ open, onOpenChange, onSwitchToSignup }: LoginModalP
       setPassword("")
       // Navigate to dashboard page
       router.push("/dashboard")
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Login error:", err)
+      const e = err as { status?: number; message?: string }
       if (!window.navigator.onLine) {
         setError("Unable to connect. Please check your connection and try again")
-      } else if (err.status === 401 || err.message?.includes("401")) {
+      } else if (e.status === 401 || e.message?.includes("401")) {
         setError("Incorrect email or password")
       } else {
         setError("Something went wrong. Please try again")

@@ -77,6 +77,7 @@ export function QuizManagerPanel({
 
   const isEditMode = !!quiz
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (quiz?.questions?.length) {
       setQuestions(
@@ -91,9 +92,8 @@ export function QuizManagerPanel({
     } else if (!quiz && open) {
       setQuestions([])
     }
-    // Sync quiz prop to local questions state
-    // eslint-disable-next-line react-hooks/set-state-in-effect
   }, [quiz, open])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const addQuestion = () => {
     setQuestions((prev) => [

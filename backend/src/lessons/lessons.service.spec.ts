@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
 import { LessonsService } from './lessons.service';
 import { Course } from 'src/courses/entities/course.entity';
@@ -10,9 +9,6 @@ import { Lesson } from './entities/lesson.entity';
 
 describe('LessonsService', () => {
   let service: LessonsService;
-  let lessonRepository: Repository<Lesson>;
-  let courseRepository: Repository<Course>;
-
   const mockLessonRepository = {
     create: jest.fn(),
     save: jest.fn(),
@@ -41,12 +37,6 @@ describe('LessonsService', () => {
     }).compile();
 
     service = module.get<LessonsService>(LessonsService);
-    lessonRepository = module.get<Repository<Lesson>>(
-      getRepositoryToken(Lesson),
-    );
-    courseRepository = module.get<Repository<Course>>(
-      getRepositoryToken(Course),
-    );
   });
 
   afterEach(() => {
