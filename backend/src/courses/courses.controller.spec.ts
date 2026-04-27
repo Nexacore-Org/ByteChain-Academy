@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CoursesController } from './courses.controller';
 import { CoursesService } from './courses.service';
-import { PaginationService } from 'src/common/services/pagination.service';
+import { PaginationService } from '../common/services/pagination.service';
 
 describe('CoursesController', () => {
   let controller: CoursesController;

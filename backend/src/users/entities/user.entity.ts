@@ -25,25 +25,28 @@ export class User {
   password: string;
 
   @Column({ nullable: true })
-  name: string;
+  name: string | null;
 
   @Column({ nullable: true })
-  username: string;
+  username: string | null;
 
   @Column({ nullable: true })
-  bio: string;
+  bio: string | null;
+
+  @Column({ unique: true, nullable: true })
+  walletAddress: string | null;
 
   @Column({ nullable: true })
-  walletAddress: string;
-
-  @Column({ nullable: true })
-  avatarUrl: string;
+  avatarUrl: string | null;
 
   @Column({
     type: 'varchar',
     default: UserRole.USER,
   })
   role: UserRole;
+
+  @Column({ default: false })
+  suspended: boolean;
 
   @Column({ type: 'int', default: 0 })
   lessonsCompleted: number;
@@ -60,13 +63,27 @@ export class User {
   @Column({ type: 'int', default: 0 })
   streak: number;
 
-  @Column({ nullable: true })
-  @Exclude()
-  resetToken: string;
+  @Column({ type: 'int', default: 0 })
+  longestStreak: number;
+
+  @Column({ type: 'datetime', nullable: true })
+  lastActiveAt: Date | null;
 
   @Column({ nullable: true })
   @Exclude()
-  resetTokenExpires: Date;
+  resetToken: string | null;
+
+  @Column({ nullable: true })
+  @Exclude()
+  resetTokenExpires: Date | null;
+
+  @Column({ type: 'int', default: 0 })
+  @Exclude()
+  failedLoginAttempts: number;
+
+  @Column({ type: 'datetime', nullable: true })
+  @Exclude()
+  lockedUntil: Date | null;
 
   @CreateDateColumn()
   createdAt: Date;

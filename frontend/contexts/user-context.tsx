@@ -27,8 +27,14 @@ export interface LearningStats {
 
 export interface UserStats {
   courseCount: number;
+  completedCourseCount: number;
   certificateCount: number;
   xp: number;
+  streak: number;
+  longestStreak: number;
+  lastActiveAt: string | null;
+  badgesCount: number;
+  rank: number;
 }
 
 export interface NotificationPreferences {
@@ -78,7 +84,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [notificationPreferences, setNotificationPreferences] =
     useState<NotificationPreferences>(defaultNotificationPreferences);
 
-  const loadUserData = () => {
+  const loadUserData = useCallback(() => {
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("auth_token");
       if (token) {
@@ -148,7 +154,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
+  }, [loadUserData]);
 
   const updateProfile = (updates: Partial<UserProfile>) => {
     if (user) {

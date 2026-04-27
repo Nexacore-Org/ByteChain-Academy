@@ -9,15 +9,16 @@ import { Repository } from 'typeorm';
 import { Quiz } from '../quizzes/entities/quiz.entity';
 import { Question } from '../quizzes/entities/question.entity';
 import { QuizSubmission } from '../quizzes/entities/quiz-submission.entity';
-import { Lesson } from 'src/lessons/entities/lesson.entity';
+import { Lesson } from '../lessons/entities/lesson.entity';
 import { CreateQuizDto } from './dto/create-quiz.dto';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
-import { NotificationsService } from 'src/notifications/notifications.service';
-import { NotificationType } from 'src/notifications/entities/notification.entity';
-import { RewardsService } from 'src/rewards/rewards.service';
-import { XP_QUIZ_PASS } from 'src/rewards/rewards.service';
-import { XpRewardReason } from 'src/rewards/entities/reward-history.entity';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/entities/notification.entity';
+import { RewardsService } from '../rewards/rewards.service';
+import { XP_QUIZ_PASS } from '../rewards/rewards.service';
+import { XpRewardReason } from '../rewards/entities/reward-history.entity';
+import { StreakService } from '../users/streak.service';
 
 @Injectable()
 export class QuizzesService {
@@ -32,6 +33,7 @@ export class QuizzesService {
     private quizSubmissionRepository: Repository<QuizSubmission>,
     private readonly notificationsService: NotificationsService,
     private readonly rewardsService: RewardsService,
+    private readonly streakService: StreakService,
   ) {}
 
   async create(createQuizDto: CreateQuizDto): Promise<Quiz> {
@@ -234,6 +236,7 @@ export class QuizzesService {
         `You passed the quiz "${quiz.title}".`,
         `/courses/lessons/${quiz.lessonId}`,
       );
+      await this.streakService.updateStreak(userId);
     }
 
     return savedSubmission;

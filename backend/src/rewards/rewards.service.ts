@@ -9,11 +9,21 @@ import {
   XpRewardReason,
 } from './entities/reward-history.entity';
 import { UserBadge } from './entities/user-badge.entity';
-import { NotificationsService } from 'src/notifications/notifications.service';
-import { NotificationType } from 'src/notifications/entities/notification.entity';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/entities/notification.entity';
+import { WebhooksService } from '../webhooks/webhooks.service';
+import { WebhookEvent } from '../webhooks/dto/create-webhook.dto';
 
 export const XP_LESSON_COMPLETE = 10;
 export const XP_QUIZ_PASS = 25;
+
+/** Human-readable labels for XP reward reasons. */
+const REASON_LABELS: Record<XpRewardReason, string> = {
+  [XpRewardReason.LESSON_COMPLETE]: 'Completed a lesson',
+  [XpRewardReason.QUIZ_PASS]: 'Passed a quiz',
+  [XpRewardReason.COURSE_COMPLETE]: 'Completed a course',
+  [XpRewardReason.STREAK_MILESTONE]: 'Streak milestone bonus',
+};
 export const XP_COURSE_COMPLETE = 100;
 
 function meetsMilestoneRule(
@@ -46,6 +56,7 @@ export class RewardsService {
     @InjectRepository(RewardHistory)
     private rewardHistoryRepository: Repository<RewardHistory>,
     private readonly notificationsService: NotificationsService,
+    private readonly webhooksService: WebhooksService,
   ) {}
 
   async ensureBadgeCatalog(): Promise<void> {
@@ -205,6 +216,14 @@ export class RewardsService {
           `You earned a new badge: ${badge.name}.`,
           '/rewards',
         );
+        
+        // Dispatch webhook event
+        await this.webhooksService.dispatchEvent(WebhookEvent.BADGE_EARNED, {
+          userId,
+          badgeId: badge.id,
+          badgeName: badge.name,
+          awardedAt: new Date(),
+        });
       } catch {
         // Unique constraint race: ignore
       }
@@ -216,14 +235,19 @@ export class RewardsService {
   async getMyRewards(userId: string): Promise<{
     xp: number;
     badges: Array<{ badge: Badge; awardedAt: Date }>;
-    recentHistory: RewardHistory[];
+    recentHistory: Array<{
+      amount: number;
+      reason: XpRewardReason;
+      label: string;
+      createdAt: Date;
+    }>;
   }> {
     const user = await this.userRepository.findOneOrFail({
       where: { id: userId },
       select: ['xp'],
     });
 
-    const [badges, recentHistory] = await Promise.all([
+    const [badges, rawHistory] = await Promise.all([
       this.getEarnedBadges(userId),
       this.rewardHistoryRepository.find({
         where: { userId },
@@ -231,6 +255,13 @@ export class RewardsService {
         take: 50,
       }),
     ]);
+
+    const recentHistory = rawHistory.map((h) => ({
+      amount: h.amount,
+      reason: h.reason,
+      label: REASON_LABELS[h.reason] ?? h.reason,
+      createdAt: h.createdAt,
+    }));
 
     return {
       xp: user.xp,
@@ -240,17 +271,30 @@ export class RewardsService {
   }
 
   async getLeaderboard(): Promise<
-    Array<{ username: string | null; xp: number }>
+    Array<{ rank: number; username: string | null; xp: number; badgesCount: number }>
   > {
-    const rows = await this.userRepository.find({
-      select: ['username', 'name', 'xp'],
-      order: { xp: 'DESC' },
-      take: 10,
-    });
+    const rows = await this.userRepository
+      .createQueryBuilder('user')
+      .select('user.username', 'username')
+      .addSelect('user.name', 'name')
+      .addSelect('COALESCE(user.xp, 0)', 'xp')
+      .addSelect(
+        (qb) =>
+          qb
+            .select('COUNT(ub.id)')
+            .from('user_badges', 'ub')
+            .where('ub."userId" = user.id'),
+        'badgesCount',
+      )
+      .orderBy('"xp"', 'DESC')
+      .limit(10)
+      .getRawMany();
 
-    return rows.map((u) => ({
-      username: u.username ?? u.name ?? null,
-      xp: u.xp ?? 0,
+    return rows.map((r, i) => ({
+      rank: i + 1,
+      username: r.username ?? r.name ?? null,
+      xp: Number(r.xp) || 0,
+      badgesCount: Number(r.badgesCount) || 0,
     }));
   }
 }

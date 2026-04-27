@@ -8,12 +8,12 @@ import {
 import { QuizzesService } from './quizzes.service';
 import { Quiz } from '../quizzes/entities/quiz.entity';
 import { Question } from '../quizzes/entities/question.entity';
-import { Lesson } from 'src/lessons/entities/lesson.entity';
+import { Lesson } from '../lessons/entities/lesson.entity';
 import { QuizSubmission } from '../quizzes/entities/quiz-submission.entity';
 import { QuestionType } from '../quizzes/entities/question.entity';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
-import { NotificationsService } from 'src/notifications/notifications.service';
-import { RewardsService } from 'src/rewards/rewards.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { RewardsService } from '../rewards/rewards.service';
 
 describe('QuizzesService', () => {
   let service: QuizzesService;

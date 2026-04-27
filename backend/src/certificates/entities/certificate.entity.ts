@@ -1,5 +1,5 @@
-import { Course } from 'src/courses/entities/course.entity';
-import { User } from 'src/users/entities/user.entity';
+import { Course } from '../../courses/entities/course.entity';
+import { User } from '../../users/entities/user.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -25,8 +25,8 @@ export class Certificate {
   /**
    * Recipient info (denormalized for easy access & PDF rendering)
    */
-  @Column()
-  recipientName: string;
+  @Column({ nullable: true })
+  recipientName: string | null;
 
   @Column()
   recipientEmail: string;

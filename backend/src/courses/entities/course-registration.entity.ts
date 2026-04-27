@@ -10,6 +10,7 @@ import { User } from '../../users/entities/user.entity';
 import { Course } from './course.entity';
 
 @Entity('course_registrations')
+@Unique(['userId', 'courseId'])
 export class CourseRegistration {
   @PrimaryGeneratedColumn('uuid')
   id: string;

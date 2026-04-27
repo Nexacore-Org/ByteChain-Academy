@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/auth-context";
 import { LearningProvider } from "@/contexts/learning-context";
+import { Providers } from "@/components/providers";
 import { UserProvider } from "@/contexts/user-context";
 import { ReactQueryProvider } from "@/lib/query-client";
 

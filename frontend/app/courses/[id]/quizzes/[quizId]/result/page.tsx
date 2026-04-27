@@ -122,8 +122,7 @@ export default function QuizResultPage({
                   {Math.round(result.score)}%
                 </div>
                 <p className="text-gray-400">
-                  You got {Math.round((result.score / 100) * result.totalQuestions)} out of{" "}
-                  {result.totalQuestions} questions correct
+                  You got {result.correctAnswers} out of {result.totalQuestions} questions correct
                 </p>
               </div>
 

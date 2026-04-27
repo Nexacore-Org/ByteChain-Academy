@@ -2,10 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { NotFoundException } from '@nestjs/common';
 import { LessonsService } from './lessons.service';
-import { Course } from 'src/courses/entities/course.entity';
+import { Course } from '../courses/entities/course.entity';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 import { Lesson } from './entities/lesson.entity';
+import { PaginationService } from '../common/services/pagination.service';
 
 describe('LessonsService', () => {
   let service: LessonsService;
@@ -15,6 +16,7 @@ describe('LessonsService', () => {
     find: jest.fn(),
     findOne: jest.fn(),
     remove: jest.fn(),
+    update: jest.fn(),
   };
 
   const mockCourseRepository = {
@@ -32,6 +34,12 @@ describe('LessonsService', () => {
         {
           provide: getRepositoryToken(Course),
           useValue: mockCourseRepository,
+        },
+        {
+          provide: PaginationService,
+          useValue: {
+            paginate: jest.fn().mockResolvedValue({ data: [], total: 0, page: 1, limit: 10, totalPages: 0 }),
+          },
         },
       ],
     }).compile();
@@ -288,6 +296,57 @@ describe('LessonsService', () => {
       mockLessonRepository.findOne.mockResolvedValue(null);
 
       await expect(service.remove(lessonId)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('reorderLessons', () => {
+    it('should update the order of each lesson by its position in orderedIds', async () => {
+      const courseId = 'course-123';
+      const orderedIds = ['lesson-3', 'lesson-1', 'lesson-2'];
+      const mockCourse = { id: courseId, title: 'Test Course' };
+
+      mockCourseRepository.findOne.mockResolvedValue(mockCourse);
+      mockLessonRepository.update.mockResolvedValue({ affected: 1 });
+
+      await service.reorderLessons(courseId, orderedIds);
+
+      expect(mockCourseRepository.findOne).toHaveBeenCalledWith({
+        where: { id: courseId },
+      });
+      expect(mockLessonRepository.update).toHaveBeenCalledTimes(3);
+      expect(mockLessonRepository.update).toHaveBeenNthCalledWith(
+        1,
+        { id: 'lesson-3', courseId },
+        { order: 0 },
+      );
+      expect(mockLessonRepository.update).toHaveBeenNthCalledWith(
+        2,
+        { id: 'lesson-1', courseId },
+        { order: 1 },
+      );
+      expect(mockLessonRepository.update).toHaveBeenNthCalledWith(
+        3,
+        { id: 'lesson-2', courseId },
+        { order: 2 },
+      );
+    });
+
+    it('should throw NotFoundException when course does not exist', async () => {
+      mockCourseRepository.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.reorderLessons('nonexistent', ['lesson-1']),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should handle an empty orderedIds array without errors', async () => {
+      const courseId = 'course-123';
+      mockCourseRepository.findOne.mockResolvedValue({ id: courseId });
+      mockLessonRepository.update.mockResolvedValue({ affected: 0 });
+
+      await service.reorderLessons(courseId, []);
+
+      expect(mockLessonRepository.update).not.toHaveBeenCalled();
     });
   });
 });

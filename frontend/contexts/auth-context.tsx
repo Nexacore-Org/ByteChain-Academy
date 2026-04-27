@@ -16,14 +16,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     typeof window !== "undefined" ? !!localStorage.getItem("auth_token") : false
   );
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, _password: string) => {
     // Mock login - in production, this would call your API
     localStorage.setItem("auth_token", "mock_token_" + Date.now());
     localStorage.setItem("user_email", email);
     setIsAuthenticated(true);
   };
 
-  const signup = async (name: string, email: string, password: string) => {
+  const signup = async (name: string, email: string, _password: string) => {
     // Mock signup - in production, this would call your API
     localStorage.setItem("auth_token", "mock_token_" + Date.now());
     localStorage.setItem("user_email", email);

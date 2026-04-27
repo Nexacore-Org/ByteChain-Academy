@@ -4,12 +4,13 @@ import {
   ConflictException,
   UnauthorizedException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, MoreThan } from 'typeorm';
+import { Repository, MoreThan, Like } from 'typeorm';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
-import { RegisterDto } from 'src/auth/dto/ register.dto';
+import { RegisterDto } from '../auth/dto/register.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { User, UserRole } from './entities/user.entity';
 import { Certificate } from '../certificates/entities/certificate.entity';
@@ -17,6 +18,7 @@ import { UserBadge } from '../rewards/entities/user-badge.entity';
 import { CourseRegistration } from '../courses/entities/course-registration.entity';
 import { promises as fs } from 'fs';
 import { extname, join } from 'path';
+import { PaginatedResult } from '../common/services/pagination.service';
 
 type AvatarUploadFile = {
   size: number;
@@ -247,6 +249,8 @@ export class UserService {
     certificateCount: number;
     xp: number;
     streak: number;
+    longestStreak: number;
+    lastActiveAt: Date | null;
     badgesCount: number;
     rank: number;
   }> {
@@ -269,6 +273,8 @@ export class UserService {
       certificateCount,
       xp: resolvedXp,
       streak: user.streak ?? 0,
+      longestStreak: user.longestStreak ?? 0,
+      lastActiveAt: user.lastActiveAt ?? null,
       badgesCount,
       rank: usersAhead + 1,
     };
@@ -297,5 +303,93 @@ export class UserService {
       avatarUrl: user.avatarUrl ?? null,
       bio: user.bio ?? null,
     };
+  }
+
+  async adminListUsers(
+    page: number,
+    limit: number,
+    search?: string,
+  ): Promise<PaginatedResult<User>> {
+    const safePage = Number.isFinite(page) ? Math.max(1, page) : 1;
+    const safeLimit = Number.isFinite(limit)
+      ? Math.min(100, Math.max(1, limit))
+      : 10;
+    const trimmedSearch = search?.trim();
+
+    const where = trimmedSearch
+      ? [
+          { email: Like(`%${trimmedSearch}%`) },
+          { username: Like(`%${trimmedSearch}%`) },
+          { name: Like(`%${trimmedSearch}%`) },
+        ]
+      : undefined;
+
+    const [data, total] = await this.userRepository.findAndCount({
+      where,
+      order: { createdAt: 'DESC' },
+      skip: (safePage - 1) * safeLimit,
+      take: safeLimit,
+    });
+
+    return {
+      data,
+      total,
+      page: safePage,
+      limit: safeLimit,
+      totalPages: Math.ceil(total / safeLimit),
+    };
+  }
+
+  async adminGetUser(userId: string): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  }
+
+  async adminUpdateRole(
+    actorUserId: string,
+    userId: string,
+    role: UserRole,
+  ): Promise<User> {
+    const user = await this.adminGetUser(userId);
+
+    if (actorUserId === userId && role !== UserRole.ADMIN) {
+      throw new ForbiddenException('Admins cannot demote themselves');
+    }
+
+    user.role = role;
+    return this.userRepository.save(user);
+  }
+
+  async adminSuspendUser(userId: string, suspended: boolean): Promise<User> {
+    const user = await this.adminGetUser(userId);
+    user.suspended = suspended;
+    return this.userRepository.save(user);
+  }
+
+  async incrementFailedLoginAttempts(userId: string): Promise<void> {
+    const user = await this.getProfile(userId);
+    user.failedLoginAttempts = (user.failedLoginAttempts ?? 0) + 1;
+
+    if (user.failedLoginAttempts === 5) {
+      const lockedUntil = new Date();
+      lockedUntil.setMinutes(lockedUntil.getMinutes() + 15);
+      user.lockedUntil = lockedUntil;
+    } else if (user.failedLoginAttempts === 10) {
+      const lockedUntil = new Date();
+      lockedUntil.setMinutes(lockedUntil.getMinutes() + 60);
+      user.lockedUntil = lockedUntil;
+    }
+
+    await this.userRepository.save(user);
+  }
+
+  async resetFailedLoginAttempts(userId: string): Promise<void> {
+    await this.userRepository.update(userId, {
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+    });
   }
 }

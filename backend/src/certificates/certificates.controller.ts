@@ -10,12 +10,14 @@ import {
   HttpStatus,
   UseGuards,
   Req,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CertificateService } from './certificates.service';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { UserRole } from 'src/users/entities/user.entity';
+import { Roles } from '../common/decorators/roles.decorator';
+import { UserRole } from '../users/entities/user.entity';
 import { CertificateVerificationResultDto } from './dto/certificate-response.dto';
 import { VerifyCertificateDto } from './dto/verify-certificate.dto';
 
@@ -24,7 +26,16 @@ export class CertificateController {
   constructor(private readonly certificateService: CertificateService) {}
 
   /**
-   * Public endpoint to verify a certificate
+   * Public endpoint to verify a certificate by hash
+   * GET /certificates/verify/:hash
+   */
+  @Get('verify/:hash')
+  async verifyCertificateByHash(@Param('hash') hash: string) {
+    return this.certificateService.verifyCertificateByHash(hash);
+  }
+
+  /**
+   * Legacy POST verify (body-based)
    * POST /certificates/verify
    */
   @Post('verify')
@@ -36,12 +47,23 @@ export class CertificateController {
   }
 
   /**
-   * Get all certificates of logged-in user
+   * Get certificates for the authenticated user with download links
+   * GET /certificates/my
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get('my')
+  async getMyCertificates(@Req() req) {
+    const userId = req.user.id as string;
+    return this.certificateService.getMyCertificates(userId);
+  }
+
+  /**
+   * Get all certificates of logged-in user (legacy)
    * GET /certificates
    */
   @UseGuards(JwtAuthGuard)
   @Get()
-  async getMyCertificates(@Req() req) {
+  async getAllMyCertificates(@Req() req) {
     const userId = req.user.id as string;
     return this.certificateService.getCertificatesByUser(userId);
   }
@@ -58,9 +80,35 @@ export class CertificateController {
   }
 
   /**
+   * Download a certificate PDF (owner only)
+   * GET /certificates/:id/download
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/download')
+  async downloadCertificate(
+    @Param('id') id: string,
+    @Req() req,
+    @Res() res: Response,
+  ) {
+    const userId = req.user.id as string;
+    const filePath = await this.certificateService.getCertificateForDownload(
+      id,
+      userId,
+    );
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="certificate-${id}.pdf"`,
+    );
+
+    const { createReadStream } = await import('fs');
+    const stream = createReadStream(filePath);
+    stream.pipe(res);
+  }
+
+  /**
    * ADMIN: Revoke a certificate by ID
-   * POST /certificates/revoke/:id (legacy)
-   * PATCH /certificates/:id/revoke (preferred)
    */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
