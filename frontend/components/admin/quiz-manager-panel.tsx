@@ -115,6 +115,24 @@ export function QuizManagerPanel({
     );
   }, [quiz]);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (quiz?.questions?.length) {
+      setQuestions(
+        quiz.questions.map((q) => ({
+          id: q.id,
+          text: q.text,
+          options: q.options || [],
+          correctAnswer: q.correctAnswer || "",
+          _sortId: q.id || nextSortId(),
+        }))
+      )
+    } else if (!quiz && open) {
+      setQuestions([])
+    }
+  }, [quiz, open])
+  /* eslint-enable react-hooks/set-state-in-effect */
+
   const addQuestion = () => {
     setQuestions((prev: Array<QuizQuestionForm & { _sortId?: string }>) => [
       ...prev,

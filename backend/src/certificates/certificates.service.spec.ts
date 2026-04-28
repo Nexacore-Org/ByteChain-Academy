@@ -45,11 +45,7 @@ const makeCertRepo = () => ({
   find: jest.fn(),
   create: jest.fn(),
   save: jest.fn(),
-  createQueryBuilder: jest.fn(),
 });
-
-const makeUserRepo = () => ({ findOneBy: jest.fn() });
-const makeCourseRepo = () => ({ findOneBy: jest.fn() });
 
 describe('CertificateService', () => {
   let service: CertificateService;

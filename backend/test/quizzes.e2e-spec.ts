@@ -9,7 +9,6 @@ import { User, UserRole } from '../src/users/entities/user.entity';
 import { Course } from '../src/courses/entities/course.entity';
 import { Lesson } from '../src/lessons/entities/lesson.entity';
 import { Quiz } from '../src/quizzes/entities/quiz.entity';
-import { Question } from '../src/quizzes/entities/question.entity';
 import { QuizSubmission } from '../src/quizzes/entities/quiz-submission.entity';
 import { QuestionType } from '../src/quizzes/entities/question.entity';
 

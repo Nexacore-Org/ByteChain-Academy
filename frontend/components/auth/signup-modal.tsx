@@ -36,6 +36,12 @@ export function SignUpModal({ open, onOpenChange, onSwitchToLogin }: SignUpModal
       setEmail("")
       setPassword("")
       router.push("/dashboard")
+    } catch (err: unknown) {
+      console.error("Signup error:", err)
+      const e = err as { status?: number; message?: string }
+      if (!window.navigator.onLine) {
+        setError("Unable to connect. Please check your connection and try again")
+      } else if (e.status === 409 || e.message?.includes("409")) {
     } catch (error: unknown) {
       console.error("Signup error:", error)
       const err = error instanceof Error ? error : new Error(String(error))
