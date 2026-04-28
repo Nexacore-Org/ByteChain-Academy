@@ -36,7 +36,10 @@ export class ProgressController {
   @Post('complete')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Mark lesson as complete' })
-  @ApiResponse({ status: 201, description: 'Lesson marked as complete successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Lesson marked as complete successfully',
+  })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async completeLesson(
@@ -56,7 +59,10 @@ export class ProgressController {
   @Get(':courseId')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get course progress' })
-  @ApiResponse({ status: 200, description: 'Course progress retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Course progress retrieved successfully',
+  })
   @ApiResponse({ status: 400, description: 'Bad request - courseId required' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getCourseProgress(

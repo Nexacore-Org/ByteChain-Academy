@@ -1,23 +1,27 @@
+# 📌 Pull Request Title
+
 ## Description
 
-<!-- Briefly describe the changes made in this PR -->
+<!-- Provide a brief summary of the changes in this PR. -->
 
-## Type of Change
+## Related Issues
 
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Breaking change
-- [ ] Documentation update
+<!-- Link related issues using `Closes #issue_number` or `Fixes #issue_number` -->
+
+## Changes Made
+
+- [ ] List key changes made in this PR.
+
+## How to Test
+
+<!-- Describe how a reviewer can test these changes. -->
+
+## Screenshots (if applicable)
+
+<!-- Upload screenshots for UI-related changes. -->
 
 ## Checklist
 
-- [ ] Lint passes (`npm run lint` in both backend and frontend)
-- [ ] Build passes (`npm run build` in both backend and frontend)
-- [ ] Tests pass (`npm run test` in backend)
-- [ ] E2E tests pass (`npm run test:e2e` in backend)
-- [ ] No new TypeScript errors
-- [ ] No console errors or warnings
-
-## Related Issue
-
-Closes #<!-- issue number -->
+- [ ] My code follows the project's coding style.
+- [ ] I have tested these changes locally.
+- [ ] Documentation has been updated where necessary.

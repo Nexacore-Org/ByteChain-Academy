@@ -119,8 +119,15 @@ export class AdminCoursesController {
 
   @Patch(':id/publish')
   @ApiOperation({ summary: 'Publish a course (admin)' })
-  @ApiResponse({ status: 200, description: 'Course published successfully', type: CourseResponseDto })
-  @ApiResponse({ status: 400, description: 'Cannot publish a course with no lessons' })
+  @ApiResponse({
+    status: 200,
+    description: 'Course published successfully',
+    type: CourseResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Cannot publish a course with no lessons',
+  })
   @ApiResponse({ status: 404, description: 'Course not found' })
   async publish(@Param('id') id: string): Promise<CourseResponseDto> {
     return this.coursesService.publishCourse(id);
@@ -128,7 +135,11 @@ export class AdminCoursesController {
 
   @Patch(':id/unpublish')
   @ApiOperation({ summary: 'Unpublish a course (admin)' })
-  @ApiResponse({ status: 200, description: 'Course unpublished successfully', type: CourseResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Course unpublished successfully',
+    type: CourseResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Course not found' })
   async unpublish(@Param('id') id: string): Promise<CourseResponseDto> {
     return this.coursesService.unpublishCourse(id);

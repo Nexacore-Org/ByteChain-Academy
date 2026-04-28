@@ -15,7 +15,10 @@ export class WebhooksService {
     private readonly webhookRepository: Repository<Webhook>,
   ) {}
 
-  async registerWebhook(userId: string, dto: CreateWebhookDto): Promise<Webhook> {
+  async registerWebhook(
+    userId: string,
+    dto: CreateWebhookDto,
+  ): Promise<Webhook> {
     const secret = crypto.randomBytes(32).toString('hex');
     const webhook = this.webhookRepository.create({
       ...dto,
@@ -26,9 +29,9 @@ export class WebhooksService {
   }
 
   async listWebhooks(userId: string): Promise<Webhook[]> {
-    return this.webhookRepository.find({ 
+    return this.webhookRepository.find({
       where: { userId },
-      order: { createdAt: 'DESC' }
+      order: { createdAt: 'DESC' },
     });
   }
 
@@ -52,24 +55,34 @@ export class WebhooksService {
 
     if (subscribedWebhooks.length === 0) return;
 
-    this.logger.debug(`Dispatching event ${event} to ${subscribedWebhooks.length} webhooks`);
+    this.logger.debug(
+      `Dispatching event ${event} to ${subscribedWebhooks.length} webhooks`,
+    );
 
     for (const webhook of subscribedWebhooks) {
       // Execute delivery without awaiting to avoid blocking the main application flow
       this.sendWebhook(webhook, event, payload).catch((err) => {
-        const errorMessage = err.response?.data ? JSON.stringify(err.response.data) : err.message;
-        this.logger.error(`Webhook delivery failed for ${webhook.url} (Event: ${event}): ${errorMessage}`);
+        const errorMessage = err.response?.data
+          ? JSON.stringify(err.response.data)
+          : err.message;
+        this.logger.error(
+          `Webhook delivery failed for ${webhook.url} (Event: ${event}): ${errorMessage}`,
+        );
       });
     }
   }
 
-  private async sendWebhook(webhook: Webhook, event: string, payload: any): Promise<void> {
+  private async sendWebhook(
+    webhook: Webhook,
+    event: string,
+    payload: any,
+  ): Promise<void> {
     const timestamp = Date.now();
-    const data = JSON.stringify({ 
-      event, 
-      payload, 
+    const data = JSON.stringify({
+      event,
+      payload,
       timestamp,
-      webhookId: webhook.id 
+      webhookId: webhook.id,
     });
 
     // HMAC-SHA256 signature for verification

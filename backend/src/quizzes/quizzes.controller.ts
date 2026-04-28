@@ -8,7 +8,12 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -34,10 +39,17 @@ export class QuizzesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Create a new quiz (admin only)' })
-  @ApiResponse({ status: 201, description: 'Quiz created successfully', type: AdminQuizResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Quiz created successfully',
+    type: AdminQuizResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Bad request - validation error' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - admin access required' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - admin access required',
+  })
   async create(
     @Body() createQuizDto: CreateQuizDto,
   ): Promise<AdminQuizResponseDto> {
@@ -48,7 +60,11 @@ export class QuizzesController {
   @Get('lesson/:lessonId')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get quiz for a specific lesson' })
-  @ApiResponse({ status: 200, description: 'Quiz retrieved successfully', type: QuizResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Quiz retrieved successfully',
+    type: QuizResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Quiz not found' })
   async findByLesson(
@@ -62,10 +78,17 @@ export class QuizzesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Update quiz details (admin only)' })
-  @ApiResponse({ status: 200, description: 'Quiz updated successfully', type: AdminQuizResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Quiz updated successfully',
+    type: AdminQuizResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Bad request - validation error' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - admin access required' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - admin access required',
+  })
   @ApiResponse({ status: 404, description: 'Quiz not found' })
   async update(
     @Param('id') id: string,
@@ -78,7 +101,11 @@ export class QuizzesController {
   @Get('submissions/my')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get current user quiz submissions' })
-  @ApiResponse({ status: 200, description: 'Submissions retrieved successfully', type: [QuizSubmissionResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'Submissions retrieved successfully',
+    type: [QuizSubmissionResponseDto],
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getMySubmissions(@Req() req): Promise<QuizSubmissionResponseDto[]> {
     const submissions = await this.quizzesService.getUserSubmissions(
@@ -90,7 +117,11 @@ export class QuizzesController {
   @Post(':id/submit')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Submit answers for a quiz' })
-  @ApiResponse({ status: 201, description: 'Quiz submitted successfully', type: QuizSubmissionResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Quiz submitted successfully',
+    type: QuizSubmissionResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Bad request - invalid answers' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Quiz not found' })
@@ -109,7 +140,11 @@ export class QuizzesController {
   @Get(':id/submission')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get user submission for a specific quiz' })
-  @ApiResponse({ status: 200, description: 'Submission retrieved successfully', type: QuizSubmissionResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Submission retrieved successfully',
+    type: QuizSubmissionResponseDto,
+  })
   @ApiResponse({ status: 204, description: 'No submission found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getUserSubmission(
@@ -127,9 +162,16 @@ export class QuizzesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Get quiz details by ID (admin only)' })
-  @ApiResponse({ status: 200, description: 'Quiz details retrieved successfully', type: AdminQuizResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Quiz details retrieved successfully',
+    type: AdminQuizResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - admin access required' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - admin access required',
+  })
   @ApiResponse({ status: 404, description: 'Quiz not found' })
   async findOne(@Param('id') id: string): Promise<AdminQuizResponseDto> {
     const quiz = await this.quizzesService.findOne(id);

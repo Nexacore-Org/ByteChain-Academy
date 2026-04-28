@@ -216,7 +216,7 @@ export class RewardsService {
           `You earned a new badge: ${badge.name}.`,
           '/rewards',
         );
-        
+
         // Dispatch webhook event
         await this.webhooksService.dispatchEvent(WebhookEvent.BADGE_EARNED, {
           userId,
@@ -276,7 +276,12 @@ export class RewardsService {
   }
 
   async getLeaderboard(): Promise<
-    Array<{ rank: number; username: string | null; xp: number; badgesCount: number }>
+    Array<{
+      rank: number;
+      username: string | null;
+      xp: number;
+      badgesCount: number;
+    }>
   > {
     const rows = await this.userRepository
       .createQueryBuilder('user')

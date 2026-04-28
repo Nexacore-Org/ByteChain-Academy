@@ -70,7 +70,10 @@ export class DAOController {
   @ApiOperation({ summary: 'Edit proposal (owner only, before any votes)' })
   @ApiResponse({ status: 200, description: 'Proposal updated successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden - not the owner' })
-  @ApiResponse({ status: 400, description: 'Bad request - has votes or invalid data' })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - has votes or invalid data',
+  })
   edit(
     @Request() req,
     @Param('id') id: string,

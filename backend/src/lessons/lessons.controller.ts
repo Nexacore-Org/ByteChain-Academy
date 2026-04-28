@@ -11,7 +11,12 @@ import {
   HttpStatus,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { LessonsService } from './lessons.service';
 
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -33,10 +38,17 @@ export class LessonsController {
   @Roles(UserRole.ADMIN)
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Create a new lesson (admin only)' })
-  @ApiResponse({ status: 201, description: 'Lesson created successfully', type: LessonResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Lesson created successfully',
+    type: LessonResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Bad request - validation error' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - admin access required' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - admin access required',
+  })
   async create(
     @Body() createLessonDto: CreateLessonDto,
   ): Promise<LessonResponseDto> {
@@ -93,7 +105,11 @@ export class LessonsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get lesson details by ID' })
-  @ApiResponse({ status: 200, description: 'Lesson details retrieved successfully', type: LessonResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Lesson details retrieved successfully',
+    type: LessonResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Lesson not found' })
   async findOne(@Param('id') id: string): Promise<LessonResponseDto> {
     const lesson = await this.lessonsService.findOne(id);
@@ -105,10 +121,17 @@ export class LessonsController {
   @Roles(UserRole.ADMIN)
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Update lesson details (admin only)' })
-  @ApiResponse({ status: 200, description: 'Lesson updated successfully', type: LessonResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Lesson updated successfully',
+    type: LessonResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Bad request - validation error' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - admin access required' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - admin access required',
+  })
   @ApiResponse({ status: 404, description: 'Lesson not found' })
   async update(
     @Param('id') id: string,
@@ -126,7 +149,10 @@ export class LessonsController {
   @ApiOperation({ summary: 'Delete a lesson (admin only)' })
   @ApiResponse({ status: 204, description: 'Lesson deleted successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - admin access required' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - admin access required',
+  })
   @ApiResponse({ status: 404, description: 'Lesson not found' })
   async remove(@Param('id') id: string): Promise<void> {
     await this.lessonsService.remove(id);

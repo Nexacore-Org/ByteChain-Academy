@@ -60,7 +60,11 @@ describe('UsersController', () => {
 
   describe('PATCH /me', () => {
     it('returns updated profile after updating username and bio', async () => {
-      const updated = { ...mockProfileResponse, username: 'newname', bio: 'new bio' };
+      const updated = {
+        ...mockProfileResponse,
+        username: 'newname',
+        bio: 'new bio',
+      };
       userService.updateProfile.mockResolvedValue(undefined as any);
       userService.getMyProfile.mockResolvedValue(updated);
 
@@ -123,7 +127,10 @@ describe('UsersController', () => {
 
       const result = await controller.uploadMyAvatar(mockRequest, validFile);
 
-      expect(userService.uploadAvatar).toHaveBeenCalledWith('user-1', validFile);
+      expect(userService.uploadAvatar).toHaveBeenCalledWith(
+        'user-1',
+        validFile,
+      );
       expect(result).toEqual({ avatarUrl: '/uploads/avatars/uuid.png' });
     });
 

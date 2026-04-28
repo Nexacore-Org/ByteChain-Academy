@@ -19,7 +19,10 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { DAOService } from '../dao/dao.service';
-import { DAOProposal, ProposalStatus } from '../dao/entities/dao-proposal.entity';
+import {
+  DAOProposal,
+  ProposalStatus,
+} from '../dao/entities/dao-proposal.entity';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -52,14 +55,16 @@ export class AdminDAOController {
   ) {}
 
   @Get('proposals')
-  @ApiOperation({ summary: 'Get all proposals with moderation details (admin)' })
+  @ApiOperation({
+    summary: 'Get all proposals with moderation details (admin)',
+  })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ 
-    name: 'status', 
-    required: false, 
+  @ApiQuery({
+    name: 'status',
+    required: false,
     enum: ProposalStatus,
-    description: 'Filter by proposal status' 
+    description: 'Filter by proposal status',
   })
   @ApiResponse({ status: 200, description: 'Proposals retrieved successfully' })
   @ApiResponse({ status: 403, description: 'Admin access required' })
@@ -83,7 +88,7 @@ export class AdminDAOController {
 
     const [proposals, total] = await query.getManyAndCount();
 
-    const proposalsWithEmails = proposals.map(proposal => ({
+    const proposalsWithEmails = proposals.map((proposal) => ({
       ...proposal,
       proposerEmail: proposal.proposer?.email || 'Unknown',
       moderatorEmail: proposal.moderator?.email || undefined,

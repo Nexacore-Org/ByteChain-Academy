@@ -89,7 +89,18 @@ export class EmailService {
       courseName,
       certificateHash,
     );
-    await this.sendEmail({ to, subject, html, attachments: [{ filename: `ByteChain-Certificate-${courseName.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`, path: pdfPath, contentType: 'application/pdf' }] });
+    await this.sendEmail({
+      to,
+      subject,
+      html,
+      attachments: [
+        {
+          filename: `ByteChain-Certificate-${courseName.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`,
+          path: pdfPath,
+          contentType: 'application/pdf',
+        },
+      ],
+    });
   }
 
   async sendStreakReminderEmail(
@@ -101,9 +112,16 @@ export class EmailService {
     await this.sendEmail({ to, subject, html });
   }
 
-  private async sendEmail({ to, subject, html, attachments }: EmailPayload): Promise<void> {
+  private async sendEmail({
+    to,
+    subject,
+    html,
+    attachments,
+  }: EmailPayload): Promise<void> {
     if (!this.transporter) {
-      const attachmentInfo = attachments ? attachments.map(a => a.filename).join(', ') : 'none';
+      const attachmentInfo = attachments
+        ? attachments.map((a) => a.filename).join(', ')
+        : 'none';
       this.logger.log(
         `Email fallback -> to: ${to}, subject: ${subject}, attachments: ${attachmentInfo}, html: ${html}`,
       );

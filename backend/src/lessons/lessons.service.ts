@@ -38,13 +38,19 @@ export class LessonsService {
       videoStartTimestamp: createLessonDto.videoStartTimestamp,
       order: createLessonDto.order ?? 0,
       courseId: createLessonDto.courseId,
-      published: createLessonDto.published !== undefined ? createLessonDto.published : true,
+      published:
+        createLessonDto.published !== undefined
+          ? createLessonDto.published
+          : true,
     });
 
     return this.lessonRepository.save(lesson);
   }
 
-  async findAllByCourse(courseId: string, publishedOnly: boolean = false): Promise<Lesson[]> {
+  async findAllByCourse(
+    courseId: string,
+    publishedOnly: boolean = false,
+  ): Promise<Lesson[]> {
     // Verify course exists
     const course = await this.courseRepository.findOne({
       where: { id: courseId },

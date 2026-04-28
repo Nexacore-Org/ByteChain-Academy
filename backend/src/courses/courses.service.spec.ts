@@ -274,9 +274,9 @@ describe('CoursesService', () => {
     it('should throw NotFoundException when course does not exist', async () => {
       courseRepo.findOne.mockResolvedValue(null);
 
-      await expect(
-        service.enroll('user-1', 'nonexistent'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.enroll('user-1', 'nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -357,7 +357,10 @@ describe('CoursesService', () => {
       const unpublishedCourse = { ...mockCourse, published: false };
       courseRepo.findOne.mockResolvedValue(unpublishedCourse);
       lessonRepo.count.mockResolvedValue(2);
-      courseRepo.save.mockResolvedValue({ ...unpublishedCourse, published: true });
+      courseRepo.save.mockResolvedValue({
+        ...unpublishedCourse,
+        published: true,
+      });
       regRepo.find.mockResolvedValue([
         { userId: 'user-1' },
         { userId: 'user-2' },
@@ -365,7 +368,9 @@ describe('CoursesService', () => {
 
       const result = await service.publishCourse(mockCourse.id);
 
-      expect(lessonRepo.count).toHaveBeenCalledWith({ where: { courseId: mockCourse.id } });
+      expect(lessonRepo.count).toHaveBeenCalledWith({
+        where: { courseId: mockCourse.id },
+      });
       expect(courseRepo.save).toHaveBeenCalled();
       expect(notificationsService.createNotification).toHaveBeenCalledTimes(2);
       expect(notificationsService.createNotification).toHaveBeenCalledWith(

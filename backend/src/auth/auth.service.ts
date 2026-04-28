@@ -135,7 +135,7 @@ export class AuthService {
   private async generateRefreshToken(userId: string): Promise<string> {
     const rawToken = crypto.randomBytes(40).toString('hex');
     const hashedToken = this.hashToken(rawToken);
-    
+
     const expiresInDays = parseInt(
       this.configService.get<string>('REFRESH_TOKEN_EXPIRES_IN') || '30',
       10,

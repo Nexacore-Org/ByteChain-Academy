@@ -33,7 +33,9 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
-        NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
+        NODE_ENV: Joi.string()
+          .valid('development', 'production', 'test')
+          .default('development'),
         PORT: Joi.number().default(3001),
 
         JWT_SECRET: Joi.string().min(32).required(),
@@ -56,7 +58,9 @@ import { WebhooksModule } from './webhooks/webhooks.module';
         SMTP_USER: Joi.string().optional().allow(''),
         SMTP_PASS: Joi.string().optional().allow(''),
         SMTP_FROM_NAME: Joi.string().default('ByteChain Academy'),
-        SMTP_FROM_EMAIL: Joi.string().email().default('noreply@bytechain.academy'),
+        SMTP_FROM_EMAIL: Joi.string()
+          .email()
+          .default('noreply@bytechain.academy'),
 
         AVATAR_UPLOAD_PATH: Joi.string().default('uploads/avatars'),
         MAX_AVATAR_SIZE_MB: Joi.number().default(2),

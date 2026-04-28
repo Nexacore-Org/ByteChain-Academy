@@ -21,7 +21,6 @@ import { VerifyCertificateDto } from './dto/verify-certificate.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
 import { ConfigService } from '@nestjs/config';
-<<<<<<< HEAD
 import { EmailService } from '../email/email.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
 import { WebhookEvent } from '../webhooks/dto/create-webhook.dto';
@@ -128,7 +127,9 @@ export class CertificateService {
         .fillColor('#1a3c5e')
         .fontSize(26)
         .font('Helvetica-Bold')
-        .text(certificate.recipientName ?? 'Valued Student', 0, 220, { align: 'center' });
+        .text(certificate.recipientName ?? 'Valued Student', 0, 220, {
+          align: 'center',
+        });
 
       doc
         .moveTo(160, 256)

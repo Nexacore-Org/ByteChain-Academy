@@ -39,3 +39,4 @@ export class Course {
   // Soft-delete field for admin restore functionality
   @DeleteDateColumn({ nullable: true })
   deletedAt: Date | null;
+}

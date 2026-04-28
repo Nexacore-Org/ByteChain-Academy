@@ -66,7 +66,11 @@ describe('Critical User Journey (e2e)', () => {
     // Mirror the production bootstrap
     app.setGlobalPrefix('api/v1');
     app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }),
+      new ValidationPipe({
+        whitelist: true,
+        transform: true,
+        forbidNonWhitelisted: true,
+      }),
     );
     app.useGlobalFilters(new HttpExceptionFilter());
 
@@ -78,16 +82,23 @@ describe('Critical User Journey (e2e)', () => {
   afterAll(async () => {
     // Delete in dependency order to respect FK constraints
     if (dataSource) {
-      await dataSource.getRepository(Certificate).delete({ user: { id: studentId } });
-      await dataSource.getRepository(QuizSubmission).delete({ userId: studentId });
+      await dataSource
+        .getRepository(Certificate)
+        .delete({ user: { id: studentId } });
+      await dataSource
+        .getRepository(QuizSubmission)
+        .delete({ userId: studentId });
       await dataSource.getRepository(Progress).delete({ userId: studentId });
       if (quizId) {
         await dataSource.getRepository(Question).delete({ quizId });
         await dataSource.getRepository(Quiz).delete({ id: quizId });
       }
-      if (lessonId) await dataSource.getRepository(Lesson).delete({ id: lessonId });
-      if (courseId) await dataSource.getRepository(Course).delete({ id: courseId });
-      if (studentId) await dataSource.getRepository(User).delete({ id: studentId });
+      if (lessonId)
+        await dataSource.getRepository(Lesson).delete({ id: lessonId });
+      if (courseId)
+        await dataSource.getRepository(Course).delete({ id: courseId });
+      if (studentId)
+        await dataSource.getRepository(User).delete({ id: studentId });
       if (adminId) await dataSource.getRepository(User).delete({ id: adminId });
     }
     await app.close();
@@ -110,7 +121,9 @@ describe('Critical User Journey (e2e)', () => {
     adminToken = res.body.token;
 
     // Promote to admin directly in the DB
-    await dataSource.getRepository(User).update(adminId, { role: UserRole.ADMIN });
+    await dataSource
+      .getRepository(User)
+      .update(adminId, { role: UserRole.ADMIN });
   });
 
   /* ---------------------------------------------------------------------- */
