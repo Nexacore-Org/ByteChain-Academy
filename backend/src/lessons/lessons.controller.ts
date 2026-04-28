@@ -11,7 +11,7 @@ import {
   HttpStatus,
   Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { LessonsService } from './lessons.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -22,7 +22,7 @@ import { CreateLessonDto } from './dto/create-lesson.dto';
 import { LessonResponseDto } from './dto/lesson-response.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 
-@ApiTags('lessons')
+@ApiTags('Lessons')
 @Controller('lessons')
 export class LessonsController {
   constructor(private readonly lessonsService: LessonsService) {}
@@ -30,6 +30,12 @@ export class LessonsController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Create a new lesson (admin only)' })
+  @ApiResponse({ status: 201, description: 'Lesson created successfully', type: LessonResponseDto })
+  @ApiResponse({ status: 400, description: 'Bad request - validation error' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - admin access required' })
   async create(
     @Body() createLessonDto: CreateLessonDto,
   ): Promise<LessonResponseDto> {
@@ -38,6 +44,8 @@ export class LessonsController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get paginated list of lessons' })
+  @ApiResponse({ status: 200, description: 'Lessons retrieved successfully' })
   async findAll(@Query() pagination: PaginationDto): Promise<{
     data: LessonResponseDto[];
     total: number;
@@ -56,6 +64,9 @@ export class LessonsController {
 
   // NOTE: /course/:courseId must be declared BEFORE /:id to avoid shadowing
   @Get('course/:courseId')
+  @ApiOperation({ summary: 'Get lessons for a specific course' })
+  @ApiResponse({ status: 200, description: 'Lessons retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Course not found' })
   async findByCourse(
     @Param('courseId') courseId: string,
     @Query() pagination: PaginationDto,
@@ -80,8 +91,9 @@ export class LessonsController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Get a lesson by ID with hasQuiz flag' })
+  @ApiOperation({ summary: 'Get lesson details by ID' })
+  @ApiResponse({ status: 200, description: 'Lesson details retrieved successfully', type: LessonResponseDto })
+  @ApiResponse({ status: 404, description: 'Lesson not found' })
   async findOne(@Param('id') id: string): Promise<LessonResponseDto> {
     const lesson = await this.lessonsService.findOneWithQuizFlag(id);
     return new LessonResponseDto(lesson);
@@ -90,6 +102,13 @@ export class LessonsController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Update lesson details (admin only)' })
+  @ApiResponse({ status: 200, description: 'Lesson updated successfully', type: LessonResponseDto })
+  @ApiResponse({ status: 400, description: 'Bad request - validation error' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - admin access required' })
+  @ApiResponse({ status: 404, description: 'Lesson not found' })
   async update(
     @Param('id') id: string,
     @Body() updateLessonDto: UpdateLessonDto,
@@ -102,6 +121,12 @@ export class LessonsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Delete a lesson (admin only)' })
+  @ApiResponse({ status: 204, description: 'Lesson deleted successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - admin access required' })
+  @ApiResponse({ status: 404, description: 'Lesson not found' })
   async remove(@Param('id') id: string): Promise<void> {
     await this.lessonsService.remove(id);
   }

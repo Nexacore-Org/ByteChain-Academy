@@ -38,7 +38,7 @@ export class UserService {
     private userBadgeRepository: Repository<UserBadge>,
     @InjectRepository(CourseRegistration)
     private courseRegistrationRepository: Repository<CourseRegistration>,
-  ) {}
+  ) { }
 
   async create(userData: RegisterDto): Promise<User> {
     const existingUser = await this.userRepository.findOne({
@@ -243,6 +243,37 @@ export class UserService {
     return { avatarUrl: user.avatarUrl };
   }
 
+  async deleteProfile(userId: string, password: string): Promise<void> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid password');
+    }
+
+    const deletionId = crypto.randomUUID();
+
+    user.email = `deleted-${deletionId}@bytechain.invalid`;
+    user.name = 'Deleted User';
+
+    user.username = null;
+    user.walletAddress = null;
+    user.avatarUrl = null;
+    user.bio = null;
+    user.resetToken = null;
+
+    // prevent login completely
+    user.password = crypto.randomUUID();
+
+    await this.userRepository.save(user);
+  }
+
   async getMyStats(userId: string): Promise<{
     courseCount: number;
     completedCourseCount: number;
@@ -318,10 +349,10 @@ export class UserService {
 
     const where = trimmedSearch
       ? [
-          { email: Like(`%${trimmedSearch}%`) },
-          { username: Like(`%${trimmedSearch}%`) },
-          { name: Like(`%${trimmedSearch}%`) },
-        ]
+        { email: Like(`%${trimmedSearch}%`) },
+        { username: Like(`%${trimmedSearch}%`) },
+        { name: Like(`%${trimmedSearch}%`) },
+      ]
       : undefined;
 
     const [data, total] = await this.userRepository.findAndCount({

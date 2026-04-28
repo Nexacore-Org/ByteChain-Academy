@@ -67,6 +67,20 @@ Swagger UI is available at:
 
 - `http://localhost:3001/api/v1/docs`
 
+## DAO Features
+
+The platform includes a DAO (Decentralized Autonomous Organization) system for community governance:
+
+- **Create Proposals**: Authenticated users can create proposals with title and description
+- **Vote on Proposals**: Users can vote YES, NO, or ABSTAIN on active proposals
+- **Edit Proposals**: Proposal owners can edit title/description before any votes are cast
+- **Withdraw Proposals**: Proposal owners can withdraw active proposals, setting status to WITHDRAWN
+- **Automatic Resolution**: Proposals auto-resolve to PASSED/REJECTED after voting deadline
+
+**Proposal Statuses**: ACTIVE, PASSED, REJECTED, WITHDRAWN
+
+Withdrawn proposals are excluded from default proposal lists but can be viewed with `?status=WITHDRAWN`.
+
 ## Soft-Delete Behavior
 
 Courses support soft-deletion for data safety:
