@@ -5,77 +5,35 @@ import { CourseCard } from "@/components/course-card"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { useQuery } from "@tanstack/react-query"
+import { api } from "@/lib/api"
+import { CourseCardSkeleton } from "@/components/courses/course-card-skeleton"
+import { ErrorCard } from "@/components/ui/error-card"
 
-const courses = [
-  {
-    id: "crypto-101",
-    title: "Crypto 101: From Fiat to Bitcoin",
-    description: "Understand why Bitcoin and blockchains exist. Learn the fundamentals of cryptocurrency and...",
-    difficulty: "Beginner" as const,
-    rating: 4.8,
-    duration: 6,
-    lessons: 8,
-    students: 1204,
-    instructor: "Dr. Sarah Johnson",
-  },
-  {
-    id: "defi-fundamentals",
-    title: "DeFi Fundamentals: Lending, AMMs & Yield",
-    description: "Walk through DeFi protocols, automated market makers, and yield farming strategies without deep...",
-    difficulty: "Intermediate" as const,
-    rating: 4.9,
-    duration: 9,
-    lessons: 12,
-    students: 856,
-    instructor: "Michael Torres",
-  },
-  {
-    id: "wallet-security",
-    title: "Wallet Security Masterclass",
-    description: "Learn how to protect your keys, avoid phishing attacks, and practice safe custody of digital assets.",
-    difficulty: "Beginner" as const,
-    rating: 4.7,
-    duration: 7,
-    lessons: 6,
-    students: 2103,
-    instructor: "Emma Rodriguez",
-  },
-  {
-    id: "smart-contracts",
-    title: "Smart Contract Development",
-    description: "Build your first smart contract with Solidity. Understand gas optimization and security patterns.",
-    difficulty: "Advanced" as const,
-    rating: 4.9,
-    duration: 15,
-    lessons: 20,
-    students: 542,
-    instructor: "David Kim",
-  },
-  {
-    id: "nft-fundamentals",
-    title: "NFT Market Fundamentals",
-    description: "Explore NFT standards, marketplaces, and digital ownership in the Web3 ecosystem.",
-    difficulty: "Intermediate" as const,
-    rating: 4.6,
-    duration: 8,
-    lessons: 10,
-    students: 945,
-    instructor: "Lisa Martinez",
-  },
-  {
-    id: "dao-governance",
-    title: "DAO Governance & Voting",
-    description: "Learn about decentralized autonomous organizations and on-chain governance mechanisms.",
-    difficulty: "Advanced" as const,
-    rating: 4.8,
-    duration: 12,
-    lessons: 15,
-    students: 387,
-    instructor: "James Wilson",
-  },
-]
+interface Course {
+  id: string
+  title: string
+  description: string
+  difficulty: "Beginner" | "Intermediate" | "Advanced"
+  rating?: number
+  duration?: number
+  lessons?: number
+  students?: number
+  enrollmentCount?: number
+  isEnrolled?: boolean
+  instructor?: string
+}
 
 export default function CoursesPage() {
+  const { data, isLoading, isError, refetch } = useQuery<Course[]>({
+    queryKey: ["courses"],
+    queryFn: async () => {
+      const res = await api.get<{ data?: Course[] } | Course[]>("/courses")
+      const r = res as { data?: Course[] } | Course[]
+      return Array.isArray(r) ? r : (r?.data ?? [])
+    },
+  })
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       <Header />
@@ -93,11 +51,45 @@ export default function CoursesPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {courses.map((course) => (
-            <CourseCard key={course.id} {...course} />
-          ))}
-        </div>
+        {isLoading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <CourseCardSkeleton key={i} />
+            ))}
+          </div>
+        )}
+
+        {isError && (
+          <ErrorCard
+            message="Failed to load courses. Please try again."
+            onRetry={() => void refetch()}
+          />
+        )}
+
+        {!isLoading && !isError && data && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {data.length === 0 ? (
+              <p className="text-gray-400 col-span-3 text-center py-12">
+                No courses available yet.
+              </p>
+            ) : (
+              data.map((course) => (
+                <CourseCard
+                  key={course.id}
+                  id={course.id}
+                  title={course.title}
+                  description={course.description}
+                  difficulty={course.difficulty ?? "Beginner"}
+                  rating={course.rating ?? 0}
+                  duration={course.duration ?? 0}
+                  lessons={course.lessons ?? 0}
+                  students={course.enrollmentCount ?? course.students ?? 0}
+                  instructor={course.instructor ?? ""}
+                />
+              ))
+            )}
+          </div>
+        )}
       </main>
     </div>
   )

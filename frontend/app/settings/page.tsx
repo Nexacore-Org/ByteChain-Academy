@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Bell, LogOut, Save, Settings, User } from "lucide-react";
+import { ArrowLeft, Bell, LogOut, Save, Settings, User, CheckCircle, Sparkles, Shield, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/auth-context";
 import { useUser } from "@/contexts/user-context";
+import { WalletConnectCard } from "@/components/wallet/wallet-connect-card";
 
 export default function SettingsPage() {
   const { isAuthenticated, logout } = useAuth();
@@ -30,12 +31,19 @@ export default function SettingsPage() {
   const [newLessonsAvailable, setNewLessonsAvailable] = useState(false);
   const [achievementAlerts, setAchievementAlerts] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const memoizedLoadUserData = useCallback(() => {
+    void loadUserData();
+  }, [loadUserData]);
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/");
+    } else {
+      memoizedLoadUserData();
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, memoizedLoadUserData]);
 
   useEffect(() => {
     if (!user) return;
@@ -73,6 +81,7 @@ export default function SettingsPage() {
   const onSave = async () => {
     if (!user || !hasChanges) return;
     setIsSaving(true);
+    setSaveSuccess(false);
     try {
       await updateProfile({ fullName: username, bio });
       await updateNotificationPreferences({
@@ -81,7 +90,9 @@ export default function SettingsPage() {
         achievementAlerts,
       });
       toast.success("Settings updated");
+      setSaveSuccess(true);
       await loadUserData();
+      setTimeout(() => setSaveSuccess(false), 3000);
     } catch {
       toast.error("Failed to save settings");
     } finally {
@@ -149,6 +160,10 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
+        <div className="mb-6">
+          <WalletConnectCard />
+        </div>
+
         <Card className="mb-6 border-white/10 bg-[#080e22]">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -158,7 +173,7 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <label className="flex items-start gap-3 p-3 rounded-lg border border-white/10 bg-[#0b1327]">
-              <Checkbox checked={courseUpdates} onChange={(e) => setCourseUpdates(e.target.checked)} />
+              <Checkbox checked={courseUpdates} onCheckedChange={(checked) => setCourseUpdates(!!checked)} />
               <div>
                 <p className="text-sm font-medium text-white">Course updates</p>
                 <p className="text-xs text-gray-400">Alerts for major updates in your enrolled courses.</p>
@@ -168,7 +183,7 @@ export default function SettingsPage() {
             <label className="flex items-start gap-3 p-3 rounded-lg border border-white/10 bg-[#0b1327]">
               <Checkbox
                 checked={newLessonsAvailable}
-                onChange={(e) => setNewLessonsAvailable(e.target.checked)}
+                onCheckedChange={(checked) => setNewLessonsAvailable(!!checked)}
               />
               <div>
                 <p className="text-sm font-medium text-white">New lessons</p>
@@ -179,7 +194,7 @@ export default function SettingsPage() {
             <label className="flex items-start gap-3 p-3 rounded-lg border border-white/10 bg-[#0b1327]">
               <Checkbox
                 checked={achievementAlerts}
-                onChange={(e) => setAchievementAlerts(e.target.checked)}
+                onCheckedChange={(checked) => setAchievementAlerts(!!checked)}
               />
               <div>
                 <p className="text-sm font-medium text-white">Achievement alerts</p>
@@ -205,7 +220,23 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-[#080e22] to-[#0a0a0a] border border-[#00ff88]/20">
+          <div className="flex items-center gap-2">
+            {saveSuccess && (
+              <div className="flex items-center gap-2 text-[#00ff88] animate-in fade-in slide-in-from-left-2">
+                <CheckCircle className="w-5 h-5" />
+                <span className="text-sm font-medium">
+                  Changes saved successfully!
+                </span>
+              </div>
+            )}
+            {hasChanges && !saveSuccess && (
+              <div className="flex items-center gap-2 text-yellow-500">
+                <Sparkles className="w-4 h-4" />
+                <span className="text-sm">You have unsaved changes</span>
+              </div>
+            )}
+          </div>
           <Button onClick={() => void onSave()} disabled={!hasChanges || isSaving} className="gap-2">
             <Save className="w-4 h-4" />
             {isSaving ? "Saving..." : "Save Changes"}
@@ -215,3 +246,4 @@ export default function SettingsPage() {
     </div>
   );
 }
+

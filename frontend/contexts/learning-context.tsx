@@ -58,6 +58,7 @@ interface LearningContextType {
   quizResults: Record<string, QuizResult>
   isSubmittingQuiz: boolean
   isCompletingLesson: boolean
+  enrollInCourse: (courseId: string) => Promise<void>
   markLessonComplete: (courseId: string, lessonId: string) => Promise<boolean>
   submitQuiz: (quizId: string, answers: Record<string, number>) => Promise<QuizResult | null>
   getCourseProgress: (courseId: string) => number
@@ -302,27 +303,7 @@ const mockCourses: Course[] = [
 ]
 
 export function LearningProvider({ children }: { children: React.ReactNode }) {
-  const [courses, setCourses] = useState<Course[]>(() => {
-  
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("learning_courses")
-      if (saved) {
-        try {
-          const savedCourses = JSON.parse(saved) as Course[]
-          const courseMap = new Map<string, Course>(savedCourses.map((c: Course) => [c.id, c]))
-          mockCourses.forEach((course) => {
-            if (!courseMap.has(course.id)) {
-              courseMap.set(course.id, course)
-            }
-          })
-          return Array.from(courseMap.values()) as Course[]
-        } catch {
-          return mockCourses
-        }
-      }
-    }
-    return mockCourses
-  })
+  const [courses, setCourses] = useState<Course[]>([])
 
   const [quizResults, setQuizResults] = useState<Record<string, QuizResult>>(() => {
     if (typeof window !== "undefined") {
@@ -340,18 +321,45 @@ export function LearningProvider({ children }: { children: React.ReactNode }) {
   const [isSubmittingQuiz, setIsSubmittingQuiz] = useState(false)
   const [isCompletingLesson, setIsCompletingLesson] = useState(false)
 
-  // Save to localStorage whenever courses or quizResults change
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("learning_courses", JSON.stringify(courses))
+  const fetchCourses = async () => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null
+    if (!token) return
+    try {
+      const data = await api.get<{ id: string; title: string; description: string; isEnrolled?: boolean; progressPercent?: number }[]>("/courses")
+      const list = Array.isArray(data) ? data : (data as { data?: typeof data }).data ?? []
+      setCourses(
+        list.map((c) => ({
+          id: c.id,
+          title: c.title,
+          description: c.description,
+          difficulty: "Beginner" as const,
+          rating: 0,
+          duration: 0,
+          lessons: [],
+          progress: c.progressPercent ?? 0,
+          enrolled: c.isEnrolled ?? false,
+        }))
+      )
+    } catch {
+      // silently fail — courses stay empty
     }
-  }, [courses])
+  }
+
+  useEffect(() => {
+    void fetchCourses()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("learning_quiz_results", JSON.stringify(quizResults))
     }
   }, [quizResults])
+
+  const enrollInCourse = async (courseId: string) => {
+    await api.post(`/courses/${courseId}/enroll`, {})
+    await fetchCourses()
+  }
 
   const markLessonComplete = async (courseId: string, lessonId: string): Promise<boolean> => {
     setIsCompletingLesson(true)
@@ -473,6 +481,7 @@ export function LearningProvider({ children }: { children: React.ReactNode }) {
         quizResults,
         isSubmittingQuiz,
         isCompletingLesson,
+        enrollInCourse,
         markLessonComplete,
         submitQuiz,
         getCourseProgress,

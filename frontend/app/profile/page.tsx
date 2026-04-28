@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Header } from "@/components/header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -104,7 +105,7 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            {/* Quick Links / Badges Preview could go here */}
+            {/* Quick Links / Badges Preview */}
             <div className="p-6 rounded-3xl bg-green-500/5 border border-green-500/10 space-y-4">
                <div className="flex items-center justify-between">
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-green-500/60">Academy Standing</h3>
@@ -159,3 +160,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+
