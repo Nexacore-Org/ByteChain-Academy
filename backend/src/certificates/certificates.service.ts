@@ -21,7 +21,6 @@ import { VerifyCertificateDto } from './dto/verify-certificate.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
 import { ConfigService } from '@nestjs/config';
-<<<<<<< HEAD
 import { EmailService } from '../email/email.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
 import { WebhookEvent } from '../webhooks/dto/create-webhook.dto';
