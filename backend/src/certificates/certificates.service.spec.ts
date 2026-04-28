@@ -9,45 +9,12 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { ConfigService } from '@nestjs/config';
 import { EmailService } from '../email/email.service';
 
-const mockRepo = () => ({});
-
-const now = new Date();
-
-const mockUser = {
-  id: 'user-uuid-1',
-  name: 'Alice',
-  email: 'alice@example.com',
-};
-
-const mockCourse = {
-  id: 'course-uuid-1',
-  title: 'Intro to Web3',
-};
-
-const mockCertificate = {
-  id: 'cert-uuid-1',
-  certificateHash: 'abc123hash',
-  recipientName: mockUser.name,
-  recipientEmail: mockUser.email,
-  courseOrProgram: mockCourse.title,
-  certificateData: JSON.stringify({ userId: mockUser.id, courseId: mockCourse.id }),
-  issuedAt: now,
-  expiresAt: null,
-  isValid: true,
-  user: mockUser,
-  course: mockCourse,
-};
-
-const makeCertRepo = () => ({
+const mockRepo = () => ({
   findOne: jest.fn(),
   find: jest.fn(),
   create: jest.fn(),
   save: jest.fn(),
-  createQueryBuilder: jest.fn(),
 });
-
-const makeUserRepo = () => ({ findOneBy: jest.fn() });
-const makeCourseRepo = () => ({ findOneBy: jest.fn() });
 
 describe('CertificateService', () => {
   let service: CertificateService;
