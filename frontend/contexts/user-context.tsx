@@ -127,7 +127,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
       }
     }
-  };
+  }, []);
 
   const createDefaultUser = () => {
     const email = localStorage.getItem("user_email") || "student@bytechain.edu";
