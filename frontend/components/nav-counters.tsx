@@ -1,16 +1,26 @@
 "use client";
 
 import { useUser } from "@/contexts/user-context";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { useAuth } from "@/contexts/auth-context";
 import { BookOpen, Award, Zap } from "lucide-react";
 
 function CounterSkeleton() {
-  return (
-    <div className="h-8 w-16 animate-pulse rounded-lg bg-white/10" aria-hidden />
-  );
+  return <div className="h-8 w-16 animate-pulse rounded-lg bg-white/10" aria-hidden />;
 }
 
 export function NavCounters() {
   const { userStats, userStatsLoading, userStatsError } = useUser();
+  const { isAuthenticated } = useAuth();
+
+  // Wire unread count per issue #219
+  useQuery({
+    queryKey: ["notifications", "unread-count"],
+    queryFn: () => api.get<{ count: number }>("/notifications/unread-count").then((r) => r.count),
+    refetchInterval: 60_000,
+    enabled: isAuthenticated,
+  });
 
   const displayValue = (value: number | undefined) => {
     if (userStatsError) return "—";
@@ -48,7 +58,7 @@ export function NavCounters() {
           <CounterSkeleton />
         ) : (
           <span className="font-medium text-white">
-            {displayValue(userStats?.xp)} XP Points
+            {displayValue(userStats?.xp)} XP
           </span>
         )}
       </div>
