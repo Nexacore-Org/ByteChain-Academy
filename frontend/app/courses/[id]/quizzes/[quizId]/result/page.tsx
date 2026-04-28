@@ -2,7 +2,7 @@
 
 import { use } from "react"
 import { Header } from "@/components/header"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useLearning } from "@/contexts/learning-context"
 import { useRouter } from "next/navigation"
@@ -16,7 +16,7 @@ export default function QuizResultPage({
   params: Promise<{ id: string; quizId: string }>
 }) {
   const { id, quizId } = use(params)
-  const { courses, quizResults, getQuiz } = useLearning()
+  const { courses, quizResults } = useLearning()
   const { isAuthenticated } = useAuth()
   const router = useRouter()
 

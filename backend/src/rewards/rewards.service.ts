@@ -266,7 +266,12 @@ export class RewardsService {
     return {
       xp: user.xp,
       badges,
-      recentHistory,
+      recentHistory: history.map((h) => ({
+        amount: h.amount,
+        reason: h.reason,
+        label: RewardsService.REASON_LABELS[h.reason] ?? h.reason,
+        createdAt: h.createdAt,
+      })),
     };
   }
 

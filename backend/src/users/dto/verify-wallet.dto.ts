@@ -1,4 +1,5 @@
 import { IsString, IsNotEmpty, Matches } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class VerifyWalletDto {
   @IsString()
@@ -7,8 +8,10 @@ export class VerifyWalletDto {
     message:
       'walletAddress must be a valid Stellar public key (56-character G-address)',
   })
+  @ApiProperty({ example: 'example', description: 'walletAddress field' })
   walletAddress: string;
 
+  @ApiProperty({ example: 'example', description: 'signature field' })
   @IsString()
   @IsNotEmpty()
   signature: string;

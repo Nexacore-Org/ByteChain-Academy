@@ -42,6 +42,12 @@ export function LoginModal({ open, onOpenChange, onSwitchToSignup }: LoginModalP
       if (!window.navigator.onLine) {
         setError("Unable to connect. Please check your connection and try again")
       } else if (e.status === 401 || e.message?.includes("401")) {
+    } catch (error: unknown) {
+      console.error("Login error:", error)
+      const err = error instanceof Error ? error : new Error(String(error))
+      if (!window.navigator.onLine) {
+        setError("Unable to connect. Please check your connection and try again")
+      } else if ((error !== null && typeof error === "object" && "status" in error && (error as { status: number }).status === 401) || err.message?.includes("401")) {
         setError("Incorrect email or password")
       } else {
         setError("Something went wrong. Please try again")

@@ -14,6 +14,7 @@ import {
   ExecutionContext,
   Injectable,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -67,6 +68,7 @@ class OptionalJwtAuthGuard extends AuthGuard('jwt') {
   }
 }
 
+@ApiTags('Courses')
 @Controller('courses')
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
@@ -74,6 +76,12 @@ export class CoursesController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Create a new course (admin only)' })
+  @ApiResponse({ status: 201, description: 'Course created successfully', type: CourseResponseDto })
+  @ApiResponse({ status: 400, description: 'Bad request - validation error' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - admin access required' })
   async create(
     @Body() createCourseDto: CreateCourseDto,
   ): Promise<CourseResponseDto> {
@@ -82,6 +90,10 @@ export class CoursesController {
 
   @Get('enrolled')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Get courses enrolled by current user' })
+  @ApiResponse({ status: 200, description: 'Enrolled courses retrieved successfully', type: [EnrolledCourseResponseDto] })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getEnrolledCourses(
     @Req() req: RequestWithUser & { user: { id: string } },
   ): Promise<EnrolledCourseResponseDto[]> {
@@ -91,6 +103,10 @@ export class CoursesController {
   /** @deprecated Use GET /courses/enrolled */
   @Get('registered')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Get registered courses (deprecated - use /enrolled)' })
+  @ApiResponse({ status: 200, description: 'Registered courses retrieved successfully', type: [EnrolledCourseResponseDto] })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getRegisteredCoursesLegacy(
     @Req() req: RequestWithUser & { user: { id: string } },
   ): Promise<EnrolledCourseResponseDto[]> {
@@ -98,7 +114,13 @@ export class CoursesController {
   }
 
   @Get()
-  async findAll(@Query() pagination: PaginationDto): Promise<{
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({ summary: 'Get paginated list of courses' })
+  @ApiResponse({ status: 200, description: 'Courses retrieved successfully' })
+  async findAll(
+    @Req() req: RequestWithUser,
+    @Query() pagination: PaginationDto,
+  ): Promise<{
     data: CourseResponseDto[];
     total: number;
     page: number;
@@ -113,6 +135,11 @@ export class CoursesController {
 
   @Get(':id/enrollment-status')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Get enrollment status for a specific course' })
+  @ApiResponse({ status: 200, description: 'Enrollment status retrieved successfully', type: EnrollmentStatusResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Course not found' })
   async getEnrollmentStatus(
     @Param('id') courseId: string,
     @Req() req: RequestWithUser & { user: { id: string } },
@@ -122,6 +149,12 @@ export class CoursesController {
 
   @Post(':id/enroll')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Enroll in a course' })
+  @ApiResponse({ status: 201, description: 'Successfully enrolled in course', type: CourseRegistrationResponseDto })
+  @ApiResponse({ status: 400, description: 'Bad request - already enrolled or course full' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Course not found' })
   async enroll(
     @Param('id') courseId: string,
     @Req() req: RequestWithUser & { user: { id: string } },
@@ -132,6 +165,11 @@ export class CoursesController {
   @Delete(':id/enroll')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Unenroll from a course' })
+  @ApiResponse({ status: 204, description: 'Successfully unenrolled from course' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Course not found or not enrolled' })
   async unenroll(
     @Param('id') courseId: string,
     @Req() req: RequestWithUser & { user: { id: string } },
@@ -140,6 +178,9 @@ export class CoursesController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get course details by ID' })
+  @ApiResponse({ status: 200, description: 'Course details retrieved successfully', type: CourseResponseDto })
+  @ApiResponse({ status: 404, description: 'Course not found' })
   async findOne(@Param('id') id: string): Promise<CourseResponseDto> {
     return this.coursesService.findOne(id);
   }
@@ -147,6 +188,13 @@ export class CoursesController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Update course details (admin only)' })
+  @ApiResponse({ status: 200, description: 'Course updated successfully', type: CourseResponseDto })
+  @ApiResponse({ status: 400, description: 'Bad request - validation error' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - admin access required' })
+  @ApiResponse({ status: 404, description: 'Course not found' })
   async update(
     @Param('id') id: string,
     @Body() updateCourseDto: UpdateCourseDto,
@@ -158,6 +206,12 @@ export class CoursesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Delete a course (admin only)' })
+  @ApiResponse({ status: 204, description: 'Course deleted successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - admin access required' })
+  @ApiResponse({ status: 404, description: 'Course not found' })
   async remove(@Param('id') id: string): Promise<void> {
     await this.coursesService.remove(id);
   }

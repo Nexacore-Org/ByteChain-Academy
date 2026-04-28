@@ -32,11 +32,9 @@ export function SignUpModal({ open, onOpenChange, onSwitchToLogin }: SignUpModal
       setError("")
       await signup(name, email, password)
       onOpenChange(false)
-      // Reset form
       setName("")
       setEmail("")
       setPassword("")
-      // Navigate to dashboard page
       router.push("/dashboard")
     } catch (err: unknown) {
       console.error("Signup error:", err)
@@ -44,6 +42,12 @@ export function SignUpModal({ open, onOpenChange, onSwitchToLogin }: SignUpModal
       if (!window.navigator.onLine) {
         setError("Unable to connect. Please check your connection and try again")
       } else if (e.status === 409 || e.message?.includes("409")) {
+    } catch (error: unknown) {
+      console.error("Signup error:", error)
+      const err = error instanceof Error ? error : new Error(String(error))
+      if (!window.navigator.onLine) {
+        setError("Unable to connect. Please check your connection and try again")
+      } else if ((error !== null && typeof error === "object" && "status" in error && (error as { status: number }).status === 409) || err.message?.includes("409")) {
         setError("An account with this email already exists")
       } else {
         setError("Something went wrong. Please try again")
