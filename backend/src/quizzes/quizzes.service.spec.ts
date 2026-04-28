@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import {
   NotFoundException,
   ConflictException,
@@ -18,11 +17,6 @@ import { RewardsService } from '../rewards/rewards.service';
 
 describe('QuizzesService', () => {
   let service: QuizzesService;
-  let quizRepository: Repository<Quiz>;
-  let questionRepository: Repository<Question>;
-  let lessonRepository: Repository<Lesson>;
-  let quizSubmissionRepository: Repository<QuizSubmission>;
-
   const mockQuizRepository = {
     findOne: jest.fn(),
     create: jest.fn(),
@@ -78,16 +72,6 @@ describe('QuizzesService', () => {
     }).compile();
 
     service = module.get<QuizzesService>(QuizzesService);
-    quizRepository = module.get<Repository<Quiz>>(getRepositoryToken(Quiz));
-    questionRepository = module.get<Repository<Question>>(
-      getRepositoryToken(Question),
-    );
-    lessonRepository = module.get<Repository<Lesson>>(
-      getRepositoryToken(Lesson),
-    );
-    quizSubmissionRepository = module.get<Repository<QuizSubmission>>(
-      getRepositoryToken(QuizSubmission),
-    );
   });
 
   afterEach(() => {

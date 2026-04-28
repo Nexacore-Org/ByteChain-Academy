@@ -48,6 +48,12 @@ export class User {
   @Column({ default: false })
   suspended: boolean;
 
+  @Column({ default: false })
+  onboardingCompleted: boolean;
+
+  @Column({ nullable: true })
+  learningGoal: string | null;
+
   @Column({ type: 'int', default: 0 })
   lessonsCompleted: number;
 

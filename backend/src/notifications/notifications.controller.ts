@@ -11,12 +11,14 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { plainToInstance } from 'class-transformer';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { NotificationResponseDto } from './dto/notification-response.dto';
 import { NotificationsService } from './notifications.service';
 
+@ApiTags('Notifications')
+@ApiBearerAuth('access-token')
 @Controller('notifications')
 @UseGuards(JwtAuthGuard)
 @UseInterceptors(ClassSerializerInterceptor)
@@ -25,31 +27,11 @@ export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get my notifications with pagination' })
-  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
-  @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Notifications retrieved successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        data: {
-          type: 'array',
-          items: { $ref: '#/components/schemas/NotificationResponseDto' }
-        },
-        total: { type: 'number', example: 42 },
-        unreadCount: { type: 'number', example: 5 }
-      }
-    }
-  })
+  @ApiOperation({ summary: 'Get user notifications' })
+  @ApiResponse({ status: 200, description: 'Notifications retrieved successfully', type: [NotificationResponseDto] })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getMyNotifications(
-    @Request() req,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-  ): Promise<{ data: NotificationResponseDto[]; total: number; unreadCount: number }> {
-    const result = await this.notificationsService.getMyNotifications(
+  async getMyNotifications(@Request() req): Promise<NotificationResponseDto[]> {
+    const notifications = await this.notificationsService.getMyNotifications(
       req.user.id as string,
       page,
       limit,
@@ -62,42 +44,17 @@ export class NotificationsController {
   }
 
   @Get('unread-count')
-  @ApiOperation({ summary: 'Get unread notification count' })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Unread count retrieved successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        count: { type: 'number', example: 5 }
-      }
-    }
-  })
+  @ApiOperation({ summary: 'Get count of unread notifications' })
+  @ApiResponse({ status: 200, description: 'Unread count retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getUnreadCount(@Request() req): Promise<{ count: number }> {
-    const result = await this.notificationsService.getUnreadCount(req.user.id as string);
-    return { count: result.unreadCount };
-  }
-
-  @Patch('read-all')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Mark all notifications as read' })
-  @ApiResponse({ status: 204, description: 'All notifications marked as read' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async markAllAsRead(@Request() req): Promise<void> {
-    await this.notificationsService.markAllAsRead(req.user.id as string);
+  async getUnreadCount(@Request() req): Promise<{ unreadCount: number }> {
+    return this.notificationsService.getUnreadCount(req.user.id as string);
   }
 
   @Patch(':id/read')
-  @ApiOperation({ summary: 'Mark a notification as read' })
-  @ApiParam({ name: 'id', type: String, description: 'Notification ID' })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Notification marked as read successfully',
-    type: NotificationResponseDto
-  })
+  @ApiOperation({ summary: 'Mark notification as read' })
+  @ApiResponse({ status: 200, description: 'Notification marked as read', type: NotificationResponseDto })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Cannot modify another user\'s notification' })
   @ApiResponse({ status: 404, description: 'Notification not found' })
   async markAsRead(
     @Request() req,
@@ -108,5 +65,13 @@ export class NotificationsController {
       notificationId,
     );
     return plainToInstance(NotificationResponseDto, notification);
+  }
+
+  @Patch('read-all')
+  @ApiOperation({ summary: 'Mark all notifications as read' })
+  @ApiResponse({ status: 200, description: 'All notifications marked as read' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async markAllAsRead(@Request() req): Promise<{ updatedCount: number }> {
+    return this.notificationsService.markAllAsRead(req.user.id as string);
   }
 }

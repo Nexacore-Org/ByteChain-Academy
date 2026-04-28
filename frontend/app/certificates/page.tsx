@@ -9,6 +9,8 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Award, GraduationCap } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorCard } from "@/components/ui/error-card";
 
 interface Certificate {
   id: string;
@@ -26,22 +28,27 @@ export default function MyCertificatesPage() {
   const router = useRouter();
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await api.get<Certificate[]>("/certificates");
+      setCertificates(Array.isArray(data) ? data : []);
+    } catch {
+      setError("Failed to load certificates. Please try again.");
+      setCertificates([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/");
       return;
     }
-    const load = async () => {
-      try {
-        const data = await api.get<Certificate[]>("/certificates");
-        setCertificates(Array.isArray(data) ? data : []);
-      } catch {
-        setCertificates([]);
-      } finally {
-        setLoading(false);
-      }
-    };
     void load();
   }, [isAuthenticated, router]);
 
@@ -74,14 +81,24 @@ export default function MyCertificatesPage() {
 
         {loading ? (
           <div className="space-y-4">
-            {[1, 2].map((i) => (
-              <div
-                key={i}
-                className="h-24 animate-pulse rounded-xl bg-white/5"
-                aria-hidden
-              />
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="border-white/10 bg-white/5">
+                <CardHeader className="flex flex-row items-start justify-between">
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-5 w-1/2" />
+                    <Skeleton className="h-4 w-1/4" />
+                  </div>
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-8 w-32" />
+                </CardContent>
+              </Card>
             ))}
           </div>
+        ) : error ? (
+          <ErrorCard message={error} onRetry={() => void load()} />
         ) : certificates.length === 0 ? (
           <Card className="border-[#00ff88]/20 bg-gradient-to-br from-[#080e22] to-[#0a0a0a]">
             <CardContent className="flex flex-col items-center justify-center py-16">

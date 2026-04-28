@@ -3,13 +3,10 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 
 @Injectable()
 export class RateLimitGuard extends ThrottlerGuard {
-  protected async getTracker(req: Record<string, any>): Promise<string> {
-    // Authenticated users → user-based rate limiting
+  protected getTracker(req: Record<string, any>): Promise<string> {
     if (req.user?.id) {
-      return `user-${req.user.id}`;
+      return Promise.resolve(`user-${req.user.id}`);
     }
-
-    // Public users → IP-based rate limiting
-    return req.ip;
+    return Promise.resolve(req.ip);
   }
 }

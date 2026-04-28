@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Header } from "@/components/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useUser } from "@/contexts/user-context";
 import { useLearning } from "@/contexts/learning-context";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import {
   ArrowLeft,
   User,
@@ -32,9 +33,13 @@ export default function ProfilePage() {
   const { courses } = useLearning();
   const router = useRouter();
 
-  useEffect(() => {
+  const memoizedLoadUserData = useCallback(() => {
     loadUserData();
-  }, []);
+  }, [loadUserData]);
+
+  useEffect(() => {
+    memoizedLoadUserData();
+  }, [memoizedLoadUserData]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -119,9 +124,11 @@ export default function ProfilePage() {
                 <div className="absolute inset-0 bg-gradient-to-br from-[#00ff88] to-[#00d88b] rounded-full blur-xl opacity-30 animate-pulse" />
                 <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-[#00ff88] to-[#00d88b] flex items-center justify-center text-[#002E20] text-3xl font-bold shadow-lg shadow-[#00ff88]/20">
                   {user.avatar ? (
-                    <img
+                    <Image
                       src={user.avatar}
                       alt={user.fullName}
+                      width={96}
+                      height={96}
                       className="w-full h-full rounded-full object-cover"
                     />
                   ) : (

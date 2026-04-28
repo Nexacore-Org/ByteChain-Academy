@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ProgressService } from './progress.service';
 import { Progress } from './entities/progress.entity';
-<<<<<<< HEAD
 import { Lesson } from '../lessons/entities/lesson.entity';
 import { CertificateService } from '../certificates/certificates.service';
 import { NotificationsService } from '../notifications/notifications.service';
