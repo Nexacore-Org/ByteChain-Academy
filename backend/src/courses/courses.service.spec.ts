@@ -45,9 +45,6 @@ const makeRegRepo = () => ({
   save: jest.fn(),
 });
 
-const makeLessonRepo = () => ({ count: jest.fn() });
-const makeProgressRepo = () => ({ count: jest.fn() });
-
 describe('CoursesService', () => {
   let service: CoursesService;
   let courseRepo: ReturnType<typeof makeCourseRepo>;
@@ -72,12 +69,23 @@ describe('CoursesService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CoursesService,
-        { provide: getRepositoryToken(Course), useValue: courseRepo },
-        { provide: getRepositoryToken(CourseRegistration), useValue: regRepo },
-        { provide: getRepositoryToken(Lesson), useValue: lessonRepo },
-        { provide: getRepositoryToken(Progress), useValue: progressRepo },
-        { provide: PaginationService, useValue: paginationService },
-        { provide: NotificationsService, useValue: notificationsService },
+        { provide: getRepositoryToken(Course), useValue: mockRepo() },
+        {
+          provide: getRepositoryToken(CourseRegistration),
+          useValue: mockRepo(),
+        },
+        {
+          provide: PaginationService,
+          useValue: {
+            paginate: jest.fn().mockResolvedValue({
+              data: [],
+              total: 0,
+              page: 1,
+              limit: 10,
+              totalPages: 0,
+            }),
+          },
+        },
       ],
     }).compile();
 

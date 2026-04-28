@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GraduationCap, ArrowLeft, AlertTriangle } from "lucide-react";
-import { CertificateCard, type Certificate } from "@/components/CertificateCard";
-import { CertificateCardSkeleton } from "@/components/CertificateCardSkeleton";
-import { CertificatesEmptyState } from "@/components/CertificatesEmptyState";
+import { CertificateCard, type Certificate } from "./Certificatecard";
+import { CertificateCardSkeleton } from "./Certificatecardskeleton";
+import { CertificatesEmptyState } from "./Certificatesemptystate";
 
 type FetchState = "loading" | "success" | "error";
 
