@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CurrencyEntry, CurrencyType } from './entities/currency-entry.entity';
 import {
   CreateCurrencyDto,
@@ -43,7 +43,7 @@ export class CurrenciesService {
 
     const formattedItems = items.map((item) => {
       // Omit detailed historical data in find all list to reduce payload
-      const { historicalData, ...rest } = item;
+      const { historicalData: _historicalData, ...rest } = item;
       return rest;
     });
 

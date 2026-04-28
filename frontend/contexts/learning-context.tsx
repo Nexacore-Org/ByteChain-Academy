@@ -244,63 +244,7 @@ const mockQuizzes: Quiz[] = [
   },
 ]
 
-const mockCourses: Course[] = [
-  {
-    id: "crypto-101",
-    title: "Crypto 101: From Fiat to Bitcoin",
-    description: "Understand why Bitcoin and blockchains exist. Learn the fundamentals of cryptocurrency and...",
-    difficulty: "Beginner",
-    rating: 4.8,
-    duration: 6,
-    lessons: mockLessons["crypto-101"],
-    progress: 0,
-    enrolled: true,
-  },
-  {
-    id: "defi-fundamentals",
-    title: "DeFi Fundamentals: Lending, AMMs & Yield",
-    description: "Walk through DeFi protocols, automated market makers, and yield farming strategies without deep...",
-    difficulty: "Intermediate",
-    rating: 4.9,
-    duration: 9,
-    lessons: mockLessons["defi-fundamentals"],
-    progress: 0,
-    enrolled: true,
-  },
-  {
-    id: "wallet-security",
-    title: "Wallet Security Masterclass",
-    description: "Learn how to protect your keys, avoid phishing attacks, and practice safe custody of digital assets.",
-    difficulty: "Beginner",
-    rating: 4.7,
-    duration: 7,
-    lessons: [],
-    progress: 0,
-    enrolled: false,
-  },
-  {
-    id: "smart-contracts",
-    title: "Smart Contract Development",
-    description: "Build your first smart contract with Solidity. Understand gas optimization and security patterns.",
-    difficulty: "Advanced",
-    rating: 4.9,
-    duration: 15,
-    lessons: [],
-    progress: 0,
-    enrolled: false,
-  },
-  {
-    id: "nft-fundamentals",
-    title: "NFT Market Fundamentals",
-    description: "Explore NFT standards, marketplaces, and digital ownership in the Web3 ecosystem.",
-    difficulty: "Intermediate",
-    rating: 4.6,
-    duration: 8,
-    lessons: [],
-    progress: 0,
-    enrolled: false,
-  },
-]
+// Removed unused mockCourses
 
 export function LearningProvider({ children }: { children: React.ReactNode }) {
   const [courses, setCourses] = useState<Course[]>([])
@@ -347,7 +291,6 @@ export function LearningProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     void fetchCourses()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
