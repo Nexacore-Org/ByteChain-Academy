@@ -6,7 +6,6 @@ import { RewardHistory } from './entities/reward-history.entity';
 import { UserBadge } from './entities/user-badge.entity';
 import { RewardsController } from './rewards.controller';
 import { RewardsService } from './rewards.service';
-<<<<<<< HEAD
 import { NotificationsModule } from '../notifications/notifications.module';
 import { WebhooksModule } from '../webhooks/webhooks.module';
 
