@@ -35,11 +35,9 @@ export class ProgressController {
    */
   @Post('complete')
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Mark a lesson as complete' })
-  @ApiResponse({
-    status: 201,
-    description: 'Lesson marked as complete successfully',
-  })
+  @ApiOperation({ summary: 'Mark lesson as complete' })
+  @ApiResponse({ status: 201, description: 'Lesson marked as complete successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async completeLesson(
     @Req() req: RequestWithUser,
@@ -57,22 +55,9 @@ export class ProgressController {
    */
   @Get(':courseId')
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Get course progress for a user' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns an array of lesson completion states',
-    schema: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          lessonId: { type: 'string' },
-          completed: { type: 'boolean' },
-          completedAt: { type: 'string', format: 'date-time' },
-        },
-      },
-    },
-  })
+  @ApiOperation({ summary: 'Get course progress' })
+  @ApiResponse({ status: 200, description: 'Course progress retrieved successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request - courseId required' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getCourseProgress(
     @Req() req: RequestWithUser,

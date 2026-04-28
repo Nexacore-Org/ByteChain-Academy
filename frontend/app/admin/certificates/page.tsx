@@ -54,8 +54,8 @@ export default function AdminCertificatesPage() {
 
   const fetchCertificates = useCallback(async (search?: string) => {
     try {
-      const params = search?.trim() ? { search: search.trim() } : undefined;
-      const res = await api.get<CertificatesResponse>("/certificates/all", params);
+      const qs = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : "";
+      const res = await api.get<CertificatesResponse>(`/certificates/all${qs}`);
       setData(res);
     } catch {
       setData({ totalIssued: 0, revoked: 0, data: [] });
@@ -100,7 +100,7 @@ export default function AdminCertificatesPage() {
     const cert = revokeDialog.cert;
     if (!cert) return;
     try {
-      await api.patch(`/certificates/${cert.id}/revoke`);
+      await api.patch(`/certificates/${cert.id}/revoke`, {});
       toast.success("Certificate revoked");
       setRevokeDialog({ open: false, cert: null });
       setData((prev) => {

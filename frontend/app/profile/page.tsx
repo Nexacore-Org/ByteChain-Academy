@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Header } from "@/components/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,8 +8,6 @@ import { useAuth } from "@/contexts/auth-context";
 import { useUser } from "@/contexts/user-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
 import { AvatarUpload } from "@/components/profile/avatar-upload";
 import { StatsSummary } from "@/components/profile/stats-summary";
 import { ProfileTabs } from "@/components/profile/profile-tabs";
