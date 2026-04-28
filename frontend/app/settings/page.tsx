@@ -20,7 +20,9 @@ import {
   Mail,
   Shield,
 } from "lucide-react";
+import { WalletConnectCard } from "@/components/wallet/wallet-connect-card";
 import Link from "next/link";
+import { useCallback } from "react";
 
 export default function SettingsPage() {
   const { isAuthenticated } = useAuth();
@@ -45,9 +47,13 @@ export default function SettingsPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
-  useEffect(() => {
+  const memoizedLoadUserData = useCallback(() => {
     loadUserData();
-  }, []);
+  }, [loadUserData]);
+
+  useEffect(() => {
+    memoizedLoadUserData();
+  }, [memoizedLoadUserData]);
 
   // Initialize form state when user data loads
   useEffect(() => {
@@ -304,6 +310,11 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Wallet Connect */}
+        <div className="mb-8">
+          <WalletConnectCard />
+        </div>
 
         {/* Save Button */}
         <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-[#080e22] to-[#0a0a0a] border border-[#00ff88]/20">

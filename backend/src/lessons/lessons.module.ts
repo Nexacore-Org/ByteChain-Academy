@@ -11,7 +11,7 @@ import { AuthModule } from '../auth/auth.module';
   imports: [
     TypeOrmModule.forFeature([Lesson, Course]),
     PassportModule,
-    forwardRef(() => AuthModule),
+    AuthModule,
   ],
   controllers: [LessonsController],
   providers: [LessonsService],
