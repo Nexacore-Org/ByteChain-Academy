@@ -156,6 +156,8 @@ export class UserService {
       user.name = updateProfileDto.username;
     }
     if (updateProfileDto.bio !== undefined) user.bio = updateProfileDto.bio;
+    if (updateProfileDto.onboardingCompleted !== undefined) user.onboardingCompleted = updateProfileDto.onboardingCompleted;
+    if (updateProfileDto.learningGoal !== undefined) user.learningGoal = updateProfileDto.learningGoal;
 
     return this.userRepository.save(user);
   }
