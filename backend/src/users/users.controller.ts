@@ -20,6 +20,8 @@ import { plainToInstance } from 'class-transformer';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { UserService } from './users.service';
 import { WalletService } from './wallet.service';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { DeleteAccountDto } from './dto/delete-account.dto';
 import { RolesGuard } from '../common/guards/roles.guard';
 
 @ApiTags('Users')
@@ -31,7 +33,7 @@ export class UsersController {
   constructor(
     private readonly userService: UserService,
     private readonly walletService: WalletService,
-  ) {}
+  ) { }
 
   @Get('me')
   @ApiOperation({ summary: 'Get current user profile' })
@@ -110,8 +112,11 @@ export class UsersController {
   @ApiOperation({ summary: 'Delete user account' })
   @ApiResponse({ status: 204, description: 'Account deleted successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async deleteProfile(@Request() req): Promise<void> {
-    await this.userService.deleteProfile(req.user.id);
+  async deleteProfile(
+    @Request() req,
+    @Body() dto: DeleteAccountDto,
+  ): Promise<void> {
+    await this.userService.deleteProfile(req.user.id, dto.password);
   }
 
   @Get('me/stats')
