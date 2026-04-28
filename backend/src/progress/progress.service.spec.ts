@@ -2,10 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ProgressService } from './progress.service';
 import { Progress } from './entities/progress.entity';
-import { Lesson } from 'src/lessons/entities/lesson.entity';
-import { CertificateService } from 'src/certificates/certificates.service';
-import { NotificationsService } from 'src/notifications/notifications.service';
-import { RewardsService } from 'src/rewards/rewards.service';
+<<<<<<< HEAD
+import { Lesson } from '../lessons/entities/lesson.entity';
+import { CertificateService } from '../certificates/certificates.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { RewardsService } from '../rewards/rewards.service';
+import { StreakService } from '../users/streak.service';
 
 const makeProgressRepo = () => ({
   findOne: jest.fn(),
@@ -26,6 +28,8 @@ describe('ProgressService', () => {
   let certificateService: { issueCertificateForCourse: jest.Mock };
   let notificationsService: { createNotification: jest.Mock };
   let rewardsService: { awardXP: jest.Mock };
+  let streakService: { updateStreak: jest.Mock };
+
 
   beforeEach(async () => {
     progressRepo = makeProgressRepo();
@@ -33,6 +37,8 @@ describe('ProgressService', () => {
     certificateService = { issueCertificateForCourse: jest.fn().mockResolvedValue({}) };
     notificationsService = { createNotification: jest.fn().mockResolvedValue(undefined) };
     rewardsService = { awardXP: jest.fn().mockResolvedValue({ xp: 10, newlyAwardedBadges: [] }) };
+    streakService = { updateStreak: jest.fn().mockResolvedValue(undefined) };
+
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -42,7 +48,9 @@ describe('ProgressService', () => {
         { provide: CertificateService, useValue: certificateService },
         { provide: NotificationsService, useValue: notificationsService },
         { provide: RewardsService, useValue: rewardsService },
+        { provide: StreakService, useValue: streakService },
       ],
+
     }).compile();
 
     service = module.get<ProgressService>(ProgressService);

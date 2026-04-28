@@ -1,95 +1,93 @@
-# 📚 ByteChain Academy
+# ByteChain Academy
 
-Welcome to **ByteChain Academy**, a lightweight Web3 learning platform that offers bite-sized lessons (5-10 mins) combined with a decentralized currency knowledge hub. Perfect for busy professionals looking for no-commitment crypto education.
+ByteChain Academy is a Web3 learning platform that combines short, practical lessons with quizzes, analytics, certificates, and DAO-style governance features.
 
-## ✨ Key Features
+## Project overview
 
-- ⚡ Bite-sized, interactive Web3 lessons
-- 🧠 Practical challenges and quick quizzes
-- 🌍 Historical data on global currencies
-- 🗳️ Community-powered content through DAO governance
+- Backend: NestJS REST API with Swagger docs
+- Frontend: Next.js app router application
+- Data layer: local SQLite by default in codebase, PostgreSQL-ready environment variables and Docker service for deployment workflows
+- Infra: Docker Compose for local infrastructure services
 
----
+## Tech stack
 
-## 🚀 Getting Started
+| Layer | Technology |
+| --- | --- |
+| Frontend | Next.js 16, React 19, TypeScript |
+| Backend | NestJS 11, TypeScript, TypeORM |
+| Auth | JWT |
+| API docs | Swagger at `/api/v1/docs` |
+| Local infra | Docker Compose (PostgreSQL + optional Redis) |
+| Testing and linting | Jest, ESLint, Prettier |
 
-Follow these instructions to set up the project locally for development and testing purposes.
+## Quick start
 
-### 🔹 Backend Setup
+### 1) Clone the repository
 
-The backend is built with [NestJS](https://nestjs.com/):
+```bash
+git clone https://github.com/Spagero763/ByteChain-Academy.git
+cd ByteChain-Academy
+```
 
-1. **Clone the Repository:**
-   ```bash
-   git clone https://github.com/Nexacore-Org/ByteChain-Academy.git
-   cd ByteChain-Academy/backend
-   ```
-2. **Install Dependencies:**
-   ```bash
-   npm install
-   ```
-3. **Run the Server in Development Mode:**
-   ```bash
-   npm run start:dev
-   ```
-4. **Run Tests:**
-   ```bash
-   npm run test
-   npm run test:e2e
-   npm run test:cov
-   ```
+### 2) Start local services (PostgreSQL, optional Redis)
 
-### 🔹 Frontend Setup
+```bash
+docker compose up -d
+```
 
-The frontend uses [Next.js](https://nextjs.org/):
+### 3) Configure backend environment
 
-1. **Navigate to the Frontend Directory:**
-   ```bash
-   cd ../frontend
-   ```
-2. **Install Dependencies:**
-   ```bash
-   npm install
-   ```
-3. **Run the Development Server:**
-   ```bash
-   npm run dev
-   ```
-4. **Visit the App:**
-   Go to [http://localhost:3000](http://localhost:3000)
+```bash
+cd backend
+cp .env.example .env
+```
 
----
+Update values in `.env` for your machine, then install and run:
 
-## 🛠️ Technologies Used
+```bash
+npm install
+npm run start:dev
+```
 
-- **Frontend:** Next.js, React 19
-- **Styling:** Tailwind CSS, tw-animate-css
-- **UI/UX:** Lucide React, Class Variance Authority, clsx
-- **Backend:** NestJS, Node.js, TypeScript
-- **Testing (Backend):** Jest
-- **Formatting & Linting:** ESLint, Prettier
-- **Hosting (Frontend):** Vercel
+### 4) Configure frontend environment
 
-## Contributions
+Open a second terminal:
 
-Please read our [CONTRIBUTING.md](https://github.com/Nexacore-Org/ByteChain-Academy/blob/main/CONTRIBUTING.MD) guide before making a contribution.
+```bash
+cd frontend
+cp .env.example .env.local
+npm install
+npm run dev
+```
+
+### 5) Open the app
+
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:3001/api/v1
+- Swagger docs: http://localhost:3001/api/v1/docs
+
+## Architecture overview
+
+- `frontend/`: user-facing web app (UI, dashboard, admin pages)
+- `backend/`: API, auth, business modules, certificate and currency services
+- `docker-compose.yml`: local PostgreSQL and Redis services
+
+Request flow:
+
+1. Frontend sends requests to backend via `NEXT_PUBLIC_API_URL`.
+2. Backend validates/authenticates requests and processes business logic.
+3. Backend persists and retrieves data through TypeORM.
+
+## Deployment guides
+
+- Backend deployment guide: `backend/README.md` (includes Railway steps)
+- Frontend deployment guide: `frontend/README.md` (includes Vercel steps)
+
+## Contributing
+
+See `CONTRIBUTING.md` for the Drips Wave contribution process, issue assignment, PR standards, and branch naming conventions.
 
 ## License
 
-This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for details.
-
-## 📧 Contact
-
-For inquiries, discussions, or help, feel free to reach out to us:
-
-- 📬 Email: [contact@nexacore.org](mailto:nexacore.org@gmail.com)
-- 🗣️ Telegram: [https://t.me/ByteChainAcademy](https://t.me/+E_iHswAzaPA4Yzk8)
-- 🐛 Issues: Open an issue for feature requests or bug reports
-
----
-
-## 🔌 Ports
-
-- **Backend:** runs on port 3001 (http://localhost:3001)
-- **Frontend:** runs on port 3000 (http://localhost:3000)
+This project is licensed under the MIT License. See `LICENSE` for details.
 

@@ -8,9 +8,14 @@ import {
   UseGuards,
   BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { Request } from 'express';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { ProgressService } from './progress.service';
 import { CompleteLessonDto } from './dto/complete-lesson.dto';
 
@@ -18,8 +23,8 @@ interface RequestWithUser extends Request {
   user: { id: string; email: string; role: string };
 }
 
-@ApiTags('Progress')
-@ApiBearerAuth('access-token')
+@ApiTags('progress')
+@ApiBearerAuth()
 @Controller('progress')
 export class ProgressController {
   constructor(private readonly progressService: ProgressService) {}
@@ -28,7 +33,7 @@ export class ProgressController {
    * Mark a lesson as complete for the authenticated user.
    * Triggers certificate auto-issuance when all lessons in the course are completed.
    */
-  @Post('lesson')
+  @Post('complete')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Mark lesson as complete' })
   @ApiResponse({ status: 201, description: 'Lesson marked as complete successfully' })
@@ -48,7 +53,7 @@ export class ProgressController {
   /**
    * Get the authenticated user's progress for a specific course (list of lesson completion statuses).
    */
-  @Get('course/:courseId')
+  @Get(':courseId')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get course progress' })
   @ApiResponse({ status: 200, description: 'Course progress retrieved successfully' })
