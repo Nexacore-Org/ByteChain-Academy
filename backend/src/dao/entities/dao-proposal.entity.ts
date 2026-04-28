@@ -14,6 +14,7 @@ export enum ProposalStatus {
   ACTIVE = 'ACTIVE',
   PASSED = 'PASSED',
   REJECTED = 'REJECTED',
+  WITHDRAWN = 'WITHDRAWN',
 }
 
 @Entity('dao_proposals')

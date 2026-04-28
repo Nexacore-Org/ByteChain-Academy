@@ -16,7 +16,6 @@ import {
   GraduationCap,
   TrendingUp,
   Clock,
-  Award,
   FileQuestion,
   Sparkles,
   ArrowRight,
@@ -27,10 +26,8 @@ import {
   BookCheck,
   Rocket,
   Star,
-  Users,
   Timer,
 } from "lucide-react"
-import Link from "next/link"
 
 export default function DashboardPage() {
   const { isAuthenticated } = useAuth()
