@@ -9,8 +9,8 @@ import {
     Loader2,
     X,
 } from "lucide-react";
-import { useCopyVerificationCode } from "@/hooks/useCopyVerificationCode";
-import { useCertificateDownload } from "@/hooks/useCertificateDownload";
+import { useCopyVerificationCode } from "@/components/MyCertificatesPage/Usecopyverificationcode";
+import { useCertificateDownload } from "@/components/MyCertificatesPage/Usecertificatedownload";
 
 export interface Certificate {
     id: string;
