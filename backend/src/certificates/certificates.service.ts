@@ -326,18 +326,12 @@ export class CertificateService {
       certificateData,
     } = issueCertificateDto;
 
-    const hashPayload = {
-      recipientName,
-      recipientEmail,
-      courseOrProgram,
-      issuedAt,
-      timestamp: Date.now(),
-    };
+    const issuedAtDate = new Date(issuedAt);
 
     const certificateHash = this.generateCertificateHash(
       recipientName + recipientEmail,
       courseOrProgram,
-      new Date(issuedAt),
+      issuedAtDate,
     );
 
     const existing = await this.certificateRepository.findOne({

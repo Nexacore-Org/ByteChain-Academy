@@ -5,11 +5,9 @@ import {
   UnauthorizedException,
   NotFoundException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { UserService } from '../users/users.service';
 import { UserRole } from '../users/entities/user.entity';
-import { EmailService } from '../email/email.service';
 
 const mockUser = {
   id: 'user-uuid-1',

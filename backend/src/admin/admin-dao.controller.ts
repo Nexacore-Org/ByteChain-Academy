@@ -8,7 +8,6 @@ import {
   Query,
   Request,
   ParseIntPipe,
-  NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
 import {

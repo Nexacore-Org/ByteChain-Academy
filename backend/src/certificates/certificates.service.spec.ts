@@ -9,13 +9,6 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { ConfigService } from '@nestjs/config';
 import { EmailService } from '../email/email.service';
 
-const mockRepo = () => ({
-  findOne: jest.fn(),
-  find: jest.fn(),
-  create: jest.fn(),
-  save: jest.fn(),
-});
-
 describe('CertificateService', () => {
   let service: CertificateService;
   let certRepo: ReturnType<typeof makeCertRepo>;
