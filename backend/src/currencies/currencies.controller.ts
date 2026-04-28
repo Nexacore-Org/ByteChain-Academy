@@ -10,9 +10,17 @@ import {
   UseGuards,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { CurrenciesService } from './currencies.service';
-import { CreateCurrencyDto, UpdateCurrencyDto } from './dto/create-currency.dto';
+import {
+  CreateCurrencyDto,
+  UpdateCurrencyDto,
+} from './dto/create-currency.dto';
 import { CurrencyType } from './entities/currency-entry.entity';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -38,7 +46,9 @@ export class CurrenciesController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a single currency entry by ID with full history' })
+  @ApiOperation({
+    summary: 'Get a single currency entry by ID with full history',
+  })
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.currenciesService.findOne(id);
   }
@@ -51,8 +61,18 @@ export class CurrenciesController {
 
   @Get(':id/history')
   @ApiOperation({ summary: 'Get filtered historical data for a currency' })
-  @ApiQuery({ name: 'from', type: String, required: false, description: 'YYYY-MM-DD' })
-  @ApiQuery({ name: 'to', type: String, required: false, description: 'YYYY-MM-DD' })
+  @ApiQuery({
+    name: 'from',
+    type: String,
+    required: false,
+    description: 'YYYY-MM-DD',
+  })
+  @ApiQuery({
+    name: 'to',
+    type: String,
+    required: false,
+    description: 'YYYY-MM-DD',
+  })
   async getHistory(
     @Param('id', ParseUUIDPipe) id: string,
     @Query('from') from?: string,

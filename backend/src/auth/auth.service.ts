@@ -9,7 +9,6 @@ import { RegisterDto } from './dto/register.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-<<<<<<< HEAD
 import { UserService } from '../users/users.service';
 import { EmailService } from '../email/email.service';
 import { UserRole } from '../users/entities/user.entity';

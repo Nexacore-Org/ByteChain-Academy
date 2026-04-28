@@ -21,6 +21,7 @@ describe('QuizzesController', () => {
             findOne: jest.fn(),
             submitQuiz: jest.fn(),
             getUserSubmission: jest.fn(),
+            getUserQuizAttempts: jest.fn(),
             getUserSubmissions: jest.fn(),
           },
         },
@@ -99,6 +100,15 @@ describe('QuizzesController', () => {
       const guards = Reflect.getMetadata(
         GUARDS_METADATA,
         QuizzesController.prototype.getUserSubmission,
+      );
+      expect(guards).toBeDefined();
+      expect(guards).toContain(JwtAuthGuard);
+    });
+
+    it('should apply JwtAuthGuard on getUserQuizAttempts', () => {
+      const guards = Reflect.getMetadata(
+        GUARDS_METADATA,
+        QuizzesController.prototype.getUserQuizAttempts,
       );
       expect(guards).toBeDefined();
       expect(guards).toContain(JwtAuthGuard);

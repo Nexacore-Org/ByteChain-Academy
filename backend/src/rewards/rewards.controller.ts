@@ -1,10 +1,10 @@
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOkResponse, ApiTags, ApiUnauthorizedResponse, ApiOperation, ApiResponse, } from '@nestjs/swagger';
 import { Request } from 'express';
 import {
   ApiTags,
   ApiBearerAuth,
   ApiOperation,
+  ApiResponse,
   ApiOkResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';

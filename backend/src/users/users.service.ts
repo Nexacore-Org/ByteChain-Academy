@@ -38,7 +38,7 @@ export class UserService {
     private userBadgeRepository: Repository<UserBadge>,
     @InjectRepository(CourseRegistration)
     private courseRegistrationRepository: Repository<CourseRegistration>,
-  ) { }
+  ) {}
 
   async create(userData: RegisterDto): Promise<User> {
     const existingUser = await this.userRepository.findOne({
@@ -158,11 +158,6 @@ export class UserService {
     if (updateProfileDto.bio !== undefined) user.bio = updateProfileDto.bio;
 
     return this.userRepository.save(user);
-  }
-
-  async deleteProfile(userId: string): Promise<void> {
-    const user = await this.getProfile(userId);
-    await this.userRepository.remove(user);
   }
 
   async getStats(
@@ -349,10 +344,10 @@ export class UserService {
 
     const where = trimmedSearch
       ? [
-        { email: Like(`%${trimmedSearch}%`) },
-        { username: Like(`%${trimmedSearch}%`) },
-        { name: Like(`%${trimmedSearch}%`) },
-      ]
+          { email: Like(`%${trimmedSearch}%`) },
+          { username: Like(`%${trimmedSearch}%`) },
+          { name: Like(`%${trimmedSearch}%`) },
+        ]
       : undefined;
 
     const [data, total] = await this.userRepository.findAndCount({

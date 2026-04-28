@@ -4,7 +4,10 @@ import { ApiProperty } from '@nestjs/swagger';
 
 @Exclude()
 export class NotificationResponseDto {
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'id field' })
+  @ApiProperty({
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'id field',
+  })
   @Expose()
   id: string;
 
@@ -24,8 +27,10 @@ export class NotificationResponseDto {
   @Expose()
   isRead: boolean;
 
-  @ApiProperty({ example: '2026-04-22T00:00:00.000Z', description: 'createdAt field' })
+  @ApiProperty({
+    example: '2026-04-22T00:00:00.000Z',
+    description: 'createdAt field',
+  })
   @Expose()
   createdAt: Date;
 }
-

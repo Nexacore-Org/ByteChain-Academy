@@ -1,6 +1,11 @@
 import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -27,9 +32,18 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 900 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Authenticate user and return JWT token' })
-  @ApiResponse({ status: 200, description: 'Login successful, returns JWT token' })
-  @ApiResponse({ status: 400, description: 'Bad request - invalid credentials' })
-  @ApiResponse({ status: 401, description: 'Unauthorized - invalid credentials' })
+  @ApiResponse({
+    status: 200,
+    description: 'Login successful, returns JWT token',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - invalid credentials',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - invalid credentials',
+  })
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }
@@ -48,8 +62,14 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Reset user password using reset token' })
   @ApiResponse({ status: 200, description: 'Password reset successfully' })
-  @ApiResponse({ status: 400, description: 'Bad request - invalid token or password' })
-  @ApiResponse({ status: 401, description: 'Unauthorized - invalid reset token' })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - invalid token or password',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - invalid reset token',
+  })
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.authService.resetPassword(resetPasswordDto);
   }

@@ -6,4 +6,3 @@ export class VerifyCertificateDto {
   @IsString()
   certificateHash: string;
 }
-

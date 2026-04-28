@@ -18,13 +18,20 @@ export class IssueCertificateDto {
   @IsDate()
   issuedAt: Date;
 
-  @ApiProperty({ example: '2026-04-22T00:00:00.000Z', description: 'expiresAt field', required: false })
+  @ApiProperty({
+    example: '2026-04-22T00:00:00.000Z',
+    description: 'expiresAt field',
+    required: false,
+  })
   @IsOptional()
   @IsDate()
   expiresAt?: Date;
 
-  @ApiProperty({ example: 'example', description: 'certificateData field', required: false })
+  @ApiProperty({
+    example: 'example',
+    description: 'certificateData field',
+    required: false,
+  })
   @IsOptional()
   certificateData?: any;
 }
-

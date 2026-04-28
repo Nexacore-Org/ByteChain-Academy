@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Certificate } from '../certificates/entities/certificate.entity';
-<<<<<<< HEAD
 import { Course } from '../courses/entities/course.entity';
 import { User } from '../users/entities/user.entity';
 import { CertificateController } from './certificates.controller';

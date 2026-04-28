@@ -15,7 +15,10 @@ export class AnalyticsOverviewDto {
 }
 
 export class CoursePerformanceDto {
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'courseId field' })
+  @ApiProperty({
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'courseId field',
+  })
   courseId: string;
   @ApiProperty({ example: 'Intro to Blockchain', description: 'title field' })
   title: string;
@@ -37,7 +40,10 @@ export class LearnerActivityPointDto {
 }
 
 export class TopLearnerDto {
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'userId field' })
+  @ApiProperty({
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'userId field',
+  })
   userId: string;
   @ApiProperty({ example: 'Jane Doe', description: 'username field' })
   username: string | null;
@@ -48,4 +54,3 @@ export class TopLearnerDto {
   @ApiProperty({ example: 1, description: 'certificatesEarned field' })
   certificatesEarned: number;
 }
-

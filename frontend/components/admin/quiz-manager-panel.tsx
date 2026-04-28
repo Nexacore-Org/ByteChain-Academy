@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -8,51 +8,61 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-} from "@dnd-kit/core"
+} from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-} from "@dnd-kit/sortable"
-import { FileQuestion, Plus, Loader2 } from "lucide-react"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { QuizQuestionBlock, type QuizQuestionForm } from "./quiz-question-block"
-import type { QuizData } from "@/hooks/use-lesson-quiz"
-import { cn } from "@/lib/utils"
+} from "@dnd-kit/sortable";
+import { FileQuestion, Plus, Loader2 } from "lucide-react";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  QuizQuestionBlock,
+  type QuizQuestionForm,
+} from "./quiz-question-block";
+import type { QuizData } from "@/hooks/use-lesson-quiz";
+import { cn } from "@/lib/utils";
 
-let sortIdCounter = 0
+let sortIdCounter = 0;
 function nextSortId() {
-  return `sort-${++sortIdCounter}`
+  return `sort-${++sortIdCounter}`;
 }
 
 interface QuizManagerPanelProps {
-  open: boolean
-  onClose: () => void
-  lessonTitle: string
-  lessonId: string
-  quiz: QuizData | null
-  loading: boolean
-  error: string | null
-  submitError: string | null
-  submitLoading: boolean
-  onRetry?: () => void
+  open: boolean;
+  onClose: () => void;
+  lessonTitle: string;
+  lessonId: string;
+  quiz: QuizData | null;
+  loading: boolean;
+  error: string | null;
+  submitError: string | null;
+  submitLoading: boolean;
+  onRetry?: () => void;
   onCreateQuiz: (payload: {
-    title: string
-    description?: string
-    questions: { text: string; options: string[]; correctAnswer: string }[]
-  }) => Promise<QuizData | null>
+    title: string;
+    description?: string;
+    maxAttempts?: number;
+    questions: { text: string; options: string[]; correctAnswer: string }[];
+  }) => Promise<QuizData | null>;
   onUpdateQuiz: (
     quizId: string,
     payload: {
-      title?: string
-      description?: string
-      questions: { id?: string; text: string; options: string[]; correctAnswer: string }[]
-    }
-  ) => Promise<QuizData | null>
-  onSuccess?: (hasQuiz: boolean) => void
+      title?: string;
+      description?: string;
+      maxAttempts?: number;
+      questions: {
+        id?: string;
+        text: string;
+        options: string[];
+        correctAnswer: string;
+      }[];
+    },
+  ) => Promise<QuizData | null>;
+  onSuccess?: (hasQuiz: boolean) => void;
 }
 
 export function QuizManagerPanel({
@@ -71,20 +81,39 @@ export function QuizManagerPanel({
   onUpdateQuiz,
   onSuccess,
 }: QuizManagerPanelProps) {
-  const [passingScore, setPassingScore] = useState(70)
-  const [questions, setQuestions] = useState<Array<QuizQuestionForm & { _sortId?: string }>>(() =>
-    quiz?.questions?.map((q) => ({
-      id: q.id,
-      text: q.text,
-      options: q.options || [],
-      correctAnswer: q.correctAnswer || "",
-      _sortId: q.id || nextSortId(),
-    })) ?? []
-  )
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
-  const [successToast, setSuccessToast] = useState(false)
+  const [passingScore, setPassingScore] = useState(70);
+  const [maxAttempts, setMaxAttempts] = useState(quiz?.maxAttempts ?? 1);
+  const [questions, setQuestions] = useState<
+    Array<QuizQuestionForm & { _sortId?: string }>
+  >(
+    () =>
+      quiz?.questions?.map((q) => ({
+        id: q.id,
+        text: q.text,
+        options: q.options || [],
+        correctAnswer: q.correctAnswer || "",
+        _sortId: q.id || nextSortId(),
+      })) ?? [],
+  );
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
+  const [successToast, setSuccessToast] = useState(false);
 
-  const isEditMode = !!quiz
+  const isEditMode = !!quiz;
+
+  useEffect(() => {
+    setMaxAttempts(quiz?.maxAttempts ?? 1);
+    setQuestions(
+      quiz?.questions?.map((q) => ({
+        id: q.id,
+        text: q.text,
+        options: q.options || [],
+        correctAnswer: q.correctAnswer || "",
+        _sortId: q.id || nextSortId(),
+      })) ?? [],
+    );
+  }, [quiz]);
 
   const addQuestion = () => {
     setQuestions((prev: Array<QuizQuestionForm & { _sortId?: string }>) => [
@@ -95,47 +124,54 @@ export function QuizManagerPanel({
         correctAnswer: "",
         _sortId: nextSortId(),
       },
-    ])
-  }
+    ]);
+  };
 
   const updateQuestion = (idx: number, q: QuizQuestionForm) => {
     setQuestions((prev: Array<QuizQuestionForm & { _sortId?: string }>) => {
-      const next = [...prev]
-      next[idx] = { ...q, _sortId: next[idx]._sortId }
-      return next
-    })
-  }
+      const next = [...prev];
+      next[idx] = { ...q, _sortId: next[idx]._sortId };
+      return next;
+    });
+  };
 
   const removeQuestion = (idx: number) => {
-    setQuestions((prev: Array<QuizQuestionForm & { _sortId?: string }>) => prev.filter((_: QuizQuestionForm & { _sortId?: string }, i: number) => i !== idx))
-  }
+    setQuestions((prev: Array<QuizQuestionForm & { _sortId?: string }>) =>
+      prev.filter(
+        (_: QuizQuestionForm & { _sortId?: string }, i: number) => i !== idx,
+      ),
+    );
+  };
 
   const validate = (): boolean => {
-    const errs: Record<string, string> = {}
-    questions.forEach((q: QuizQuestionForm & { _sortId?: string }, i: number) => {
-      if (!q.text?.trim()) {
-        errs[`q${i}-text`] = "Question text is required"
-      }
-      const opts = q.options.filter((o: string) => o.trim())
-      if (opts.length < 2) {
-        errs[`q${i}-options`] = "At least 2 options are required"
-      }
-      if (!q.correctAnswer?.trim()) {
-        errs[`q${i}-correct`] = "Select the correct answer"
-      } else if (!opts.includes(q.correctAnswer.trim())) {
-        errs[`q${i}-correct`] = "Correct answer must be one of the options"
-      }
-    })
-    setValidationErrors(errs)
-    return Object.keys(errs).length === 0
-  }
+    const errs: Record<string, string> = {};
+    questions.forEach(
+      (q: QuizQuestionForm & { _sortId?: string }, i: number) => {
+        if (!q.text?.trim()) {
+          errs[`q${i}-text`] = "Question text is required";
+        }
+        const opts = q.options.filter((o: string) => o.trim());
+        if (opts.length < 2) {
+          errs[`q${i}-options`] = "At least 2 options are required";
+        }
+        if (!q.correctAnswer?.trim()) {
+          errs[`q${i}-correct`] = "Select the correct answer";
+        } else if (!opts.includes(q.correctAnswer.trim())) {
+          errs[`q${i}-correct`] = "Correct answer must be one of the options";
+        }
+      },
+    );
+    setValidationErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
   const handleSave = async () => {
-    if (!validate()) return
+    if (!validate()) return;
 
     const payload = {
       title: `Quiz — ${lessonTitle}`,
       description: `Passing score: ${passingScore}%`,
+      maxAttempts,
       questions: questions
         .filter((q: QuizQuestionForm & { _sortId?: string }) => q.text.trim())
         .map((q: QuizQuestionForm & { _sortId?: string }) => ({
@@ -144,44 +180,61 @@ export function QuizManagerPanel({
           options: q.options.filter((o: string) => o.trim()),
           correctAnswer: q.correctAnswer.trim(),
         })),
-    }
+    };
 
     if (payload.questions.length === 0) {
-      setValidationErrors({ form: "Add at least one question" })
-      return
+      setValidationErrors({ form: "Add at least one question" });
+      return;
     }
 
     if (isEditMode && quiz) {
-      const updated = await onUpdateQuiz(quiz.id, payload)
+      const updated = await onUpdateQuiz(quiz.id, payload);
       if (updated) {
-        onSuccess?.(true)
-        setSuccessToast(true)
-        setTimeout(() => setSuccessToast(false), 3000)
+        onSuccess?.(true);
+        setSuccessToast(true);
+        setTimeout(() => setSuccessToast(false), 3000);
       }
     } else {
-      const created = await onCreateQuiz(payload)
+      const created = await onCreateQuiz(payload);
       if (created) {
-        onSuccess?.(true)
-        setSuccessToast(true)
-        setTimeout(() => setSuccessToast(false), 3000)
+        onSuccess?.(true);
+        setSuccessToast(true);
+        setTimeout(() => setSuccessToast(false), 3000);
       }
     }
-  }
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  )
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
 
-  const handleDragEnd = (event: { active: { id: string }; over: { id: string } | null }) => {
-    if (!event.over) return
-    const oldIdx = questions.findIndex((q: QuizQuestionForm & { _sortId?: string }) => (q._sortId || q.id) === event.active.id)
-    const newIdx = questions.findIndex((q: QuizQuestionForm & { _sortId?: string }) => (q._sortId || q.id) === event.over!.id)
-    if (oldIdx === -1 || newIdx === -1 || oldIdx === newIdx) return
-    setQuestions((prev: Array<QuizQuestionForm & { _sortId?: string }>) => arrayMove(prev, oldIdx, newIdx))
-  }
+  const handleDragEnd = (event: {
+    active: { id: string };
+    over: { id: string } | null;
+  }) => {
+    if (!event.over) return;
+    const oldIdx = questions.findIndex(
+      (q: QuizQuestionForm & { _sortId?: string }) =>
+        (q._sortId || q.id) === event.active.id,
+    );
+    const newIdx = questions.findIndex(
+      (q: QuizQuestionForm & { _sortId?: string }) =>
+        (q._sortId || q.id) === event.over!.id,
+    );
+    if (oldIdx === -1 || newIdx === -1 || oldIdx === newIdx) return;
+    setQuestions((prev: Array<QuizQuestionForm & { _sortId?: string }>) =>
+      arrayMove(prev, oldIdx, newIdx),
+    );
+  };
 
-  const sortIds = questions.map((q: QuizQuestionForm & { _sortId?: string }) => q._sortId || q.id || "").filter(Boolean)
+  const sortIds = questions
+    .map(
+      (q: QuizQuestionForm & { _sortId?: string }) => q._sortId || q.id || "",
+    )
+    .filter(Boolean);
 
   return (
     <Sheet open={open} onClose={onClose}>
@@ -205,7 +258,12 @@ export function QuizManagerPanel({
           {!loading && error && (
             <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-400">
               <p>{error}</p>
-              <Button variant="outline" size="sm" className="mt-3" onClick={onRetry}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={onRetry}
+              >
                 Retry
               </Button>
             </div>
@@ -217,10 +275,12 @@ export function QuizManagerPanel({
                 <FileQuestion className="w-8 h-8 text-amber-400" />
               </div>
               <p className="text-gray-400 mb-2">No quiz yet.</p>
-              <p className="text-sm text-gray-500 mb-6">Add questions to test your learners.</p>
+              <p className="text-sm text-gray-500 mb-6">
+                Add questions to test your learners.
+              </p>
               <Button
                 onClick={() => {
-                  addQuestion()
+                  addQuestion();
                 }}
                 className="bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30"
               >
@@ -252,14 +312,34 @@ export function QuizManagerPanel({
                   min={1}
                   max={100}
                   value={passingScore}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassingScore(Number(e.target.value) || 70)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setPassingScore(Number(e.target.value) || 70)
+                  }
+                  className="bg-white/5 border-white/10 w-24"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">
+                  Max attempts
+                </label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={10}
+                  value={maxAttempts}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setMaxAttempts(Math.max(1, Number(e.target.value) || 1))
+                  }
                   className="bg-white/5 border-white/10 w-24"
                 />
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-gray-400">Questions</span>
+                  <span className="text-sm font-medium text-gray-400">
+                    Questions
+                  </span>
                   <Button
                     type="button"
                     variant="ghost"
@@ -274,7 +354,9 @@ export function QuizManagerPanel({
                 </div>
 
                 {validationErrors.form && (
-                  <p className="text-red-400 text-sm mb-2">{validationErrors.form}</p>
+                  <p className="text-red-400 text-sm mb-2">
+                    {validationErrors.form}
+                  </p>
                 )}
 
                 <DndContext
@@ -282,19 +364,31 @@ export function QuizManagerPanel({
                   collisionDetection={closestCenter}
                   onDragEnd={handleDragEnd}
                 >
-                  <SortableContext items={sortIds} strategy={verticalListSortingStrategy}>
+                  <SortableContext
+                    items={sortIds}
+                    strategy={verticalListSortingStrategy}
+                  >
                     <div className="space-y-4">
-                      {questions.map((q: QuizQuestionForm & { _sortId?: string }, i: number) => (
-                        <QuizQuestionBlock
-                          key={(q as { _sortId?: string })._sortId || q.id || i}
-                          question={q}
-                          index={i}
-                          disabled={submitLoading}
-                          onQuestionChange={(updated) => updateQuestion(i, updated)}
-                          onRemove={() => removeQuestion(i)}
-                          canRemove={questions.length > 1}
-                        />
-                      ))}
+                      {questions.map(
+                        (
+                          q: QuizQuestionForm & { _sortId?: string },
+                          i: number,
+                        ) => (
+                          <QuizQuestionBlock
+                            key={
+                              (q as { _sortId?: string })._sortId || q.id || i
+                            }
+                            question={q}
+                            index={i}
+                            disabled={submitLoading}
+                            onQuestionChange={(updated) =>
+                              updateQuestion(i, updated)
+                            }
+                            onRemove={() => removeQuestion(i)}
+                            canRemove={questions.length > 1}
+                          />
+                        ),
+                      )}
                     </div>
                   </SortableContext>
                 </DndContext>
@@ -312,7 +406,7 @@ export function QuizManagerPanel({
                 "w-full",
                 isEditMode
                   ? "bg-[#00ff88]/20 text-[#00ff88] hover:bg-[#00ff88]/30"
-                  : "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"
+                  : "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30",
               )}
             >
               {submitLoading ? (
@@ -324,5 +418,5 @@ export function QuizManagerPanel({
         )}
       </SheetContent>
     </Sheet>
-  )
+  );
 }

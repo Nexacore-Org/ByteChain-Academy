@@ -2,12 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ProgressService } from './progress.service';
 import { Progress } from './entities/progress.entity';
-<<<<<<< HEAD
 import { Lesson } from '../lessons/entities/lesson.entity';
 import { CertificateService } from '../certificates/certificates.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { RewardsService } from '../rewards/rewards.service';
 import { StreakService } from '../users/streak.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 const makeProgressRepo = () => ({
   findOne: jest.fn(),
@@ -29,16 +29,22 @@ describe('ProgressService', () => {
   let notificationsService: { createNotification: jest.Mock };
   let rewardsService: { awardXP: jest.Mock };
   let streakService: { updateStreak: jest.Mock };
-
+  let webhooksService: { dispatchEvent: jest.Mock };
 
   beforeEach(async () => {
     progressRepo = makeProgressRepo();
     lessonRepo = makeLessonRepo();
-    certificateService = { issueCertificateForCourse: jest.fn().mockResolvedValue({}) };
-    notificationsService = { createNotification: jest.fn().mockResolvedValue(undefined) };
-    rewardsService = { awardXP: jest.fn().mockResolvedValue({ xp: 10, newlyAwardedBadges: [] }) };
+    certificateService = {
+      issueCertificateForCourse: jest.fn().mockResolvedValue({}),
+    };
+    notificationsService = {
+      createNotification: jest.fn().mockResolvedValue(undefined),
+    };
+    rewardsService = {
+      awardXP: jest.fn().mockResolvedValue({ xp: 10, newlyAwardedBadges: [] }),
+    };
     streakService = { updateStreak: jest.fn().mockResolvedValue(undefined) };
-
+    webhooksService = { dispatchEvent: jest.fn().mockResolvedValue(undefined) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -49,8 +55,8 @@ describe('ProgressService', () => {
         { provide: NotificationsService, useValue: notificationsService },
         { provide: RewardsService, useValue: rewardsService },
         { provide: StreakService, useValue: streakService },
+        { provide: WebhooksService, useValue: webhooksService },
       ],
-
     }).compile();
 
     service = module.get<ProgressService>(ProgressService);
@@ -75,7 +81,13 @@ describe('ProgressService', () => {
       progressRepo.findOne
         .mockResolvedValueOnce(null) // alreadyCompleted check
         .mockResolvedValueOnce(null); // existing progress check
-      const newProgress = { userId, courseId, lessonId, completed: true, completedAt: new Date() };
+      const newProgress = {
+        userId,
+        courseId,
+        lessonId,
+        completed: true,
+        completedAt: new Date(),
+      };
       progressRepo.create.mockReturnValue(newProgress);
       progressRepo.save.mockResolvedValue(newProgress);
       lessonRepo.count.mockResolvedValue(5);
@@ -84,7 +96,12 @@ describe('ProgressService', () => {
       const result = await service.completeLesson(userId, courseId, lessonId);
 
       expect(progressRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ userId, courseId, lessonId, completed: true }),
+        expect.objectContaining({
+          userId,
+          courseId,
+          lessonId,
+          completed: true,
+        }),
       );
       expect(progressRepo.save).toHaveBeenCalled();
       expect(rewardsService.awardXP).toHaveBeenCalledWith(
@@ -110,7 +127,10 @@ describe('ProgressService', () => {
       progressRepo.findOne
         .mockResolvedValueOnce(null) // alreadyCompleted
         .mockResolvedValueOnce(existingProgress); // existing progress record
-      progressRepo.save.mockResolvedValue({ ...existingProgress, completed: true });
+      progressRepo.save.mockResolvedValue({
+        ...existingProgress,
+        completed: true,
+      });
       lessonRepo.count.mockResolvedValue(5);
       progressRepo.count.mockResolvedValue(1);
 
@@ -124,8 +144,14 @@ describe('ProgressService', () => {
     it('should NOT award XP when lesson was already completed', async () => {
       const alreadyDone = { id: 'prog-1', completed: true };
       const existingProgress = {
-        userId, courseId, lessonId, completed: true, completedAt: new Date(),
-        lesson: { order: 1 }, user: { id: userId }, course: { id: courseId },
+        userId,
+        courseId,
+        lessonId,
+        completed: true,
+        completedAt: new Date(),
+        lesson: { order: 1 },
+        user: { id: userId },
+        course: { id: courseId },
       };
       progressRepo.findOne
         .mockResolvedValueOnce(alreadyDone) // alreadyCompleted
@@ -171,7 +197,9 @@ describe('ProgressService', () => {
 
       await service.completeLesson(userId, courseId, lessonId);
 
-      expect(certificateService.issueCertificateForCourse).not.toHaveBeenCalled();
+      expect(
+        certificateService.issueCertificateForCourse,
+      ).not.toHaveBeenCalled();
     });
   });
 
@@ -182,9 +210,24 @@ describe('ProgressService', () => {
   describe('getCourseProgress', () => {
     it('should return progress records sorted by lesson order', async () => {
       const progressRecords = [
-        { lessonId: 'lesson-2', completed: true, completedAt: new Date(), lesson: { order: 2 } },
-        { lessonId: 'lesson-1', completed: true, completedAt: new Date(), lesson: { order: 1 } },
-        { lessonId: 'lesson-3', completed: false, completedAt: null, lesson: { order: 3 } },
+        {
+          lessonId: 'lesson-2',
+          completed: true,
+          completedAt: new Date(),
+          lesson: { order: 2 },
+        },
+        {
+          lessonId: 'lesson-1',
+          completed: true,
+          completedAt: new Date(),
+          lesson: { order: 1 },
+        },
+        {
+          lessonId: 'lesson-3',
+          completed: false,
+          completedAt: null,
+          lesson: { order: 3 },
+        },
       ];
       progressRepo.find.mockResolvedValue(progressRecords);
 
@@ -211,7 +254,12 @@ describe('ProgressService', () => {
     it('should map each record to { lessonId, completed, completedAt }', async () => {
       const completedAt = new Date('2025-01-15');
       progressRepo.find.mockResolvedValue([
-        { lessonId: 'lesson-1', completed: true, completedAt, lesson: { order: 1 } },
+        {
+          lessonId: 'lesson-1',
+          completed: true,
+          completedAt,
+          lesson: { order: 1 },
+        },
       ]);
 
       const result = await service.getCourseProgress('user-1', 'course-1');

@@ -1,70 +1,78 @@
-"use client"
+"use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react"
-import { toast } from "sonner"
-import { api } from "@/lib/api"
-import { PLACEHOLDER_VIDEO_URL } from "@/lib/constants"
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { toast } from "sonner";
+import { api } from "@/lib/api";
+import { PLACEHOLDER_VIDEO_URL } from "@/lib/constants";
 
 interface Lesson {
-  id: string
-  title: string
-  description: string
-  videoUrl: string
-  order: number
-  completed: boolean
-  hasQuiz: boolean
-  quizId?: string
+  id: string;
+  title: string;
+  description: string;
+  videoUrl: string;
+  order: number;
+  completed: boolean;
+  hasQuiz: boolean;
+  quizId?: string;
 }
 
 interface Course {
-  id: string
-  title: string
-  description: string
-  difficulty: "Beginner" | "Intermediate" | "Advanced"
-  rating: number
-  duration: number
-  lessons: Lesson[]
-  progress: number
-  enrolled: boolean
+  id: string;
+  title: string;
+  description: string;
+  difficulty: "Beginner" | "Intermediate" | "Advanced";
+  rating: number;
+  duration: number;
+  lessons: Lesson[];
+  progress: number;
+  enrolled: boolean;
 }
 
 interface QuizQuestion {
-  id: string
-  question: string
-  options: string[]
-  correctAnswer: number
+  id: string;
+  question: string;
+  options: string[];
+  correctAnswer: number;
 }
 
 interface Quiz {
-  id: string
-  title: string
-  description: string
-  questions: QuizQuestion[]
-  lessonId?: string
-  courseId: string
+  id: string;
+  title: string;
+  description: string;
+  maxAttempts?: number;
+  questions: QuizQuestion[];
+  lessonId?: string;
+  courseId: string;
 }
 
 interface QuizResult {
-  quizId: string
-  correctAnswers: number
-  score: number
-  totalQuestions: number
-  passed: boolean
-  submittedAt: string
+  quizId: string;
+  attemptNumber?: number;
+  correctAnswers: number;
+  score: number;
+  totalQuestions: number;
+  passed: boolean;
+  submittedAt: string;
+  completedAt?: string;
 }
 
 interface LearningContextType {
-  courses: Course[]
-  quizResults: Record<string, QuizResult>
-  isSubmittingQuiz: boolean
-  isCompletingLesson: boolean
-  markLessonComplete: (courseId: string, lessonId: string) => Promise<boolean>
-  submitQuiz: (quizId: string, answers: Record<string, number>) => Promise<QuizResult | null>
-  getCourseProgress: (courseId: string) => number
-  getQuiz: (quizId: string) => Quiz | undefined
+  courses: Course[];
+  quizResults: Record<string, QuizResult>;
+  isSubmittingQuiz: boolean;
+  isCompletingLesson: boolean;
+  markLessonComplete: (courseId: string, lessonId: string) => Promise<boolean>;
+  submitQuiz: (
+    quizId: string,
+    answers: Record<string, number>,
+  ) => Promise<QuizResult | null>;
+  getCourseProgress: (courseId: string) => number;
+  getQuiz: (quizId: string) => Quiz | undefined;
 }
 
-const LearningContext = createContext<LearningContextType | undefined>(undefined)
+const LearningContext = createContext<LearningContextType | undefined>(
+  undefined,
+);
 
 // Mock data
 const mockLessons: Record<string, Lesson[]> = {
@@ -72,7 +80,8 @@ const mockLessons: Record<string, Lesson[]> = {
     {
       id: "l1",
       title: "Introduction to Cryptocurrency",
-      description: "Learn the basics of what cryptocurrency is and why it matters.",
+      description:
+        "Learn the basics of what cryptocurrency is and why it matters.",
       videoUrl: PLACEHOLDER_VIDEO_URL,
       order: 1,
       completed: false,
@@ -82,7 +91,8 @@ const mockLessons: Record<string, Lesson[]> = {
     {
       id: "l2",
       title: "Understanding Bitcoin",
-      description: "Deep dive into Bitcoin: how it works and why it was created.",
+      description:
+        "Deep dive into Bitcoin: how it works and why it was created.",
       videoUrl: PLACEHOLDER_VIDEO_URL,
       order: 2,
       completed: false,
@@ -120,7 +130,7 @@ const mockLessons: Record<string, Lesson[]> = {
       quizId: "q3",
     },
   ],
-}
+};
 
 const mockQuizzes: Quiz[] = [
   {
@@ -241,13 +251,14 @@ const mockQuizzes: Quiz[] = [
       },
     ],
   },
-]
+];
 
 const mockCourses: Course[] = [
   {
     id: "crypto-101",
     title: "Crypto 101: From Fiat to Bitcoin",
-    description: "Understand why Bitcoin and blockchains exist. Learn the fundamentals of cryptocurrency and...",
+    description:
+      "Understand why Bitcoin and blockchains exist. Learn the fundamentals of cryptocurrency and...",
     difficulty: "Beginner",
     rating: 4.8,
     duration: 6,
@@ -258,7 +269,8 @@ const mockCourses: Course[] = [
   {
     id: "defi-fundamentals",
     title: "DeFi Fundamentals: Lending, AMMs & Yield",
-    description: "Walk through DeFi protocols, automated market makers, and yield farming strategies without deep...",
+    description:
+      "Walk through DeFi protocols, automated market makers, and yield farming strategies without deep...",
     difficulty: "Intermediate",
     rating: 4.9,
     duration: 9,
@@ -269,7 +281,8 @@ const mockCourses: Course[] = [
   {
     id: "wallet-security",
     title: "Wallet Security Masterclass",
-    description: "Learn how to protect your keys, avoid phishing attacks, and practice safe custody of digital assets.",
+    description:
+      "Learn how to protect your keys, avoid phishing attacks, and practice safe custody of digital assets.",
     difficulty: "Beginner",
     rating: 4.7,
     duration: 7,
@@ -280,7 +293,8 @@ const mockCourses: Course[] = [
   {
     id: "smart-contracts",
     title: "Smart Contract Development",
-    description: "Build your first smart contract with Solidity. Understand gas optimization and security patterns.",
+    description:
+      "Build your first smart contract with Solidity. Understand gas optimization and security patterns.",
     difficulty: "Advanced",
     rating: 4.9,
     duration: 15,
@@ -291,7 +305,8 @@ const mockCourses: Course[] = [
   {
     id: "nft-fundamentals",
     title: "NFT Market Fundamentals",
-    description: "Explore NFT standards, marketplaces, and digital ownership in the Web3 ecosystem.",
+    description:
+      "Explore NFT standards, marketplaces, and digital ownership in the Web3 ecosystem.",
     difficulty: "Intermediate",
     rating: 4.6,
     duration: 8,
@@ -299,139 +314,151 @@ const mockCourses: Course[] = [
     progress: 0,
     enrolled: false,
   },
-]
+];
 
 export function LearningProvider({ children }: { children: React.ReactNode }) {
   const [courses, setCourses] = useState<Course[]>(() => {
-  
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("learning_courses")
+      const saved = localStorage.getItem("learning_courses");
       if (saved) {
         try {
-          const savedCourses = JSON.parse(saved) as Course[]
-          const courseMap = new Map<string, Course>(savedCourses.map((c: Course) => [c.id, c]))
+          const savedCourses = JSON.parse(saved) as Course[];
+          const courseMap = new Map<string, Course>(
+            savedCourses.map((c: Course) => [c.id, c]),
+          );
           mockCourses.forEach((course) => {
             if (!courseMap.has(course.id)) {
-              courseMap.set(course.id, course)
+              courseMap.set(course.id, course);
             }
-          })
-          return Array.from(courseMap.values()) as Course[]
+          });
+          return Array.from(courseMap.values()) as Course[];
         } catch {
-          return mockCourses
+          return mockCourses;
         }
       }
     }
-    return mockCourses
-  })
+    return mockCourses;
+  });
 
-  const [quizResults, setQuizResults] = useState<Record<string, QuizResult>>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("learning_quiz_results")
-      if (saved) {
-        try {
-          return JSON.parse(saved)
-        } catch {
-          return {}
+  const [quizResults, setQuizResults] = useState<Record<string, QuizResult>>(
+    () => {
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem("learning_quiz_results");
+        if (saved) {
+          try {
+            return JSON.parse(saved);
+          } catch {
+            return {};
+          }
         }
       }
-    }
-    return {}
-  })
-  const [isSubmittingQuiz, setIsSubmittingQuiz] = useState(false)
-  const [isCompletingLesson, setIsCompletingLesson] = useState(false)
+      return {};
+    },
+  );
+  const [isSubmittingQuiz, setIsSubmittingQuiz] = useState(false);
+  const [isCompletingLesson, setIsCompletingLesson] = useState(false);
 
   // Save to localStorage whenever courses or quizResults change
   useEffect(() => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("learning_courses", JSON.stringify(courses))
+      localStorage.setItem("learning_courses", JSON.stringify(courses));
     }
-  }, [courses])
+  }, [courses]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("learning_quiz_results", JSON.stringify(quizResults))
+      localStorage.setItem(
+        "learning_quiz_results",
+        JSON.stringify(quizResults),
+      );
     }
-  }, [quizResults])
+  }, [quizResults]);
 
-  const markLessonComplete = async (courseId: string, lessonId: string): Promise<boolean> => {
-    setIsCompletingLesson(true)
+  const markLessonComplete = async (
+    courseId: string,
+    lessonId: string,
+  ): Promise<boolean> => {
+    setIsCompletingLesson(true);
     try {
       try {
-        await api.post("/progress/complete", { courseId, lessonId })
+        await api.post("/progress/complete", { courseId, lessonId });
       } catch (error) {
-        const status = (error as { status?: number }).status
+        const status = (error as { status?: number }).status;
         if (status === 404) {
-          await api.post("/progress/lesson", { courseId, lessonId })
+          await api.post("/progress/lesson", { courseId, lessonId });
         } else {
-          throw error
+          throw error;
         }
       }
 
-      const progressRows = await api.get<{ lessonId: string; completed: boolean }[]>(
-        `/progress/course/${courseId}`
-      )
-      const completedByLessonId = new Map(progressRows.map((row) => [row.lessonId, row.completed]))
+      const progressRows = await api.get<
+        { lessonId: string; completed: boolean }[]
+      >(`/progress/course/${courseId}`);
+      const completedByLessonId = new Map(
+        progressRows.map((row) => [row.lessonId, row.completed]),
+      );
 
       setCourses((prev) =>
         prev.map((course) => {
           if (course.id !== courseId) {
-            return course
+            return course;
           }
           const updatedLessons = course.lessons.map((lesson) => ({
             ...lesson,
             completed: completedByLessonId.get(lesson.id) ?? lesson.completed,
-          }))
-          const completedCount = updatedLessons.filter((l) => l.completed).length
+          }));
+          const completedCount = updatedLessons.filter(
+            (l) => l.completed,
+          ).length;
           const progress = updatedLessons.length
             ? (completedCount / updatedLessons.length) * 100
-            : 0
-          return { ...course, lessons: updatedLessons, progress }
-        })
-      )
-      return true
+            : 0;
+          return { ...course, lessons: updatedLessons, progress };
+        }),
+      );
+      return true;
     } catch (error) {
-      const status = (error as { status?: number }).status
+      const status = (error as { status?: number }).status;
       toast.error(
         status === 409
           ? "This lesson was already marked as complete."
-          : "Unable to mark lesson complete. Please try again."
-      )
-      return false
+          : "Unable to mark lesson complete. Please try again.",
+      );
+      return false;
     } finally {
-      setIsCompletingLesson(false)
+      setIsCompletingLesson(false);
     }
-  }
+  };
 
   const submitQuiz = async (
     quizId: string,
-    answers: Record<string, number>
+    answers: Record<string, number>,
   ): Promise<QuizResult | null> => {
-    const quiz = mockQuizzes.find((q) => q.id === quizId)
+    const quiz = mockQuizzes.find((q) => q.id === quizId);
     if (!quiz) {
-      throw new Error("Quiz not found")
+      throw new Error("Quiz not found");
     }
 
-    const formattedAnswers = Object.entries(answers).reduce<Record<string, string>>(
-      (acc, [questionId, optionIndex]) => {
-        const question = quiz.questions.find((item) => item.id === questionId)
-        if (question && question.options[optionIndex] !== undefined) {
-          acc[questionId] = question.options[optionIndex]
-        }
-        return acc
-      },
-      {}
-    )
+    const formattedAnswers = Object.entries(answers).reduce<
+      Record<string, string>
+    >((acc, [questionId, optionIndex]) => {
+      const question = quiz.questions.find((item) => item.id === questionId);
+      if (question && question.options[optionIndex] !== undefined) {
+        acc[questionId] = question.options[optionIndex];
+      }
+      return acc;
+    }, {});
 
-    setIsSubmittingQuiz(true)
+    setIsSubmittingQuiz(true);
     try {
       const submission = await api.post<{
-        quizId: string
-        score: number
-        totalQuestions: number
-        correctAnswers: number
-        passed: boolean
-        submittedAt: string
-      }>(`/quizzes/${quizId}/submit`, { answers: formattedAnswers })
+        quizId: string;
+        score: number;
+        totalQuestions: number;
+        correctAnswers: number;
+        passed: boolean;
+        submittedAt: string;
+      }>(`/quizzes/${quizId}/submit`, { answers: formattedAnswers });
 
       const result: QuizResult = {
         quizId: submission.quizId,
@@ -440,31 +467,33 @@ export function LearningProvider({ children }: { children: React.ReactNode }) {
         correctAnswers: submission.correctAnswers,
         passed: submission.passed,
         submittedAt: submission.submittedAt,
-      }
+      };
 
-      setQuizResults((prev) => ({ ...prev, [quizId]: result }))
-      return result
+      setQuizResults((prev) => ({ ...prev, [quizId]: result }));
+      return result;
     } catch (error) {
-      const status = (error as { status?: number }).status
+      const status = (error as { status?: number }).status;
       if (status === 409) {
-        toast.error("You have already completed this quiz")
+        toast.error("You have already completed this quiz");
       } else {
-        toast.error("Unable to submit quiz. Please check your connection and try again.")
+        toast.error(
+          "Unable to submit quiz. Please check your connection and try again.",
+        );
       }
-      return null
+      return null;
     } finally {
-      setIsSubmittingQuiz(false)
+      setIsSubmittingQuiz(false);
     }
-  }
+  };
 
   const getCourseProgress = (courseId: string): number => {
-    const course = courses.find((c) => c.id === courseId)
-    return course?.progress || 0
-  }
+    const course = courses.find((c) => c.id === courseId);
+    return course?.progress || 0;
+  };
 
   const getQuiz = (quizId: string): Quiz | undefined => {
-    return mockQuizzes.find((q) => q.id === quizId)
-  }
+    return mockQuizzes.find((q) => q.id === quizId);
+  };
 
   return (
     <LearningContext.Provider
@@ -481,15 +510,15 @@ export function LearningProvider({ children }: { children: React.ReactNode }) {
     >
       {children}
     </LearningContext.Provider>
-  )
+  );
 }
 
 export function useLearning() {
-  const context = useContext(LearningContext)
+  const context = useContext(LearningContext);
   if (context === undefined) {
-    throw new Error("useLearning must be used within a LearningProvider")
+    throw new Error("useLearning must be used within a LearningProvider");
   }
-  return context
+  return context;
 }
 
-export { mockQuizzes }
+export { mockQuizzes };

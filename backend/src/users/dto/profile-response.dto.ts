@@ -4,7 +4,10 @@ import { ApiProperty } from '@nestjs/swagger';
 
 @Exclude()
 export class ProfileResponseDto {
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'id field' })
+  @ApiProperty({
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'id field',
+  })
   @Expose()
   id: string;
 
@@ -20,12 +23,17 @@ export class ProfileResponseDto {
   @Expose()
   role: UserRole;
 
-  @ApiProperty({ example: '2026-04-22T00:00:00.000Z', description: 'createdAt field' })
+  @ApiProperty({
+    example: '2026-04-22T00:00:00.000Z',
+    description: 'createdAt field',
+  })
   @Expose()
   createdAt: Date;
 
-  @ApiProperty({ example: '2026-04-22T00:00:00.000Z', description: 'updatedAt field' })
+  @ApiProperty({
+    example: '2026-04-22T00:00:00.000Z',
+    description: 'updatedAt field',
+  })
   @Expose()
   updatedAt: Date;
 }
-

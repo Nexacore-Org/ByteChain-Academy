@@ -15,6 +15,7 @@ import { QuestionType } from '../quizzes/entities/question.entity';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { RewardsService } from '../rewards/rewards.service';
+import { StreakService } from '../users/streak.service';
 
 describe('QuizzesService', () => {
   let service: QuizzesService;
@@ -41,6 +42,7 @@ describe('QuizzesService', () => {
 
   const mockQuizSubmissionRepository = {
     findOne: jest.fn(),
+    count: jest.fn(),
     create: jest.fn(),
     save: jest.fn(),
     find: jest.fn(),
@@ -74,6 +76,10 @@ describe('QuizzesService', () => {
           provide: RewardsService,
           useValue: { awardXP: jest.fn().mockResolvedValue({ xp: 0 }) },
         },
+        {
+          provide: StreakService,
+          useValue: { updateStreak: jest.fn() },
+        },
       ],
     }).compile();
 
@@ -94,6 +100,10 @@ describe('QuizzesService', () => {
     jest.clearAllMocks();
   });
 
+  beforeEach(() => {
+    mockQuizSubmissionRepository.count.mockResolvedValue(0);
+  });
+
   describe('submitQuiz', () => {
     const userId = 'user-123';
     const quizId = 'quiz-123';
@@ -104,6 +114,7 @@ describe('QuizzesService', () => {
       id: quizId,
       title: 'Test Quiz',
       description: 'Test Description',
+      maxAttempts: 1,
       lessonId: 'lesson-123',
       questions: [
         {
@@ -140,10 +151,10 @@ describe('QuizzesService', () => {
       };
 
       mockQuizRepository.findOne.mockResolvedValue(mockQuiz);
-      mockQuizSubmissionRepository.findOne.mockResolvedValue(null);
       mockQuizSubmissionRepository.create.mockReturnValue({
         userId,
         quizId,
+        attemptNumber: 1,
         answers: submitDto.answers,
         score: 100,
         totalQuestions: 2,
@@ -154,6 +165,7 @@ describe('QuizzesService', () => {
         id: 'submission-123',
         userId,
         quizId,
+        attemptNumber: 1,
         answers: submitDto.answers,
         score: 100,
         totalQuestions: 2,
@@ -173,7 +185,7 @@ describe('QuizzesService', () => {
         where: { id: quizId },
         relations: ['questions'],
       });
-      expect(mockQuizSubmissionRepository.findOne).toHaveBeenCalledWith({
+      expect(mockQuizSubmissionRepository.count).toHaveBeenCalledWith({
         where: { userId, quizId },
       });
     });
@@ -191,7 +203,7 @@ describe('QuizzesService', () => {
       );
     });
 
-    it('should throw ConflictException if user already submitted the quiz', async () => {
+    it('should throw ConflictException if user reached the attempt limit', async () => {
       const submitDto: SubmitQuizDto = {
         quizId,
         answers: {
@@ -201,17 +213,51 @@ describe('QuizzesService', () => {
       };
 
       mockQuizRepository.findOne.mockResolvedValue(mockQuiz);
-      mockQuizSubmissionRepository.findOne.mockResolvedValue({
-        id: 'existing-submission',
-        userId,
-        quizId,
-      });
+      mockQuizSubmissionRepository.count.mockResolvedValue(1);
 
       await expect(service.submitQuiz(userId, submitDto)).rejects.toThrow(
         ConflictException,
       );
       await expect(service.submitQuiz(userId, submitDto)).rejects.toThrow(
-        'You have already submitted this quiz',
+        'maximum attempt limit for this quiz (1 attempt)',
+      );
+    });
+
+    it('should allow attempts up to maxAttempts with incrementing attemptNumber', async () => {
+      const submitDto: SubmitQuizDto = {
+        quizId,
+        answers: {
+          [question1Id]: '4',
+          [question2Id]: 'True',
+        },
+      };
+      const quizWithRetakes = { ...mockQuiz, maxAttempts: 3 };
+
+      mockQuizRepository.findOne.mockResolvedValue(quizWithRetakes);
+      mockQuizSubmissionRepository.count.mockResolvedValue(2);
+      mockQuizSubmissionRepository.create.mockImplementation(
+        (submission) => submission,
+      );
+      mockQuizSubmissionRepository.save.mockImplementation((submission) =>
+        Promise.resolve({
+          id: 'submission-123',
+          ...submission,
+          submittedAt: new Date(),
+          updatedAt: new Date(),
+        }),
+      );
+
+      const result = await service.submitQuiz(userId, submitDto);
+
+      expect(result.attemptNumber).toBe(3);
+      expect(mockQuizSubmissionRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId,
+          quizId,
+          attemptNumber: 3,
+          score: 100,
+          passed: true,
+        }),
       );
     });
 
@@ -225,7 +271,6 @@ describe('QuizzesService', () => {
       };
 
       mockQuizRepository.findOne.mockResolvedValue(mockQuiz);
-      mockQuizSubmissionRepository.findOne.mockResolvedValue(null);
 
       await expect(service.submitQuiz(userId, submitDto)).rejects.toThrow(
         BadRequestException,
@@ -245,7 +290,6 @@ describe('QuizzesService', () => {
       };
 
       mockQuizRepository.findOne.mockResolvedValue(mockQuiz);
-      mockQuizSubmissionRepository.findOne.mockResolvedValue(null);
 
       await expect(service.submitQuiz(userId, submitDto)).rejects.toThrow(
         BadRequestException,
@@ -265,10 +309,10 @@ describe('QuizzesService', () => {
       };
 
       mockQuizRepository.findOne.mockResolvedValue(mockQuiz);
-      mockQuizSubmissionRepository.findOne.mockResolvedValue(null);
       mockQuizSubmissionRepository.create.mockReturnValue({
         userId,
         quizId,
+        attemptNumber: 1,
         answers: submitDto.answers,
         score: 0,
         totalQuestions: 2,
@@ -279,6 +323,7 @@ describe('QuizzesService', () => {
         id: 'submission-123',
         userId,
         quizId,
+        attemptNumber: 1,
         answers: submitDto.answers,
         score: 0,
         totalQuestions: 2,
@@ -305,10 +350,10 @@ describe('QuizzesService', () => {
       };
 
       mockQuizRepository.findOne.mockResolvedValue(mockQuiz);
-      mockQuizSubmissionRepository.findOne.mockResolvedValue(null);
       mockQuizSubmissionRepository.create.mockReturnValue({
         userId,
         quizId,
+        attemptNumber: 1,
         answers: submitDto.answers,
         score: 50,
         totalQuestions: 2,
@@ -319,6 +364,7 @@ describe('QuizzesService', () => {
         id: 'submission-123',
         userId,
         quizId,
+        attemptNumber: 1,
         answers: submitDto.answers,
         score: 50,
         totalQuestions: 2,
@@ -360,10 +406,10 @@ describe('QuizzesService', () => {
       };
 
       mockQuizRepository.findOne.mockResolvedValue(mockQuizWith10Questions);
-      mockQuizSubmissionRepository.findOne.mockResolvedValue(null);
       mockQuizSubmissionRepository.create.mockReturnValue({
         userId,
         quizId,
+        attemptNumber: 1,
         answers: submitDto.answers,
         score: 70,
         totalQuestions: 10,
@@ -374,6 +420,7 @@ describe('QuizzesService', () => {
         id: 'submission-123',
         userId,
         quizId,
+        attemptNumber: 1,
         answers: submitDto.answers,
         score: 70,
         totalQuestions: 10,
@@ -399,10 +446,10 @@ describe('QuizzesService', () => {
       };
 
       mockQuizRepository.findOne.mockResolvedValue(mockQuiz);
-      mockQuizSubmissionRepository.findOne.mockResolvedValue(null);
       mockQuizSubmissionRepository.create.mockReturnValue({
         userId,
         quizId,
+        attemptNumber: 1,
         answers: submitDto.answers,
         score: 100,
         totalQuestions: 2,
@@ -413,6 +460,7 @@ describe('QuizzesService', () => {
         id: 'submission-123',
         userId,
         quizId,
+        attemptNumber: 1,
         answers: submitDto.answers,
         score: 100,
         totalQuestions: 2,
@@ -438,10 +486,10 @@ describe('QuizzesService', () => {
       };
 
       mockQuizRepository.findOne.mockResolvedValue(mockQuiz);
-      mockQuizSubmissionRepository.findOne.mockResolvedValue(null);
       mockQuizSubmissionRepository.create.mockReturnValue({
         userId,
         quizId,
+        attemptNumber: 1,
         answers: submitDto.answers,
         score: 100,
         totalQuestions: 2,
@@ -452,6 +500,7 @@ describe('QuizzesService', () => {
         id: 'submission-123',
         userId,
         quizId,
+        attemptNumber: 1,
         answers: submitDto.answers,
         score: 100,
         totalQuestions: 2,
@@ -490,6 +539,7 @@ describe('QuizzesService', () => {
       expect(result).toEqual(mockSubmission);
       expect(mockQuizSubmissionRepository.findOne).toHaveBeenCalledWith({
         where: { userId, quizId },
+        order: { attemptNumber: 'DESC' },
       });
     });
 
@@ -534,6 +584,43 @@ describe('QuizzesService', () => {
         where: { userId },
         relations: ['quiz'],
         order: { submittedAt: 'DESC' },
+      });
+    });
+  });
+
+  describe('getUserQuizAttempts', () => {
+    it('should return quiz attempts ordered by attemptNumber ASC', async () => {
+      const userId = 'user-123';
+      const quizId = 'quiz-123';
+      const mockAttempts = [
+        {
+          id: 'submission-1',
+          userId,
+          quizId,
+          attemptNumber: 1,
+          score: 50,
+          passed: false,
+          submittedAt: new Date('2024-01-01'),
+        },
+        {
+          id: 'submission-2',
+          userId,
+          quizId,
+          attemptNumber: 2,
+          score: 100,
+          passed: true,
+          submittedAt: new Date('2024-01-02'),
+        },
+      ];
+
+      mockQuizSubmissionRepository.find.mockResolvedValue(mockAttempts);
+
+      const result = await service.getUserQuizAttempts(userId, quizId);
+
+      expect(result).toEqual(mockAttempts);
+      expect(mockQuizSubmissionRepository.find).toHaveBeenCalledWith({
+        where: { userId, quizId },
+        order: { attemptNumber: 'ASC' },
       });
     });
   });

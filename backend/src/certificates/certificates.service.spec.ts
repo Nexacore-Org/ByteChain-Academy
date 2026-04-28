@@ -8,8 +8,7 @@ import { Course } from '../courses/entities/course.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { ConfigService } from '@nestjs/config';
 import { EmailService } from '../email/email.service';
-
-const mockRepo = () => ({});
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 const now = new Date();
 
@@ -30,7 +29,10 @@ const mockCertificate = {
   recipientName: mockUser.name,
   recipientEmail: mockUser.email,
   courseOrProgram: mockCourse.title,
-  certificateData: JSON.stringify({ userId: mockUser.id, courseId: mockCourse.id }),
+  certificateData: JSON.stringify({
+    userId: mockUser.id,
+    courseId: mockCourse.id,
+  }),
   issuedAt: now,
   expiresAt: null,
   isValid: true,
@@ -60,7 +62,9 @@ describe('CertificateService', () => {
     certRepo = makeCertRepo();
     userRepo = makeUserRepo();
     courseRepo = makeCourseRepo();
-    notificationsService = { createNotification: jest.fn().mockResolvedValue(undefined) };
+    notificationsService = {
+      createNotification: jest.fn().mockResolvedValue(undefined),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -71,11 +75,17 @@ describe('CertificateService', () => {
         { provide: NotificationsService, useValue: notificationsService },
         {
           provide: EmailService,
-          useValue: { sendCertificateEmail: jest.fn().mockResolvedValue(undefined) },
+          useValue: {
+            sendCertificateEmail: jest.fn().mockResolvedValue(undefined),
+          },
         },
         {
           provide: ConfigService,
           useValue: { get: jest.fn().mockReturnValue('http://localhost:3000') },
+        },
+        {
+          provide: WebhooksService,
+          useValue: { dispatchEvent: jest.fn().mockResolvedValue(undefined) },
         },
       ],
     }).compile();
@@ -147,8 +157,10 @@ describe('CertificateService', () => {
     });
 
     it('should call sendCertificateEmail with correct pdfPath', async () => {
-      const mockEmailService = { sendCertificateEmail: jest.fn().mockResolvedValue(undefined) };
-      
+      const mockEmailService = {
+        sendCertificateEmail: jest.fn().mockResolvedValue(undefined),
+      };
+
       const module: TestingModule = await Test.createTestingModule({
         providers: [
           CertificateService,
@@ -159,13 +171,19 @@ describe('CertificateService', () => {
           { provide: EmailService, useValue: mockEmailService },
           {
             provide: ConfigService,
-            useValue: { get: jest.fn().mockReturnValue('http://localhost:3000') },
+            useValue: {
+              get: jest.fn().mockReturnValue('http://localhost:3000'),
+            },
+          },
+          {
+            provide: WebhooksService,
+            useValue: { dispatchEvent: jest.fn().mockResolvedValue(undefined) },
           },
         ],
       }).compile();
 
       const testService = module.get<CertificateService>(CertificateService);
-      
+
       certRepo.findOne.mockResolvedValue(null); // no duplicate
       userRepo.findOneBy.mockResolvedValue(mockUser);
       courseRepo.findOneBy.mockResolvedValue(mockCourse);
@@ -179,7 +197,7 @@ describe('CertificateService', () => {
         'Alice',
         mockCourse.title,
         mockCertificate.certificateHash,
-        expect.stringContaining('.pdf') // pdfPath
+        expect.stringContaining('.pdf'), // pdfPath
       );
     });
 
@@ -223,7 +241,9 @@ describe('CertificateService', () => {
     });
 
     it('should return isValid=false when hash is empty', async () => {
-      const result = await service.verifyCertificate({ certificateHash: '   ' });
+      const result = await service.verifyCertificate({
+        certificateHash: '   ',
+      });
 
       expect(result.isValid).toBe(false);
       expect(result.message).toMatch(/required/i);
@@ -241,7 +261,10 @@ describe('CertificateService', () => {
     });
 
     it('should return isValid=false when certificate has been revoked', async () => {
-      certRepo.findOne.mockResolvedValue({ ...mockCertificate, isValid: false });
+      certRepo.findOne.mockResolvedValue({
+        ...mockCertificate,
+        isValid: false,
+      });
 
       const result = await service.verifyCertificate({
         certificateHash: mockCertificate.certificateHash,

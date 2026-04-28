@@ -2,7 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { CurrencyEntry, CurrencyType } from './entities/currency-entry.entity';
-import { CreateCurrencyDto, UpdateCurrencyDto } from './dto/create-currency.dto';
+import {
+  CreateCurrencyDto,
+  UpdateCurrencyDto,
+} from './dto/create-currency.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Injectable()
@@ -12,7 +15,11 @@ export class CurrenciesService {
     private readonly currencyRepository: Repository<CurrencyEntry>,
   ) {}
 
-  async findAll(type?: CurrencyType, search?: string, paginationDto?: PaginationDto) {
+  async findAll(
+    type?: CurrencyType,
+    search?: string,
+    paginationDto?: PaginationDto,
+  ) {
     const { page = 1, limit = 10 } = paginationDto || {};
     const skip = (page - 1) * limit;
 
@@ -34,7 +41,7 @@ export class CurrenciesService {
       .take(limit)
       .getManyAndCount();
 
-    const formattedItems = items.map(item => {
+    const formattedItems = items.map((item) => {
       // Omit detailed historical data in find all list to reduce payload
       const { historicalData, ...rest } = item;
       return rest;
@@ -58,7 +65,9 @@ export class CurrenciesService {
   }
 
   async findBySymbol(symbol: string) {
-    const currency = await this.currencyRepository.findOne({ where: { symbol } });
+    const currency = await this.currencyRepository.findOne({
+      where: { symbol },
+    });
     if (!currency) {
       throw new NotFoundException(`Currency with symbol "${symbol}" not found`);
     }
@@ -70,11 +79,11 @@ export class CurrenciesService {
     let history = currency.historicalData || [];
 
     if (from) {
-      history = history.filter(h => h.date >= from);
+      history = history.filter((h) => h.date >= from);
     }
 
     if (to) {
-      history = history.filter(h => h.date <= to);
+      history = history.filter((h) => h.date <= to);
     }
 
     return history;

@@ -1,7 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CurrencyEntry, CurrencyType, HistoricalPrice } from '../entities/currency-entry.entity';
+import {
+  CurrencyEntry,
+  CurrencyType,
+  HistoricalPrice,
+} from '../entities/currency-entry.entity';
 
 const CURRENCIES: Partial<CurrencyEntry>[] = [
   {
@@ -26,7 +30,7 @@ const CURRENCIES: Partial<CurrencyEntry>[] = [
     type: CurrencyType.CRYPTO,
     launchYear: 2014,
     description:
-      'Stellar is an open-source, decentralized payment protocol founded in 2014 by Jed McCaleb and Joyce Kim. It is designed to facilitate fast, low-cost cross-border transactions and currency exchanges between any pair of currencies, including both fiat and digital assets. The Stellar Consensus Protocol (SCP) enables quick transaction finality without the energy costs of proof-of-work mining. Stellar\'s native token, Lumens (XLM), is used to pay transaction fees and maintain accounts on the network. The Stellar Development Foundation (SDF) actively partners with financial institutions and NGOs to promote financial inclusion in underserved regions around the world.',
+      "Stellar is an open-source, decentralized payment protocol founded in 2014 by Jed McCaleb and Joyce Kim. It is designed to facilitate fast, low-cost cross-border transactions and currency exchanges between any pair of currencies, including both fiat and digital assets. The Stellar Consensus Protocol (SCP) enables quick transaction finality without the energy costs of proof-of-work mining. Stellar's native token, Lumens (XLM), is used to pay transaction fees and maintain accounts on the network. The Stellar Development Foundation (SDF) actively partners with financial institutions and NGOs to promote financial inclusion in underserved regions around the world.",
   },
   {
     name: 'BNB',
@@ -34,7 +38,7 @@ const CURRENCIES: Partial<CurrencyEntry>[] = [
     type: CurrencyType.CRYPTO,
     launchYear: 2017,
     description:
-      'BNB, originally launched as Binance Coin in 2017 during Binance\'s ICO, has evolved far beyond a simple exchange utility token. It powers the BNB Chain ecosystem, which includes BNB Smart Chain (BSC), a high-throughput blockchain compatible with the Ethereum Virtual Machine. BNB is used to pay trading fees on Binance at a discount, participate in token sales on Binance Launchpad, and fuel transactions on BNB Chain. Binance periodically burns BNB tokens to reduce the total supply, creating deflationary pressure. With a vibrant DeFi ecosystem and millions of active users, BNB has become one of the most widely used utility tokens in the crypto industry.',
+      "BNB, originally launched as Binance Coin in 2017 during Binance's ICO, has evolved far beyond a simple exchange utility token. It powers the BNB Chain ecosystem, which includes BNB Smart Chain (BSC), a high-throughput blockchain compatible with the Ethereum Virtual Machine. BNB is used to pay trading fees on Binance at a discount, participate in token sales on Binance Launchpad, and fuel transactions on BNB Chain. Binance periodically burns BNB tokens to reduce the total supply, creating deflationary pressure. With a vibrant DeFi ecosystem and millions of active users, BNB has become one of the most widely used utility tokens in the crypto industry.",
   },
   {
     name: 'Solana',
@@ -50,7 +54,7 @@ const CURRENCIES: Partial<CurrencyEntry>[] = [
     type: CurrencyType.CRYPTO,
     launchYear: 2017,
     description:
-      'Cardano is a third-generation proof-of-stake blockchain platform founded by Charles Hoskinson, one of Ethereum\'s co-founders, and developed by IOHK. Launched in 2017, Cardano distinguishes itself through a research-driven, peer-reviewed development approach. Its Ouroboros consensus protocol is one of the first provably secure proof-of-stake algorithms. ADA, the native token, is used for transactions, staking, and governance. Cardano\'s roadmap is divided into named eras—Byron, Shelley, Goguen, Basho, and Voltaire—each introducing new capabilities such as smart contracts and decentralized governance. The platform aims to provide financial services to the unbanked population, particularly in Africa and developing nations.',
+      "Cardano is a third-generation proof-of-stake blockchain platform founded by Charles Hoskinson, one of Ethereum's co-founders, and developed by IOHK. Launched in 2017, Cardano distinguishes itself through a research-driven, peer-reviewed development approach. Its Ouroboros consensus protocol is one of the first provably secure proof-of-stake algorithms. ADA, the native token, is used for transactions, staking, and governance. Cardano's roadmap is divided into named eras—Byron, Shelley, Goguen, Basho, and Voltaire—each introducing new capabilities such as smart contracts and decentralized governance. The platform aims to provide financial services to the unbanked population, particularly in Africa and developing nations.",
   },
   {
     name: 'USD Coin',
@@ -74,7 +78,7 @@ const CURRENCIES: Partial<CurrencyEntry>[] = [
     type: CurrencyType.CRYPTO,
     launchYear: 2011,
     description:
-      'Litecoin was created in October 2011 by former Google engineer Charlie Lee as a "lite version of Bitcoin." It shares much of Bitcoin\'s codebase but offers faster block generation times of 2.5 minutes compared to Bitcoin\'s 10 minutes, and uses the Scrypt hashing algorithm instead of SHA-256. With a maximum supply of 84 million coins, Litecoin was designed to handle a higher volume of transactions. It was one of the first cryptocurrencies to implement Segregated Witness (SegWit) and the Lightning Network. Often described as the silver to Bitcoin\'s gold, Litecoin has maintained a strong presence in the crypto market and is widely accepted by merchants and exchanges worldwide.',
+      "Litecoin was created in October 2011 by former Google engineer Charlie Lee as a \"lite version of Bitcoin.\" It shares much of Bitcoin's codebase but offers faster block generation times of 2.5 minutes compared to Bitcoin's 10 minutes, and uses the Scrypt hashing algorithm instead of SHA-256. With a maximum supply of 84 million coins, Litecoin was designed to handle a higher volume of transactions. It was one of the first cryptocurrencies to implement Segregated Witness (SegWit) and the Lightning Network. Often described as the silver to Bitcoin's gold, Litecoin has maintained a strong presence in the crypto market and is widely accepted by merchants and exchanges worldwide.",
   },
   {
     name: 'XRP',
@@ -106,7 +110,7 @@ const CURRENCIES: Partial<CurrencyEntry>[] = [
     type: CurrencyType.FIAT,
     launchYear: 800,
     description:
-      'The British Pound Sterling (GBP) is the official currency of the United Kingdom and its territories, and is the oldest currency in continuous use in the world, with origins dating back to Anglo-Saxon England around 800 AD. It is managed by the Bank of England, one of the world\'s oldest central banks, founded in 1694. The pound is the fourth most traded currency in the global foreign exchange market. Following Brexit in 2020, the UK retained the pound rather than adopting the Euro. GBP is widely used as a reserve currency and is a key component of the IMF\'s Special Drawing Rights (SDR) basket, reflecting the UK\'s continued importance in global finance.',
+      "The British Pound Sterling (GBP) is the official currency of the United Kingdom and its territories, and is the oldest currency in continuous use in the world, with origins dating back to Anglo-Saxon England around 800 AD. It is managed by the Bank of England, one of the world's oldest central banks, founded in 1694. The pound is the fourth most traded currency in the global foreign exchange market. Following Brexit in 2020, the UK retained the pound rather than adopting the Euro. GBP is widely used as a reserve currency and is a key component of the IMF's Special Drawing Rights (SDR) basket, reflecting the UK's continued importance in global finance.",
   },
   {
     name: 'Nigerian Naira',
@@ -114,7 +118,7 @@ const CURRENCIES: Partial<CurrencyEntry>[] = [
     type: CurrencyType.FIAT,
     launchYear: 1973,
     description:
-      'The Nigerian Naira (NGN) is the official currency of the Federal Republic of Nigeria, Africa\'s largest economy by GDP. It was introduced on January 1, 1973, replacing the Nigerian pound at a rate of 2 naira to 1 pound. The Central Bank of Nigeria (CBN) is responsible for issuing and regulating the naira. Nigeria\'s economy is heavily dependent on oil exports, making the naira sensitive to global oil price fluctuations. The currency has experienced significant depreciation over the decades due to inflation, foreign exchange shortages, and economic pressures. Despite challenges, Nigeria\'s large population and growing fintech sector make the naira a currency of increasing regional and continental significance.',
+      "The Nigerian Naira (NGN) is the official currency of the Federal Republic of Nigeria, Africa's largest economy by GDP. It was introduced on January 1, 1973, replacing the Nigerian pound at a rate of 2 naira to 1 pound. The Central Bank of Nigeria (CBN) is responsible for issuing and regulating the naira. Nigeria's economy is heavily dependent on oil exports, making the naira sensitive to global oil price fluctuations. The currency has experienced significant depreciation over the decades due to inflation, foreign exchange shortages, and economic pressures. Despite challenges, Nigeria's large population and growing fintech sector make the naira a currency of increasing regional and continental significance.",
   },
   {
     name: 'Japanese Yen',
@@ -122,16 +126,21 @@ const CURRENCIES: Partial<CurrencyEntry>[] = [
     type: CurrencyType.FIAT,
     launchYear: 1871,
     description:
-      'The Japanese Yen (JPY) is the official currency of Japan and the third most traded currency in the global foreign exchange market, after the US Dollar and Euro. Established by the Meiji government in 1871 as part of Japan\'s modernization efforts, the yen replaced a complex system of feudal currencies. It is managed by the Bank of Japan, which has maintained ultra-low or negative interest rate policies for decades to combat deflation and stimulate economic growth. The yen is considered a "safe haven" currency, often appreciating during global financial uncertainty as investors seek stability. Japan\'s export-driven economy means the yen\'s exchange rate has significant implications for major corporations like Toyota and Sony.',
+      "The Japanese Yen (JPY) is the official currency of Japan and the third most traded currency in the global foreign exchange market, after the US Dollar and Euro. Established by the Meiji government in 1871 as part of Japan's modernization efforts, the yen replaced a complex system of feudal currencies. It is managed by the Bank of Japan, which has maintained ultra-low or negative interest rate policies for decades to combat deflation and stimulate economic growth. The yen is considered a \"safe haven\" currency, often appreciating during global financial uncertainty as investors seek stability. Japan's export-driven economy means the yen's exchange rate has significant implications for major corporations like Toyota and Sony.",
   },
 ];
 
-function generateHistoricalData(minPrice: number, maxPrice: number): HistoricalPrice[] {
+function generateHistoricalData(
+  minPrice: number,
+  maxPrice: number,
+): HistoricalPrice[] {
   const data: HistoricalPrice[] = [];
   const now = new Date();
   for (let i = 11; i >= 0; i--) {
     const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const price = parseFloat((Math.random() * (maxPrice - minPrice) + minPrice).toFixed(6));
+    const price = parseFloat(
+      (Math.random() * (maxPrice - minPrice) + minPrice).toFixed(6),
+    );
     data.push({
       date: date.toISOString().split('T')[0],
       price,
@@ -178,10 +187,15 @@ export class CurrenciesSeedService {
   async seed() {
     let created = 0;
     for (const data of CURRENCIES) {
-      const exists = await this.repo.findOne({ where: { symbol: data.symbol } });
+      const exists = await this.repo.findOne({
+        where: { symbol: data.symbol },
+      });
       if (exists) continue;
       const [min, max] = PRICE_RANGES[data.symbol!] ?? [1, 1];
-      const entry = this.repo.create({ ...data, historicalData: generateHistoricalData(min, max) });
+      const entry = this.repo.create({
+        ...data,
+        historicalData: generateHistoricalData(min, max),
+      });
       await this.repo.save(entry);
       created++;
     }
