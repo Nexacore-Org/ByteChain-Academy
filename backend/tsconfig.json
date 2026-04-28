@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "types": ["jest", "node"],
     "module": "commonjs",
     "declaration": true,
     "removeComments": true,
@@ -17,5 +18,6 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false
-  }
+  },
+  "exclude": ["node_modules", "scripts"]
 }

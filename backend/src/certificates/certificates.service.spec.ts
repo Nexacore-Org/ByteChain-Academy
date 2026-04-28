@@ -3,11 +3,11 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { NotFoundException } from '@nestjs/common';
 import { CertificateService } from './certificates.service';
 import { Certificate } from './entities/certificate.entity';
-import { User } from 'src/users/entities/user.entity';
-import { Course } from 'src/courses/entities/course.entity';
-import { NotificationsService } from 'src/notifications/notifications.service';
+import { User } from '../users/entities/user.entity';
+import { Course } from '../courses/entities/course.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 import { ConfigService } from '@nestjs/config';
-import { EmailService } from 'src/email/email.service';
+import { EmailService } from '../email/email.service';
 
 const mockRepo = () => ({});
 
