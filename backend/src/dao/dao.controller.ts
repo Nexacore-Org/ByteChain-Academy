@@ -8,6 +8,10 @@ import {
   Query,
   Request,
   ParseIntPipe,
+  Patch,
+  Delete,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -17,6 +21,7 @@ import {
 } from '@nestjs/swagger';
 import { DAOService } from './dao.service';
 import { CreateProposalDto } from './dto/create-proposal.dto';
+import { UpdateProposalDto } from './dto/update-proposal.dto';
 import { CastVoteDto } from './dto/cast-vote.dto';
 import { ProposalStatus } from './entities/dao-proposal.entity';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -59,5 +64,28 @@ export class DAOController {
     @Body() castVoteDto: CastVoteDto,
   ) {
     return this.daoService.castVote(req.user.id, id, castVoteDto.vote);
+  }
+
+  @Patch('proposals/:id')
+  @ApiOperation({ summary: 'Edit proposal (owner only, before any votes)' })
+  @ApiResponse({ status: 200, description: 'Proposal updated successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden - not the owner' })
+  @ApiResponse({ status: 400, description: 'Bad request - has votes or invalid data' })
+  edit(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() updateProposalDto: UpdateProposalDto,
+  ) {
+    return this.daoService.editProposal(req.user.id, id, updateProposalDto);
+  }
+
+  @Delete('proposals/:id')
+  @ApiOperation({ summary: 'Withdraw proposal (owner only, active proposals)' })
+  @ApiResponse({ status: 204, description: 'Proposal withdrawn successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden - not the owner' })
+  @ApiResponse({ status: 400, description: 'Bad request - not active' })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  withdraw(@Request() req, @Param('id') id: string) {
+    return this.daoService.withdrawProposal(req.user.id, id);
   }
 }

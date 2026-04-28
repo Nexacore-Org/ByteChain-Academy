@@ -21,6 +21,7 @@ import {
   Shield,
 } from "lucide-react";
 import Link from "next/link";
+import { useCallback } from "react";
 
 export default function SettingsPage() {
   const { isAuthenticated } = useAuth();
@@ -45,9 +46,13 @@ export default function SettingsPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
-  useEffect(() => {
+  const memoizedLoadUserData = useCallback(() => {
     loadUserData();
-  }, []);
+  }, [loadUserData]);
+
+  useEffect(() => {
+    memoizedLoadUserData();
+  }, [memoizedLoadUserData]);
 
   // Initialize form state when user data loads
   useEffect(() => {

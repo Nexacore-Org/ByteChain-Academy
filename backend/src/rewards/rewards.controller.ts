@@ -1,5 +1,5 @@
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOkResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiTags, ApiUnauthorizedResponse, ApiOperation, ApiResponse, } from '@nestjs/swagger';
 import { Request } from 'express';
 import {
   ApiTags,
@@ -26,6 +26,9 @@ export class RewardsController {
   @Get('my')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Get my rewards' })
+  @ApiResponse({ status: 200, description: 'Rewards retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiOperation({
     summary: 'Get my rewards',
     description:

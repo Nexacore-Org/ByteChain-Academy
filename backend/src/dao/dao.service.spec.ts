@@ -9,6 +9,7 @@ import {
   ConflictException,
   BadRequestException,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 
 describe('DAOService', () => {
@@ -129,6 +130,151 @@ describe('DAOService', () => {
         1,
       );
       expect(result.yesVotes).toBe(1);
+    });
+  });
+
+  /* -------------------------------------------------------------------------- */
+  /*                               getAllProposals                             */
+  /* -------------------------------------------------------------------------- */
+
+  describe('getAllProposals', () => {
+    it('should exclude WITHDRAWN proposals from default list', async () => {
+      const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getManyAndCount: jest.fn().mockResolvedValue([[], 0]),
+      };
+      proposalRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+
+      await service.getAllProposals();
+
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+        'proposal.status != :withdrawn',
+        { withdrawn: ProposalStatus.WITHDRAWN },
+      );
+    });
+
+    it('should include all statuses when status filter is provided', async () => {
+      const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getManyAndCount: jest.fn().mockResolvedValue([[], 0]),
+      };
+      proposalRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+
+      await service.getAllProposals(1, 10, ProposalStatus.WITHDRAWN);
+
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+        'proposal.status = :status',
+        { status: ProposalStatus.WITHDRAWN },
+      );
+    });
+  });
+
+  /* -------------------------------------------------------------------------- */
+  /*                                 editProposal                               */
+  /* -------------------------------------------------------------------------- */
+
+  describe('editProposal', () => {
+    const mockProposalWithOwner = {
+      ...mockProposal,
+      proposerId: 'user-1',
+      title: 'Original Title',
+      description: 'Original Description',
+    };
+
+    it('should successfully edit proposal when user is owner and no votes', async () => {
+      proposalRepository.findOne.mockResolvedValue(mockProposalWithOwner);
+      proposalRepository.save.mockResolvedValue({
+        ...mockProposalWithOwner,
+        title: 'Updated Title',
+      });
+
+      const result = await service.editProposal('user-1', 'prop-1', {
+        title: 'Updated Title',
+      });
+
+      expect(proposalRepository.save).toHaveBeenCalledWith({
+        ...mockProposalWithOwner,
+        title: 'Updated Title',
+      });
+      expect(result.title).toBe('Updated Title');
+    });
+
+    it('should throw ForbiddenException when user is not the owner', async () => {
+      proposalRepository.findOne.mockResolvedValue(mockProposalWithOwner);
+
+      await expect(
+        service.editProposal('user-2', 'prop-1', { title: 'New Title' }),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw BadRequestException when proposal has votes', async () => {
+      const proposalWithVotes = {
+        ...mockProposalWithOwner,
+        yesVotes: 1,
+        noVotes: 0,
+        abstainVotes: 0,
+      };
+      proposalRepository.findOne.mockResolvedValue(proposalWithVotes);
+
+      await expect(
+        service.editProposal('user-1', 'prop-1', { title: 'New Title' }),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  /* -------------------------------------------------------------------------- */
+  /*                               withdrawProposal                            */
+  /* -------------------------------------------------------------------------- */
+
+  describe('withdrawProposal', () => {
+    const mockActiveProposal = {
+      ...mockProposal,
+      proposerId: 'user-1',
+      status: ProposalStatus.ACTIVE,
+    };
+
+    it('should successfully withdraw proposal when user is owner and status is ACTIVE', async () => {
+      proposalRepository.findOne.mockResolvedValue(mockActiveProposal);
+      proposalRepository.save.mockResolvedValue({
+        ...mockActiveProposal,
+        status: ProposalStatus.WITHDRAWN,
+      });
+
+      const result = await service.withdrawProposal('user-1', 'prop-1');
+
+      expect(proposalRepository.save).toHaveBeenCalledWith({
+        ...mockActiveProposal,
+        status: ProposalStatus.WITHDRAWN,
+      });
+      expect(result.status).toBe(ProposalStatus.WITHDRAWN);
+    });
+
+    it('should throw ForbiddenException when user is not the owner', async () => {
+      proposalRepository.findOne.mockResolvedValue(mockActiveProposal);
+
+      await expect(
+        service.withdrawProposal('user-2', 'prop-1'),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw BadRequestException when proposal is not ACTIVE', async () => {
+      const passedProposal = {
+        ...mockActiveProposal,
+        status: ProposalStatus.PASSED,
+      };
+      proposalRepository.findOne.mockResolvedValue(passedProposal);
+
+      await expect(
+        service.withdrawProposal('user-1', 'prop-1'),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

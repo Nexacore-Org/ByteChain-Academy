@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, LessThan } from 'typeorm';
@@ -10,6 +11,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { DAOProposal, ProposalStatus } from './entities/dao-proposal.entity';
 import { DAOVote, VoteType } from './entities/dao-vote.entity';
 import { CreateProposalDto } from './dto/create-proposal.dto';
+import { UpdateProposalDto } from './dto/update-proposal.dto';
 import { User } from '../users/entities/user.entity';
 import { WebhooksService } from '../webhooks/webhooks.service';
 import { WebhookEvent } from '../webhooks/dto/create-webhook.dto';
@@ -59,6 +61,9 @@ export class DAOService {
 
     if (status) {
       query.where('proposal.status = :status', { status });
+    } else {
+      // Exclude WITHDRAWN proposals from default list
+      query.where('proposal.status != :withdrawn', { withdrawn: ProposalStatus.WITHDRAWN });
     }
 
     const [proposals, total] = await query.getManyAndCount();
@@ -183,5 +188,46 @@ export class DAOService {
         });
       }
     }
+  }
+
+  async editProposal(
+    userId: string,
+    proposalId: string,
+    dto: UpdateProposalDto,
+  ): Promise<DAOProposal> {
+    const proposal = await this.getProposalById(proposalId);
+
+    if (proposal.proposerId !== userId) {
+      throw new ForbiddenException('Only the proposal owner can edit it');
+    }
+
+    const totalVotes = proposal.yesVotes + proposal.noVotes + proposal.abstainVotes;
+    if (totalVotes > 0) {
+      throw new BadRequestException('Cannot edit proposal that has received votes');
+    }
+
+    if (dto.title !== undefined) {
+      proposal.title = dto.title;
+    }
+    if (dto.description !== undefined) {
+      proposal.description = dto.description;
+    }
+
+    return this.proposalRepository.save(proposal);
+  }
+
+  async withdrawProposal(userId: string, proposalId: string): Promise<DAOProposal> {
+    const proposal = await this.getProposalById(proposalId);
+
+    if (proposal.proposerId !== userId) {
+      throw new ForbiddenException('Only the proposal owner can withdraw it');
+    }
+
+    if (proposal.status !== ProposalStatus.ACTIVE) {
+      throw new BadRequestException('Only ACTIVE proposals can be withdrawn');
+    }
+
+    proposal.status = ProposalStatus.WITHDRAWN;
+    return this.proposalRepository.save(proposal);
   }
 }
