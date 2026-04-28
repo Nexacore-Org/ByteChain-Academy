@@ -1,4 +1,10 @@
-import { IsString, IsOptional, IsBoolean, MinLength, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  MinLength,
+  MaxLength,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateProfileDto {
@@ -23,12 +29,20 @@ export class UpdateProfileDto {
   @MaxLength(500)
   bio?: string;
 
-  @ApiProperty({ example: true, description: 'onboardingCompleted field', required: false })
+  @ApiProperty({
+    example: true,
+    description: 'onboardingCompleted field',
+    required: false,
+  })
   @IsOptional()
   @IsBoolean()
   onboardingCompleted?: boolean;
 
-  @ApiProperty({ example: 'Learn DeFi', description: 'learningGoal field', required: false })
+  @ApiProperty({
+    example: 'Learn DeFi',
+    description: 'learningGoal field',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(200)

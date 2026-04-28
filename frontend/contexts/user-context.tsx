@@ -143,22 +143,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
     }
   }, [createDefaultUser]);
-  }, []);
-
-  const createDefaultUser = () => {
-    const email = localStorage.getItem("user_email") || "student@bytechain.edu";
-    const name = localStorage.getItem("user_name") || "Alex Johnson";
-
-    const defaultUser: UserProfile = {
-      id: "user_" + Date.now(),
-      fullName: name,
-      email: email,
-      role: "Student",
-      createdAt: new Date(),
-    };
-    setUser(defaultUser);
-    localStorage.setItem("user_profile", JSON.stringify(defaultUser));
-  };
 
   useEffect(() => {
     loadUserData();
