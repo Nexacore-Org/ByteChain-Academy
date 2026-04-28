@@ -57,8 +57,13 @@ describe('UserService', () => {
         { provide: getRepositoryToken(Certificate), useValue: certificateRepo },
         { provide: getRepositoryToken(UserBadge), useValue: userBadgeRepo },
         {
-          provide: getRepositoryToken(CourseRegistration),
-          useValue: courseRegistrationRepo,
+          provide: getRepositoryToken(User),
+          useValue: {
+            findOne: jest.fn(),
+            create: jest.fn(),
+            save: jest.fn(),
+            find: jest.fn(),
+          },
         },
       ],
     }).compile();

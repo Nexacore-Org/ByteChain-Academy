@@ -4,44 +4,17 @@ import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { Course } from './entities/course.entity';
 import { CourseRegistration } from './entities/course-registration.entity';
-<<<<<<< HEAD
 import { PaginationService } from '../common/services/pagination.service';
 import { Lesson } from '../lessons/entities/lesson.entity';
 import { Progress } from '../progress/entities/progress.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 
-const now = new Date();
-
-const mockCourse = {
-  id: 'course-uuid-1',
-  title: 'Intro to Web3',
-  description: 'Learn blockchain basics',
-  published: true,
-  createdAt: now,
-  updatedAt: now,
-};
-
-const paginatedEmpty = { data: [], total: 0, page: 1, limit: 10, totalPages: 0 };
-
-const makeCourseRepo = () => ({
-  findOne: jest.fn(),
-  find: jest.fn(),
-  create: jest.fn(),
-  save: jest.fn(),
-  remove: jest.fn(),
-  softRemove: jest.fn(),
-  restore: jest.fn(),
-});
-
-const makeRegRepo = () => ({
+const mockRepo = () => ({
   findOne: jest.fn(),
   find: jest.fn(),
   create: jest.fn(),
   save: jest.fn(),
 });
-
-const makeLessonRepo = () => ({ count: jest.fn() });
-const makeProgressRepo = () => ({ count: jest.fn() });
 
 describe('CoursesService', () => {
   let service: CoursesService;
@@ -67,12 +40,23 @@ describe('CoursesService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CoursesService,
-        { provide: getRepositoryToken(Course), useValue: courseRepo },
-        { provide: getRepositoryToken(CourseRegistration), useValue: regRepo },
-        { provide: getRepositoryToken(Lesson), useValue: lessonRepo },
-        { provide: getRepositoryToken(Progress), useValue: progressRepo },
-        { provide: PaginationService, useValue: paginationService },
-        { provide: NotificationsService, useValue: notificationsService },
+        { provide: getRepositoryToken(Course), useValue: mockRepo() },
+        {
+          provide: getRepositoryToken(CourseRegistration),
+          useValue: mockRepo(),
+        },
+        {
+          provide: PaginationService,
+          useValue: {
+            paginate: jest.fn().mockResolvedValue({
+              data: [],
+              total: 0,
+              page: 1,
+              limit: 10,
+              totalPages: 0,
+            }),
+          },
+        },
       ],
     }).compile();
 
