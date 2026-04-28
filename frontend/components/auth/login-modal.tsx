@@ -36,12 +36,6 @@ export function LoginModal({ open, onOpenChange, onSwitchToSignup }: LoginModalP
       setPassword("")
       // Navigate to dashboard page
       router.push("/dashboard")
-    } catch (err: unknown) {
-      console.error("Login error:", err)
-      const e = err as { status?: number; message?: string }
-      if (!window.navigator.onLine) {
-        setError("Unable to connect. Please check your connection and try again")
-      } else if (e.status === 401 || e.message?.includes("401")) {
     } catch (error: unknown) {
       console.error("Login error:", error)
       const err = error instanceof Error ? error : new Error(String(error))
@@ -134,6 +128,11 @@ export function LoginModal({ open, onOpenChange, onSwitchToSignup }: LoginModalP
             {isLoading ? "Signing in..." : "Sign In"}
           </Button>
         </form>
+        <div className="text-center text-sm text-gray-400">
+          <Link href="/forgot-password" className="text-[#02c177] hover:underline">
+            Forgot password?
+          </Link>
+        </div>
         <div className="text-center text-sm text-gray-400">
           Don&apos;t have an account?{" "}
           <button
