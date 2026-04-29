@@ -25,6 +25,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { CourseFilterDto } from './dto/course-filter.dto';
 import { CoursesService } from './courses.service';
 import { UserRole } from '../common/enums/user-role.enum';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -135,13 +136,20 @@ export class CoursesController {
     return this.coursesService.getEnrolledCourses(req.user.id);
   }
 
+  @Get('tags')
+  @ApiOperation({ summary: 'Get unique tags from published courses' })
+  @ApiResponse({ status: 200, description: 'List of unique tags', type: [String] })
+  async getTags(): Promise<string[]> {
+    return this.coursesService.getUniqueTags();
+  }
+
   @Get()
   @UseGuards(OptionalJwtAuthGuard)
   @ApiOperation({ summary: 'Get paginated list of courses' })
   @ApiResponse({ status: 200, description: 'Courses retrieved successfully' })
   async findAll(
     @Req() req: RequestWithUser,
-    @Query() pagination: PaginationDto,
+    @Query() filters: CourseFilterDto,
   ): Promise<{
     data: CourseResponseDto[];
     total: number;
@@ -149,10 +157,10 @@ export class CoursesController {
     limit: number;
     totalPages: number;
   }> {
-    const page = pagination.page ?? 1;
-    const limit = pagination.limit ?? 10;
+    const page = filters.page ?? 1;
+    const limit = filters.limit ?? 10;
     const userId = req.user?.id;
-    return this.coursesService.findAllPaginated(page, limit, userId);
+    return this.coursesService.findAllPaginated(page, limit, userId, filters);
   }
 
   @Get(':id/enrollment-status')
