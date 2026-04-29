@@ -16,7 +16,7 @@ export default function QuizResultPage({
   params: Promise<{ id: string; quizId: string }>
 }) {
   const { id, quizId } = use(params)
-  const { courses, quizResults } = useLearning()
+  const { courses, quizResults, getQuiz } = useLearning()
   const { isAuthenticated } = useAuth()
   const router = useRouter()
 
