@@ -37,6 +37,8 @@ export class LessonResponseDto {
     this.videoStartTimestamp = lesson.videoStartTimestamp || null;
     this.order = lesson.order;
     this.courseId = lesson.courseId;
+    this.hasQuiz = lesson.hasQuiz ?? false;
+    this.quizId = lesson.quizId ?? null;
     this.createdAt = lesson.createdAt;
     this.updatedAt = lesson.updatedAt;
   }

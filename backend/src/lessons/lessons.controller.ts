@@ -13,7 +13,6 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { LessonsService } from './lessons.service';
-
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { PaginationDto } from '../common/dto/pagination.dto';
@@ -63,6 +62,7 @@ export class LessonsController {
     };
   }
 
+  // NOTE: /course/:courseId must be declared BEFORE /:id to avoid shadowing
   @Get('course/:courseId')
   @ApiOperation({ summary: 'Get lessons for a specific course' })
   @ApiResponse({ status: 200, description: 'Lessons retrieved successfully' })
@@ -95,7 +95,7 @@ export class LessonsController {
   @ApiResponse({ status: 200, description: 'Lesson details retrieved successfully', type: LessonResponseDto })
   @ApiResponse({ status: 404, description: 'Lesson not found' })
   async findOne(@Param('id') id: string): Promise<LessonResponseDto> {
-    const lesson = await this.lessonsService.findOne(id);
+    const lesson = await this.lessonsService.findOneWithQuizFlag(id);
     return new LessonResponseDto(lesson);
   }
 
