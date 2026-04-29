@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
+import { useQuery } from "@tanstack/react-query"
 import { api } from "@/lib/api"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -15,36 +15,21 @@ interface Course {
 }
 
 export default function AdminPage() {
-  const [courses, setCourses] = useState<Course[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["admin-courses-list"],
+    queryFn: async () => {
+      const res = await api.get<{ data?: Course[] } | Course[]>("/courses?limit=100")
+      return Array.isArray(res) ? res : (res?.data ?? [])
+    },
+  })
 
-  const load = useCallback(() => {
-    setLoading(true)
-    setError(null)
-    api
-      .get<{ data: Course[] } | Course[]>("/courses?limit=100")
-      .then((res: unknown) => {
-        const r = res as { data?: Course[] } | Course[]
-        const list = Array.isArray(r) ? r : (r?.data ?? [])
-        setCourses(list)
-      })
-      .catch(() => {
-        setError("Failed to load courses. Please try again.")
-        setCourses([])
-      })
-      .finally(() => setLoading(false))
-  }, [])
-
-  useEffect(() => {
-    load()
-  }, [load])
+  const courses = data ?? []
 
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">Admin — Courses</h1>
 
-      {loading ? (
+      {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <Card key={i} className="border-white/10">
@@ -55,8 +40,8 @@ export default function AdminPage() {
             </Card>
           ))}
         </div>
-      ) : error ? (
-        <ErrorCard message={error} onRetry={load} />
+      ) : isError ? (
+        <ErrorCard message="Failed to load courses. Please try again." onRetry={refetch} />
       ) : courses.length === 0 ? (
         <p className="text-gray-400">No courses found.</p>
       ) : (

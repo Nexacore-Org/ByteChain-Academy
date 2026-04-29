@@ -17,7 +17,7 @@ export function PriceChart({ data }: { data: CurrencyHistoryPoint[] }) {
           <YAxis stroke="#888" />
           <Tooltip
             labelFormatter={(value) => new Date(value).toLocaleDateString()}
-            formatter={(value: number) => [`$${value.toFixed(2)}`, "Price"]}
+            formatter={(value) => [`$${Number(value).toFixed(2)}`, "Price"]}
           />
           <Line type="monotone" dataKey="price" stroke="#00ff88" strokeWidth={2} dot={false} />
         </LineChart>
