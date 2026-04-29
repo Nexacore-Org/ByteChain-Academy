@@ -21,6 +21,7 @@ import {
 } from './dto/enrollment-response.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
+import { CourseFilterDto } from './dto/course-filter.dto';
 
 @Injectable()
 export class CoursesService {
@@ -47,24 +48,70 @@ export class CoursesService {
     page: number = 1,
     limit: number = 10,
     userId?: string,
+    filters?: CourseFilterDto,
   ): Promise<PaginatedResult<CourseResponseDto>> {
-    return this.findAllPaginated(page, limit, userId);
+    return this.findAllPaginated(page, limit, userId, filters);
   }
 
   async findAllPaginated(
     page: number,
     limit: number,
     userId?: string,
+    filters?: CourseFilterDto,
   ): Promise<PaginatedResult<CourseResponseDto>> {
-    const result = await this.paginationService.paginate<Course>(
-      this.courseRepository,
-      { page, limit },
-      { where: { published: true }, order: { createdAt: 'DESC' } },
-    );
+    const { search, difficulty, tags, sortBy = 'createdAt', sortOrder = 'desc' } = filters ?? {};
+
+    const qb = this.courseRepository
+      .createQueryBuilder('course')
+      .leftJoin('course.registrations', 'reg')
+      .addSelect('COUNT(reg.id)', 'enrollmentCount')
+      .where('course.published = :published', { published: true })
+      .groupBy('course.id')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    if (search) {
+      qb.andWhere(
+        '(LOWER(course.title) LIKE :search OR LOWER(course.description) LIKE :search)',
+        { search: `%${search.toLowerCase()}%` },
+      );
+    }
+
+    if (difficulty) {
+      qb.andWhere('LOWER(course.difficulty) = :difficulty', {
+        difficulty: difficulty.toLowerCase(),
+      });
+    }
+
+    if (tags) {
+      const tagList = tags.split(',').map((t) => t.trim()).filter(Boolean);
+      tagList.forEach((tag, i) => {
+        qb.andWhere(`course.tags LIKE :tag${i}`, { [`tag${i}`]: `%${tag}%` });
+      });
+    }
+
+    const orderCol = ['title', 'difficulty'].includes(sortBy) ? sortBy : 'createdAt';
+    qb.orderBy(`course.${orderCol}`, sortOrder.toUpperCase() as 'ASC' | 'DESC');
+
+    const [courses, total] = await qb.getManyAndCount();
+
+    // fetch enrollment counts via raw query for accuracy
+    const courseIds = courses.map((c) => c.id);
+    const countMap = new Map<string, number>();
+    if (courseIds.length > 0) {
+      const counts: { courseId: string; count: string }[] =
+        await this.courseRegistrationRepository
+          .createQueryBuilder('reg')
+          .select('reg.courseId', 'courseId')
+          .addSelect('COUNT(reg.id)', 'count')
+          .where('reg.courseId IN (:...ids)', { ids: courseIds })
+          .groupBy('reg.courseId')
+          .getRawMany();
+      counts.forEach((r) => countMap.set(r.courseId, parseInt(r.count, 10)));
+    }
 
     let enrolledIds = new Set<string>();
-    if (userId && result.data.length > 0) {
-      const courseIds = result.data.map((c) => c.id);
+    if (userId && courseIds.length > 0) {
       const regs = await this.courseRegistrationRepository.find({
         where: { userId, courseId: In(courseIds) },
         select: ['courseId'],
@@ -73,15 +120,28 @@ export class CoursesService {
     }
 
     return {
-      ...result,
-      data: result.data.map(
+      data: courses.map(
         (course) =>
           new CourseResponseDto(course, {
-            isEnrolled:
-              userId !== undefined ? enrolledIds.has(course.id) : undefined,
+            isEnrolled: userId !== undefined ? enrolledIds.has(course.id) : undefined,
+            enrollmentCount: countMap.get(course.id) ?? 0,
           }),
       ),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
     };
+  }
+
+  async getUniqueTags(): Promise<string[]> {
+    const courses = await this.courseRepository.find({
+      where: { published: true },
+      select: ['tags'],
+    });
+    const tagSet = new Set<string>();
+    courses.forEach((c) => (c.tags ?? []).forEach((t) => tagSet.add(t)));
+    return Array.from(tagSet).sort();
   }
 
   async findOne(id: string): Promise<CourseResponseDto> {

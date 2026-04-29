@@ -42,13 +42,11 @@ describe('UserService', () => {
   let userRepo: ReturnType<typeof makeRepo>;
   let certificateRepo: ReturnType<typeof makeRepo>;
   let userBadgeRepo: ReturnType<typeof makeRepo>;
-  let courseRegistrationRepo: ReturnType<typeof makeRepo>;
 
   beforeEach(async () => {
     userRepo = makeRepo();
     certificateRepo = makeRepo();
     userBadgeRepo = makeRepo();
-    courseRegistrationRepo = makeRepo();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -56,15 +54,7 @@ describe('UserService', () => {
         { provide: getRepositoryToken(User), useValue: userRepo },
         { provide: getRepositoryToken(Certificate), useValue: certificateRepo },
         { provide: getRepositoryToken(UserBadge), useValue: userBadgeRepo },
-        {
-          provide: getRepositoryToken(User),
-          useValue: {
-            findOne: jest.fn(),
-            create: jest.fn(),
-            save: jest.fn(),
-            find: jest.fn(),
-          },
-        },
+        { provide: getRepositoryToken(CourseRegistration), useValue: makeRepo() },
       ],
     }).compile();
 
@@ -94,9 +84,7 @@ describe('UserService', () => {
       userRepo.findOne.mockResolvedValue({ ...mockUser, bio: 'original bio' });
       userRepo.save.mockImplementation((u: User) => Promise.resolve(u));
 
-      const result = await service.updateProfile('user-1', {
-        username: 'onlyname',
-      });
+      const result = await service.updateProfile('user-1', { username: 'onlyname' });
 
       expect(result.username).toBe('onlyname');
       expect(result.bio).toBe('original bio');
@@ -137,10 +125,7 @@ describe('UserService', () => {
 
     it('throws BadRequestException when file size exceeds limit', async () => {
       userRepo.findOne.mockResolvedValue({ ...mockUser });
-      const oversizedFile = {
-        ...validFile,
-        size: 999 * 1024 * 1024,
-      };
+      const oversizedFile = { ...validFile, size: 999 * 1024 * 1024 };
 
       await expect(
         service.uploadAvatar('user-1', oversizedFile),
@@ -171,9 +156,7 @@ describe('UserService', () => {
     it('throws NotFoundException for unknown user', async () => {
       userRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.getMyProfile('bad-id')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.getMyProfile('bad-id')).rejects.toThrow(NotFoundException);
     });
   });
 });
