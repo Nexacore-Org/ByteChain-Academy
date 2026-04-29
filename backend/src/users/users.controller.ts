@@ -170,4 +170,4 @@ export class UsersController {
   }> {
     return this.userService.getPublicProfile(id);
   }
-}
+}

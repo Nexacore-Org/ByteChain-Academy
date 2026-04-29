@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Award, Flame, GraduationCap, Trophy, Zap } from "lucide-react";
+import { Award, Flame, GraduationCap, Trophy, Zap, Sparkles } from "lucide-react";
 
 interface StatsSummaryProps {
   xp: number;
@@ -20,59 +20,59 @@ export function StatsSummary({
 }: StatsSummaryProps) {
   const cards = [
     {
-      label: "XP",
+      label: "Experience",
       value: xp.toLocaleString(),
+      subValue: "XP Earned",
       icon: Zap,
-      valueClassName: "text-[#00ff88]",
-      iconClassName: "text-[#00ff88]",
-      borderClassName: "border-[#00ff88]/20",
+      color: "from-green-500 to-emerald-700",
+      iconColor: "text-green-400",
     },
     {
-      label: "Streak",
+      label: "Daily Streak",
       value: String(streak),
+      subValue: "Days Active",
       icon: Flame,
-      valueClassName: "text-orange-400",
-      iconClassName: "text-orange-400",
-      borderClassName: "border-orange-400/20",
+      color: "from-orange-500 to-red-600",
+      iconColor: "text-orange-400",
     },
     {
-      label: "Badges",
-      value: String(badgesCount),
-      icon: Award,
-      valueClassName: "text-white",
-      iconClassName: "text-[#00ff88]",
-      borderClassName: "border-white/10",
-    },
-    {
-      label: "Certificates",
+      label: "Certifications",
       value: String(certificatesCount),
+      subValue: "Verifiable",
       icon: GraduationCap,
-      valueClassName: "text-white",
-      iconClassName: "text-[#00ff88]",
-      borderClassName: "border-white/10",
+      color: "from-blue-500 to-indigo-600",
+      iconColor: "text-blue-400",
     },
     {
-      label: "Completed Courses",
-      value: String(completedCourses),
-      icon: Trophy,
-      valueClassName: "text-white",
-      iconClassName: "text-[#00ff88]",
-      borderClassName: "border-white/10",
-    },
+      label: "Achievements",
+      value: String(badgesCount),
+      subValue: "Badges",
+      icon: Award,
+      color: "from-purple-500 to-pink-600",
+      iconColor: "text-purple-400",
+    }
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {cards.map((item) => {
         const Icon = item.icon;
         return (
-          <Card key={item.label} className={`bg-[#080e22] ${item.borderClassName}`}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs text-gray-400 uppercase tracking-wider">{item.label}</p>
-                <Icon className={`w-4 h-4 ${item.iconClassName}`} />
+          <Card key={item.label} className="relative overflow-hidden border-white/5 bg-[#0d0d0d] transition-all hover:border-white/10 group">
+            <div className={`absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r ${item.color} opacity-30 group-hover:opacity-100 transition-opacity`} />
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <p className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-black">{item.label}</p>
+                  <div className="flex items-baseline gap-1">
+                    <p className="text-3xl font-black text-white tracking-tighter">{item.value}</p>
+                  </div>
+                  <p className="text-[10px] text-gray-600 font-bold uppercase">{item.subValue}</p>
+                </div>
+                <div className={`p-2.5 rounded-xl bg-white/5 border border-white/5 ${item.iconColor}`}>
+                  <Icon className="w-5 h-5" />
+                </div>
               </div>
-              <p className={`text-2xl font-bold ${item.valueClassName}`}>{item.value}</p>
             </CardContent>
           </Card>
         );
