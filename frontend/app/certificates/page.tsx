@@ -1,157 +1,106 @@
 "use client";
 
 import { Header } from "@/components/header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { ArrowLeft, Award, GraduationCap } from "lucide-react";
+import { useEffect } from "react";
+import { ArrowLeft, ShieldCheck, Award, AlertTriangle, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { api } from "@/lib/api";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorCard } from "@/components/ui/error-card";
-
-interface Certificate {
-  id: string;
-  certificateHash: string;
-  recipientName: string;
-  recipientEmail: string;
-  courseOrProgram: string;
-  issuedAt: string;
-  expiresAt: string | null;
-  isValid: boolean;
-}
+import { useCertificates } from "@/hooks/use-certificates";
+import { CertificateCard } from "@/components/certificates/certificate-card";
 
 export default function MyCertificatesPage() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
-  const [certificates, setCertificates] = useState<Certificate[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await api.get<Certificate[]>("/certificates");
-      setCertificates(Array.isArray(data) ? data : []);
-    } catch {
-      setError("Failed to load certificates. Please try again.");
-      setCertificates([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: certificates, isLoading: certsLoading, isError, refetch } = useCertificates();
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!authLoading && !isAuthenticated) {
       router.push("/");
-      return;
     }
-    void load();
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, authLoading, router]);
+  }, [isAuthenticated, authLoading, router]);
 
-  if (!isAuthenticated) return null;
+  if (authLoading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-green-500 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       <Header />
-      <main className="container mx-auto px-6 py-12 max-w-4xl">
+      <main className="container mx-auto px-6 py-12 max-w-5xl">
         <div className="mb-8">
           <Link href="/dashboard">
-            <Button variant="ghost" className="gap-2 text-gray-400 hover:text-white">
+            <Button variant="ghost" className="gap-2 text-gray-400 hover:text-white hover:bg-white/5">
               <ArrowLeft className="w-4 h-4" />
               Back to Dashboard
             </Button>
           </Link>
         </div>
 
-        <div className="mb-10">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-[#00ff88]/10 border border-[#00ff88]/20">
-              <GraduationCap className="w-5 h-5 text-[#00ff88]" />
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold">My Certificates</h1>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <div className="space-y-2">
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight">
+              My <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600">Certificates</span>
+            </h1>
+            <p className="text-gray-400 text-lg max-w-xl">
+              Showcase your achievements. All certificates are cryptographically signed and verifiable on-chain.
+            </p>
           </div>
-          <p className="text-gray-400">
-            View and manage your earned certificates
-          </p>
+          <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-green-500/5 border border-green-500/10 text-green-400 text-sm font-bold uppercase tracking-wider">
+             <ShieldCheck className="w-5 h-5" />
+             Secured by ByteChain
+          </div>
         </div>
 
-        {loading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="border-white/10 bg-white/5">
-                <CardHeader className="flex flex-row items-start justify-between">
-                  <div className="space-y-2 flex-1">
-                    <Skeleton className="h-5 w-1/2" />
-                    <Skeleton className="h-4 w-1/4" />
-                  </div>
-                  <Skeleton className="h-6 w-16 rounded-full" />
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-8 w-32" />
-                </CardContent>
-              </Card>
+        {certsLoading ? (
+          <div className="grid gap-6">
+            {[1, 2].map((i) => (
+              <div key={i} className="h-32 rounded-xl bg-white/5 animate-pulse border border-white/10" />
             ))}
           </div>
-        ) : error ? (
-          <ErrorCard message={error} onRetry={() => void load()} />
-        ) : certificates.length === 0 ? (
-          <Card className="border-[#00ff88]/20 bg-gradient-to-br from-[#080e22] to-[#0a0a0a]">
-            <CardContent className="flex flex-col items-center justify-center py-16">
-              <div className="p-4 rounded-full bg-[#00ff88]/10 border border-[#00ff88]/20 mb-4">
-                <Award className="w-12 h-12 text-[#00ff88]" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">No certificates yet</h3>
-              <p className="text-gray-400 text-center max-w-md mb-6">
-                Complete courses to earn certificates. Your certificates will
-                appear here once you finish a course.
-              </p>
-              <Link href="/courses">
-                <Button className="gap-2 bg-gradient-to-r from-[#00ff88] to-[#00d88b] text-[#002E20]">
-                  Browse Courses
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center space-y-4 bg-white/[0.02] rounded-3xl border border-white/5">
+            <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
+              <AlertTriangle className="w-8 h-8 text-red-500" />
+            </div>
+            <div className="space-y-1">
+               <h3 className="text-xl font-bold">Failed to load certificates</h3>
+               <p className="text-gray-400">There was an error connecting to the verification server.</p>
+            </div>
+            <Button 
+              onClick={() => void refetch()}
+              className="bg-white/10 hover:bg-white/20 text-white border-white/10"
+            >
+              Try Again
+            </Button>
+          </div>
+        ) : !certificates || certificates.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center space-y-6 bg-white/[0.02] rounded-3xl border border-white/5">
+            <div className="w-20 h-20 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 opacity-50">
+              <Award className="w-10 h-10 text-gray-400" />
+            </div>
+            <div className="space-y-2">
+               <h3 className="text-2xl font-bold">No certificates yet</h3>
+               <p className="text-gray-400 max-w-xs mx-auto">
+                 Complete courses and pass quizzes to earn your blockchain certifications.
+               </p>
+            </div>
+            <Link href="/courses">
+              <Button className="bg-green-500 hover:bg-green-400 text-[#002E20] font-black px-8 h-12 rounded-xl transition-all hover:scale-105">
+                Explore Courses
+              </Button>
+            </Link>
+          </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid gap-6">
             {certificates.map((cert) => (
-              <Card
-                key={cert.id}
-                className="border-[#00ff88]/20 bg-gradient-to-br from-[#080e22] to-[#0a0a0a] hover:border-[#00ff88]/40 transition-colors"
-              >
-                <CardHeader className="flex flex-row items-start justify-between">
-                  <div>
-                    <CardTitle className="text-lg">{cert.courseOrProgram}</CardTitle>
-                    <p className="text-sm text-gray-400 mt-1">
-                      Issued {new Date(cert.issuedAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      cert.isValid
-                        ? "bg-green-500/20 text-green-400"
-                        : "bg-red-500/20 text-red-400"
-                    }`}
-                  >
-                    {cert.isValid ? "Valid" : "Revoked"}
-                  </span>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-400">
-                    Hash: <code className="text-gray-300">{cert.certificateHash.slice(0, 16)}...</code>
-                  </p>
-                  <Link href="/verify-certificate" className="mt-4 inline-block">
-                    <Button variant="outline" size="sm">
-                      Verify Certificate
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
+              <CertificateCard key={cert.id} certificate={cert} />
             ))}
           </div>
         )}

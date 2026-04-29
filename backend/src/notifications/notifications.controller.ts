@@ -2,8 +2,11 @@ import {
   ClassSerializerInterceptor,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
+  Query,
   Request,
   UseGuards,
   UseInterceptors,
@@ -24,6 +27,7 @@ import { NotificationsService } from './notifications.service';
 @Controller('notifications')
 @UseGuards(JwtAuthGuard)
 @UseInterceptors(ClassSerializerInterceptor)
+@ApiBearerAuth('access-token')
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
@@ -38,8 +42,14 @@ export class NotificationsController {
   async getMyNotifications(@Request() req): Promise<NotificationResponseDto[]> {
     const notifications = await this.notificationsService.getMyNotifications(
       req.user.id as string,
+      page,
+      limit,
     );
-    return plainToInstance(NotificationResponseDto, notifications);
+    return {
+      data: plainToInstance(NotificationResponseDto, result.data),
+      total: result.total,
+      unreadCount: result.unreadCount,
+    };
   }
 
   @Get('unread-count')

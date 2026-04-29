@@ -12,15 +12,13 @@ import {
   ClassSerializerInterceptor,
   Post,
   Param,
+  UploadedFile,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { UserProfileResponseDto } from '../users/dto/user-profile-response.dto';
 import { VerifyWalletDto } from '../users/dto/verify-wallet.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { plainToInstance } from 'class-transformer';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { UserService } from './users.service';
@@ -110,7 +108,7 @@ export class UsersController {
 
   @Patch('me')
   @ApiOperation({ summary: 'Update user profile' })
-  @ApiResponse({ status: 200, description: 'Profile updated successfully' })
+  @ApiResponse({ status: 200, description: 'Profile updated successfully', type: UserProfileResponseDto })
   @ApiResponse({ status: 400, description: 'Bad request - validation error' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async updateProfile(
