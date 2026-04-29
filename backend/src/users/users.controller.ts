@@ -53,8 +53,6 @@ export class UsersController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - admin access required' })
   async getAdminData(@Request() req) {
-    // This seems to be missing an implementation in the conflict view, but I'll leave it as a placeholder or check if it was there before
-    // Actually, upstream/main might have just added the decorator/endpoint.
     return { message: 'Admin data access' };
   }
 
@@ -172,4 +170,4 @@ export class UsersController {
   }> {
     return this.userService.getPublicProfile(id);
   }
-}
+}
