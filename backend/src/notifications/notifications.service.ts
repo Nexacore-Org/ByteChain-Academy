@@ -31,11 +31,27 @@ export class NotificationsService {
     return this.notificationRepository.save(notification);
   }
 
-  async getMyNotifications(userId: string): Promise<Notification[]> {
-    return this.notificationRepository.find({
+  async getMyNotifications(
+    userId: string,
+    page?: number,
+    limit?: number,
+  ): Promise<{ data: Notification[]; total: number; unreadCount: number }> {
+    const currentPage = page && page > 0 ? page : 1;
+    const currentLimit = limit && limit > 0 ? limit : 10;
+    const skip = (currentPage - 1) * currentLimit;
+
+    const [data, total] = await this.notificationRepository.findAndCount({
       where: { userId },
       order: { createdAt: 'DESC' },
+      skip,
+      take: currentLimit,
     });
+
+    const unreadCount = await this.notificationRepository.count({
+      where: { userId, isRead: false },
+    });
+
+    return { data, total, unreadCount };
   }
 
   async getUnreadCount(userId: string): Promise<{ unreadCount: number }> {
