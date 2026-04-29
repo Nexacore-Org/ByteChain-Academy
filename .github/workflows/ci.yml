@@ -73,3 +73,40 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  frontend-e2e:
+    name: Frontend E2E Tests
+    runs-on: ubuntu-latest
+    env:
+      JWT_SECRET: ci-test-secret-minimum-32-characters-long
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Start backend
+        working-directory: backend
+        run: npm run start:dev &
+        
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        working-directory: frontend
+        run: npm run test:e2e
