@@ -62,10 +62,7 @@ export class WebhooksController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a webhook' })
   @ApiResponse({ status: 204, description: 'Webhook deleted successfully' })
-  async deleteWebhook(
-    @Req() req: RequestWithUser,
-    @Param('id') id: string,
-  ) {
+  async deleteWebhook(@Req() req: RequestWithUser, @Param('id') id: string) {
     await this.webhooksService.deleteWebhook(req.user.id, id);
   }
 }

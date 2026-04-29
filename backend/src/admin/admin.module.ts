@@ -8,7 +8,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../users/entities/user.entity';
 
 @Module({
-  imports: [CoursesModule, LessonsModule, DAOModule, TypeOrmModule.forFeature([User])],
+  imports: [
+    CoursesModule,
+    LessonsModule,
+    DAOModule,
+    TypeOrmModule.forFeature([User]),
+  ],
   controllers: [AdminCoursesController, AdminDAOController],
 })
 export class AdminModule {}

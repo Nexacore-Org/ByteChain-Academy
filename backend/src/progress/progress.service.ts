@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CertificateService } from '../certificates/certificates.service';
 import { Progress } from './entities/progress.entity';
 import { Lesson } from 'src/lessons/entities/lesson.entity';
@@ -95,13 +96,16 @@ export class ProgressService {
           'You completed a course.',
           `/courses/${courseId}`,
         );
-        
+
         // Dispatch webhook event
-        await this.webhooksService.dispatchEvent(WebhookEvent.COURSE_COMPLETED, {
-          userId,
-          courseId,
-          completedAt: new Date(),
-        });
+        await this.webhooksService.dispatchEvent(
+          WebhookEvent.COURSE_COMPLETED,
+          {
+            userId,
+            courseId,
+            completedAt: new Date(),
+          },
+        );
       }
       await this.certificateService.issueCertificateForCourse(userId, courseId);
     }

@@ -14,6 +14,12 @@ import {
   Param,
   UploadedFile,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { UserProfileResponseDto } from '../users/dto/user-profile-response.dto';
@@ -35,11 +41,15 @@ export class UsersController {
   constructor(
     private readonly userService: UserService,
     private readonly walletService: WalletService,
-  ) { }
+  ) {}
 
   @Get('me')
   @ApiOperation({ summary: 'Get current user profile' })
-  @ApiResponse({ status: 200, description: 'User profile retrieved successfully', type: UserProfileResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'User profile retrieved successfully',
+    type: UserProfileResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getMyProfile(@Request() req): Promise<UserProfileResponseDto> {
     const user = await this.userService.getMyProfile(req.user.id as string);
@@ -51,6 +61,10 @@ export class UsersController {
   @ApiOperation({ summary: 'Get admin user data (admin only)' })
   @ApiResponse({ status: 200, description: 'Admin data retrieved' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - admin access required',
+  })
   @ApiResponse({ status: 403, description: 'Forbidden - admin access required' })
   async getAdminData(@Request() req) {
     return { message: 'Admin data access' };
@@ -116,13 +130,11 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'Profile updated successfully', type: UserProfileResponseDto })
   @ApiResponse({ status: 400, description: 'Bad request - validation error' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async updateMyProfile(
+  async updateProfile(
     @Request() req,
-    @Body() dto: UpdateProfileDto,
-  ): Promise<UserProfileResponseDto> {
-    await this.userService.updateProfile(req.user.id as string, dto);
-    const user = await this.userService.getMyProfile(req.user.id as string);
-    return plainToInstance(UserProfileResponseDto, user);
+    @Body() updateProfileDto: any,
+  ): Promise<void> {
+    await this.userService.updateProfile(req.user.id, updateProfileDto);
   }
 
   @Delete('me')
@@ -139,7 +151,10 @@ export class UsersController {
 
   @Get('me/stats')
   @ApiOperation({ summary: 'Get user statistics and achievements' })
-  @ApiResponse({ status: 200, description: 'User stats retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'User stats retrieved successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getMyStats(@Request() req): Promise<{
     courseCount: number;
@@ -157,7 +172,10 @@ export class UsersController {
 
   @Get(':id/public')
   @ApiOperation({ summary: 'Get public user profile by ID' })
-  @ApiResponse({ status: 200, description: 'Public profile retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Public profile retrieved successfully',
+  })
   @ApiResponse({ status: 404, description: 'User not found' })
   async getPublicProfile(@Param('id') id: string): Promise<{
     id: string;

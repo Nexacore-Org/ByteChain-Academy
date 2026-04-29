@@ -63,7 +63,9 @@ export class DAOService {
       query.where('proposal.status = :status', { status });
     } else {
       // Exclude WITHDRAWN proposals from default list
-      query.where('proposal.status != :withdrawn', { withdrawn: ProposalStatus.WITHDRAWN });
+      query.where('proposal.status != :withdrawn', {
+        withdrawn: ProposalStatus.WITHDRAWN,
+      });
     }
 
     const [proposals, total] = await query.getManyAndCount();
@@ -178,14 +180,17 @@ export class DAOService {
 
       if (proposal.status === ProposalStatus.PASSED) {
         // Dispatch webhook event
-        await this.webhooksService.dispatchEvent(WebhookEvent.DAO_PROPOSAL_PASSED, {
-          proposalId: proposal.id,
-          title: proposal.title,
-          yesVotes: proposal.yesVotes,
-          noVotes: proposal.noVotes,
-          proposerId: proposal.proposerId,
-          passedAt: new Date(),
-        });
+        await this.webhooksService.dispatchEvent(
+          WebhookEvent.DAO_PROPOSAL_PASSED,
+          {
+            proposalId: proposal.id,
+            title: proposal.title,
+            yesVotes: proposal.yesVotes,
+            noVotes: proposal.noVotes,
+            proposerId: proposal.proposerId,
+            passedAt: new Date(),
+          },
+        );
       }
     }
   }
@@ -201,9 +206,12 @@ export class DAOService {
       throw new ForbiddenException('Only the proposal owner can edit it');
     }
 
-    const totalVotes = proposal.yesVotes + proposal.noVotes + proposal.abstainVotes;
+    const totalVotes =
+      proposal.yesVotes + proposal.noVotes + proposal.abstainVotes;
     if (totalVotes > 0) {
-      throw new BadRequestException('Cannot edit proposal that has received votes');
+      throw new BadRequestException(
+        'Cannot edit proposal that has received votes',
+      );
     }
 
     if (dto.title !== undefined) {
@@ -216,7 +224,10 @@ export class DAOService {
     return this.proposalRepository.save(proposal);
   }
 
-  async withdrawProposal(userId: string, proposalId: string): Promise<DAOProposal> {
+  async withdrawProposal(
+    userId: string,
+    proposalId: string,
+  ): Promise<DAOProposal> {
     const proposal = await this.getProposalById(proposalId);
 
     if (proposal.proposerId !== userId) {

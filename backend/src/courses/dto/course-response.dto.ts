@@ -1,37 +1,50 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CourseResponseDto {
-  @ApiProperty()
+  @ApiProperty({
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'id field',
+  })
+  @IsString()
+  @IsNotEmpty()
   id: string;
 
   @ApiProperty()
   title: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    example: 'A concise description of the resource.',
+    description: 'description field',
+  })
+  @IsString()
+  @IsNotEmpty()
   description: string;
 
   @ApiProperty()
   published: boolean;
 
-  @ApiProperty({ nullable: true })
-  difficulty: string | null;
-
-  @ApiProperty({ type: [String] })
-  tags: string[];
-
-  @ApiProperty({ nullable: true })
-  thumbnailUrl: string | null;
-
-  @ApiProperty()
-  enrollmentCount: number;
-
-  @ApiProperty()
+  @ApiProperty({
+    example: '2026-04-22T00:00:00.000Z',
+    description: 'createdAt field',
+  })
+  @IsDate()
   createdAt: Date;
 
-  @ApiProperty()
+  @ApiProperty({
+    example: '2026-04-22T00:00:00.000Z',
+    description: 'updatedAt field',
+  })
+  @IsDate()
   updatedAt: Date;
 
-  @ApiProperty({ required: false })
+  /** Present on GET /courses when the request includes a valid JWT */
+  @ApiProperty({
+    example: true,
+    description: 'isEnrolled field',
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
   isEnrolled?: boolean;
 
   constructor(

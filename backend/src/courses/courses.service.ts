@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, In, Repository } from 'typeorm';
 import { CourseRegistration } from '../courses/entities/course-registration.entity';
@@ -342,7 +346,9 @@ export class CoursesService {
   async restore(id: string): Promise<void> {
     const result = await this.courseRepository.restore(id);
     if (!result.affected) {
-      throw new NotFoundException(`Course with ID ${id} not found or not deleted`);
+      throw new NotFoundException(
+        `Course with ID ${id} not found or not deleted`,
+      );
     }
   }
 

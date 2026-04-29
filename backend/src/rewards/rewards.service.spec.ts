@@ -10,6 +10,7 @@ import {
 } from './entities/reward-history.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { BADGE_MILESTONES } from './badge-milestones';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 describe('RewardsService', () => {
   let service: RewardsService;
@@ -282,15 +283,32 @@ describe('RewardsService', () => {
         take: 10,
       });
       expect(result).toHaveLength(3);
-      expect(result[0]).toEqual({ rank: 1, username: 'alice', xp: 500, badgesCount: 3 });
-      expect(result[1]).toEqual({ rank: 2, username: 'Bob', xp: 300, badgesCount: 1 });
-      expect(result[2]).toEqual({ rank: 3, username: null, xp: 100, badgesCount: 0 });
+      expect(result[0]).toEqual({
+        rank: 1,
+        username: 'alice',
+        xp: 500,
+        badgesCount: 3,
+      });
+      expect(result[1]).toEqual({
+        rank: 2,
+        username: 'Bob',
+        xp: 300,
+        badgesCount: 1,
+      });
+      expect(result[2]).toEqual({
+        rank: 3,
+        username: null,
+        xp: 100,
+        badgesCount: 0,
+      });
     });
 
     it('should treat null xp as 0', async () => {
-      userRepository.find = jest.fn().mockResolvedValue([
-        { id: 'u1', username: 'charlie', name: null, xp: null },
-      ]);
+      userRepository.find = jest
+        .fn()
+        .mockResolvedValue([
+          { id: 'u1', username: 'charlie', name: null, xp: null },
+        ]);
 
       const result = await service.getLeaderboard();
 
@@ -305,10 +323,26 @@ describe('RewardsService', () => {
 
   describe('getMyRewards', () => {
     it('should return xp, earned badges, and recent history with labels', async () => {
-      const mockBadge = { id: 'badge-1', key: 'first_lesson', name: 'First Lesson' };
+      const mockBadge = {
+        id: 'badge-1',
+        key: 'first_lesson',
+        name: 'First Lesson',
+      };
       const mockHistory = [
-        { id: 'hist-1', userId: 'user-1', amount: 10, reason: XpRewardReason.LESSON_COMPLETE, createdAt: new Date('2025-01-01') },
-        { id: 'hist-2', userId: 'user-1', amount: 25, reason: XpRewardReason.QUIZ_PASS, createdAt: new Date('2025-01-02') },
+        {
+          id: 'hist-1',
+          userId: 'user-1',
+          amount: 10,
+          reason: XpRewardReason.LESSON_COMPLETE,
+          createdAt: new Date('2025-01-01'),
+        },
+        {
+          id: 'hist-2',
+          userId: 'user-1',
+          amount: 25,
+          reason: XpRewardReason.QUIZ_PASS,
+          createdAt: new Date('2025-01-02'),
+        },
       ];
 
       userRepository.findOneOrFail.mockResolvedValue({ xp: 35 });
@@ -345,7 +379,11 @@ describe('RewardsService', () => {
   describe('getEarnedBadges', () => {
     it('should return badges with awardedAt timestamps', async () => {
       const awardedAt = new Date('2025-01-01');
-      const mockBadge = { id: 'badge-1', key: 'first_lesson', name: 'First Lesson' };
+      const mockBadge = {
+        id: 'badge-1',
+        key: 'first_lesson',
+        name: 'First Lesson',
+      };
       userBadgeRepository.find.mockResolvedValue([
         { badge: mockBadge, awardedAt },
       ]);

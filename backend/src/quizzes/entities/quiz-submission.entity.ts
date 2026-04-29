@@ -6,13 +6,11 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
-  Index,
 } from 'typeorm';
 import { Quiz } from './quiz.entity';
 import { User } from '../../users/entities/user.entity';
 
 @Entity('quiz_submissions')
-@Index(['userId', 'quizId'], { unique: true })
 export class QuizSubmission {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -22,6 +20,9 @@ export class QuizSubmission {
 
   @Column()
   quizId: string;
+
+  @Column({ default: 1 })
+  attemptNumber: number;
 
   @Column('simple-json')
   answers: Record<string, string>; // questionId -> answer
@@ -48,6 +49,10 @@ export class QuizSubmission {
 
   @CreateDateColumn()
   submittedAt: Date;
+
+  get completedAt(): Date {
+    return this.submittedAt;
+  }
 
   @UpdateDateColumn()
   updatedAt: Date;

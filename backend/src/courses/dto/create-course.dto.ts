@@ -7,12 +7,19 @@ export class CreateCourseDto {
   @IsNotEmpty()
   title: string;
 
-  @ApiProperty({ example: 'A concise description of the resource.' })
+  @ApiProperty({
+    example: 'A concise description of the resource.',
+    description: 'description field',
+  })
   @IsString()
   @IsNotEmpty()
   description: string;
 
-  @ApiProperty({ example: true, required: false })
+  @ApiProperty({
+    example: true,
+    description: 'published field',
+    required: false,
+  })
   @IsBoolean()
   @IsOptional()
   published?: boolean;
@@ -33,4 +40,3 @@ export class CreateCourseDto {
   @IsOptional()
   thumbnailUrl?: string;
 }
-

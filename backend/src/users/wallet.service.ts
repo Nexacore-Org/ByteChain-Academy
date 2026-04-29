@@ -49,7 +49,9 @@ export class WalletService {
     signature: string,
   ): Promise<{ walletAddress: string }> {
     // Step 1 — Retrieve the challenge
-    const challenge = await this.cacheManager.get<string>(CHALLENGE_KEY(userId));
+    const challenge = await this.cacheManager.get<string>(
+      CHALLENGE_KEY(userId),
+    );
 
     if (!challenge) {
       throw new BadRequestException(
@@ -114,7 +116,9 @@ export class WalletService {
     }
 
     if (!user.walletAddress) {
-      throw new BadRequestException('No wallet address is currently linked to this account.');
+      throw new BadRequestException(
+        'No wallet address is currently linked to this account.',
+      );
     }
 
     // Clear any pending challenge for this user as a cleanup step

@@ -18,4 +18,3 @@ export class PaginationDto {
   @Type(() => Number)
   limit?: number = 10;
 }
-

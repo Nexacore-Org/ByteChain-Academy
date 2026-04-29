@@ -11,7 +11,12 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { plainToInstance } from 'class-transformer';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { NotificationResponseDto } from './dto/notification-response.dto';
@@ -28,7 +33,11 @@ export class NotificationsController {
 
   @Get()
   @ApiOperation({ summary: 'Get user notifications' })
-  @ApiResponse({ status: 200, description: 'Notifications retrieved successfully', type: [NotificationResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'Notifications retrieved successfully',
+    type: [NotificationResponseDto],
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getMyNotifications(@Request() req): Promise<NotificationResponseDto[]> {
     const notifications = await this.notificationsService.getMyNotifications(
@@ -45,7 +54,10 @@ export class NotificationsController {
 
   @Get('unread-count')
   @ApiOperation({ summary: 'Get count of unread notifications' })
-  @ApiResponse({ status: 200, description: 'Unread count retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Unread count retrieved successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getUnreadCount(@Request() req): Promise<{ unreadCount: number }> {
     return this.notificationsService.getUnreadCount(req.user.id as string);
@@ -53,7 +65,11 @@ export class NotificationsController {
 
   @Patch(':id/read')
   @ApiOperation({ summary: 'Mark notification as read' })
-  @ApiResponse({ status: 200, description: 'Notification marked as read', type: NotificationResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Notification marked as read',
+    type: NotificationResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Notification not found' })
   async markAsRead(

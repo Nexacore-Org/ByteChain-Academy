@@ -1,15 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { DataSource } from 'typeorm';
-import { User } from '../src/entities/user.entity';
-import { Course } from '../src/entities/course.entity';
-import { Lesson } from '../src/entities/lesson.entity';
+import { HttpExceptionFilter } from '../src/common/filters/http-exception.filter';
+import { User, UserRole } from '../src/users/entities/user.entity';
+import { Course } from '../src/courses/entities/course.entity';
+import { Lesson } from '../src/lessons/entities/lesson.entity';
 import { Quiz } from '../src/quizzes/entities/quiz.entity';
 import { QuizSubmission } from '../src/quizzes/entities/quiz-submission.entity';
 import { QuestionType } from '../src/quizzes/entities/question.entity';
+
+const PREFIX = '/api/v1';
 
 describe('QuizzesController (e2e)', () => {
   let app: INestApplication<App>;
@@ -21,6 +24,46 @@ describe('QuizzesController (e2e)', () => {
   let quizId: string;
   let question1Id: string;
   let question2Id: string;
+  const createdQuizIds: string[] = [];
+  const createdLessonIds: string[] = [];
+
+  const createLessonAndQuiz = async (payload: {
+    title: string;
+    description?: string;
+    maxAttempts?: number;
+    questions: {
+      text: string;
+      type: QuestionType;
+      options: string[];
+      correctAnswer: string;
+    }[];
+  }) => {
+    const lessonRepo = dataSource.getRepository(Lesson);
+    const lesson = await lessonRepo.save(
+      lessonRepo.create({
+        title: `${payload.title} Lesson`,
+        content: 'Test Lesson Content',
+        courseId,
+        order: createdLessonIds.length + 2,
+      }),
+    );
+    createdLessonIds.push(lesson.id);
+
+    const quizResponse = await request(app.getHttpServer())
+      .post(`${PREFIX}/quizzes`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({
+        title: payload.title,
+        description: payload.description ?? 'Test',
+        maxAttempts: payload.maxAttempts,
+        lessonId: lesson.id,
+        questions: payload.questions,
+      })
+      .expect(201);
+
+    createdQuizIds.push(quizResponse.body.id);
+    return quizResponse.body;
+  };
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -28,12 +71,21 @@ describe('QuizzesController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.setGlobalPrefix('api/v1');
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        transform: true,
+        forbidNonWhitelisted: true,
+      }),
+    );
+    app.useGlobalFilters(new HttpExceptionFilter());
     dataSource = moduleFixture.get<DataSource>(DataSource);
     await app.init();
 
     // Create test user and get auth token
     const registerResponse = await request(app.getHttpServer())
-      .post('/auth/register')
+      .post(`${PREFIX}/auth/register`)
       .send({
         email: `test-${Date.now()}@example.com`,
         password: 'password123',
@@ -41,10 +93,13 @@ describe('QuizzesController (e2e)', () => {
 
     authToken = registerResponse.body.token;
     userId = registerResponse.body.user.id;
+    await dataSource
+      .getRepository(User)
+      .update(userId, { role: UserRole.ADMIN });
 
     // Create test course
     const courseResponse = await request(app.getHttpServer())
-      .post('/courses')
+      .post(`${PREFIX}/courses`)
       .set('Authorization', `Bearer ${authToken}`)
       .send({
         title: 'Test Course',
@@ -66,11 +121,12 @@ describe('QuizzesController (e2e)', () => {
 
     // Create test quiz
     const quizResponse = await request(app.getHttpServer())
-      .post('/quizzes')
+      .post(`${PREFIX}/quizzes`)
       .set('Authorization', `Bearer ${authToken}`)
       .send({
         title: 'Test Quiz',
         description: 'Test Quiz Description',
+        maxAttempts: 1,
         lessonId: lessonId,
         questions: [
           {
@@ -89,6 +145,7 @@ describe('QuizzesController (e2e)', () => {
       });
 
     quizId = quizResponse.body.id;
+    createdQuizIds.push(quizId);
     question1Id = quizResponse.body.questions[0].id;
     question2Id = quizResponse.body.questions[1].id;
   });
@@ -103,7 +160,12 @@ describe('QuizzesController (e2e)', () => {
       const userRepo = dataSource.getRepository(User);
 
       await quizSubmissionRepo.delete({ userId });
-      await quizRepo.delete({ id: quizId });
+      for (const id of createdQuizIds) {
+        await quizRepo.delete({ id });
+      }
+      for (const id of createdLessonIds) {
+        await lessonRepo.delete({ id });
+      }
       await lessonRepo.delete({ id: lessonId });
       await courseRepo.delete({ id: courseId });
       await userRepo.delete({ id: userId });
@@ -114,7 +176,7 @@ describe('QuizzesController (e2e)', () => {
   describe('POST /quizzes/:id/submit', () => {
     it('should successfully submit a quiz with correct answers', async () => {
       const response = await request(app.getHttpServer())
-        .post(`/quizzes/${quizId}/submit`)
+        .post(`${PREFIX}/quizzes/${quizId}/submit`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           answers: {
@@ -131,12 +193,14 @@ describe('QuizzesController (e2e)', () => {
       expect(response.body.totalQuestions).toBe(2);
       expect(response.body.correctAnswers).toBe(2);
       expect(response.body.passed).toBe(true);
+      expect(response.body.attemptNumber).toBe(1);
       expect(response.body).toHaveProperty('submittedAt');
+      expect(response.body).toHaveProperty('completedAt');
     });
 
     it('should reject submission without authentication', async () => {
       await request(app.getHttpServer())
-        .post(`/quizzes/${quizId}/submit`)
+        .post(`${PREFIX}/quizzes/${quizId}/submit`)
         .send({
           answers: {
             [question1Id]: '4',
@@ -146,31 +210,26 @@ describe('QuizzesController (e2e)', () => {
         .expect(401);
     });
 
-    it('should reject duplicate submission', async () => {
-      // Create a new quiz for this test
-      const newQuizResponse = await request(app.getHttpServer())
-        .post('/quizzes')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({
-          title: 'Duplicate Test Quiz',
-          description: 'Test',
-          lessonId: lessonId,
-          questions: [
-            {
-              text: 'Test Question',
-              type: QuestionType.MULTIPLE_CHOICE,
-              options: ['A', 'B'],
-              correctAnswer: 'A',
-            },
-          ],
-        });
+    it('should reject submissions beyond maxAttempts with a descriptive limit message', async () => {
+      const newQuiz = await createLessonAndQuiz({
+        title: 'Attempt Limit Test Quiz',
+        maxAttempts: 1,
+        questions: [
+          {
+            text: 'Test Question',
+            type: QuestionType.MULTIPLE_CHOICE,
+            options: ['A', 'B'],
+            correctAnswer: 'A',
+          },
+        ],
+      });
 
-      const newQuizId = newQuizResponse.body.id;
-      const newQuestionId = newQuizResponse.body.questions[0].id;
+      const newQuizId = newQuiz.id;
+      const newQuestionId = newQuiz.questions[0].id;
 
       // First submission
       await request(app.getHttpServer())
-        .post(`/quizzes/${newQuizId}/submit`)
+        .post(`${PREFIX}/quizzes/${newQuizId}/submit`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           answers: {
@@ -179,9 +238,8 @@ describe('QuizzesController (e2e)', () => {
         })
         .expect(201);
 
-      // Duplicate submission
-      await request(app.getHttpServer())
-        .post(`/quizzes/${newQuizId}/submit`)
+      const response = await request(app.getHttpServer())
+        .post(`${PREFIX}/quizzes/${newQuizId}/submit`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           answers: {
@@ -190,39 +248,87 @@ describe('QuizzesController (e2e)', () => {
         })
         .expect(409);
 
-      // Cleanup
-      await dataSource.getRepository(Quiz).delete({ id: newQuizId });
+      expect(response.body.message).toContain('maximum attempt limit');
+      expect(response.body.message).toContain('1 attempt');
+    });
+
+    it('should allow three submissions when maxAttempts is 3 and return attempt history', async () => {
+      const newQuiz = await createLessonAndQuiz({
+        title: 'Three Attempts Test Quiz',
+        maxAttempts: 3,
+        questions: [
+          {
+            text: 'Test Question',
+            type: QuestionType.MULTIPLE_CHOICE,
+            options: ['A', 'B'],
+            correctAnswer: 'A',
+          },
+        ],
+      });
+
+      const newQuizId = newQuiz.id;
+      const newQuestionId = newQuiz.questions[0].id;
+      const answers = { [newQuestionId]: 'A' };
+
+      for (const attemptNumber of [1, 2, 3]) {
+        const response = await request(app.getHttpServer())
+          .post(`${PREFIX}/quizzes/${newQuizId}/submit`)
+          .set('Authorization', `Bearer ${authToken}`)
+          .send({ answers })
+          .expect(201);
+
+        expect(response.body.attemptNumber).toBe(attemptNumber);
+      }
+
+      await request(app.getHttpServer())
+        .post(`${PREFIX}/quizzes/${newQuizId}/submit`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ answers })
+        .expect(409);
+
+      const attemptsResponse = await request(app.getHttpServer())
+        .get(`${PREFIX}/quizzes/${newQuizId}/attempts`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(200);
+
+      expect(attemptsResponse.body).toHaveLength(3);
+      expect(
+        attemptsResponse.body.map((attempt) => attempt.attemptNumber),
+      ).toEqual([1, 2, 3]);
+      expect(attemptsResponse.body[0]).toEqual(
+        expect.objectContaining({
+          attemptNumber: 1,
+          score: 100,
+          passed: true,
+        }),
+      );
+      expect(attemptsResponse.body[0]).toHaveProperty('completedAt');
     });
 
     it('should reject submission with missing answers', async () => {
-      const newQuizResponse = await request(app.getHttpServer())
-        .post('/quizzes')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({
-          title: 'Missing Answers Test Quiz',
-          description: 'Test',
-          lessonId: lessonId,
-          questions: [
-            {
-              text: 'Question 1',
-              type: QuestionType.MULTIPLE_CHOICE,
-              options: ['A', 'B'],
-              correctAnswer: 'A',
-            },
-            {
-              text: 'Question 2',
-              type: QuestionType.MULTIPLE_CHOICE,
-              options: ['A', 'B'],
-              correctAnswer: 'A',
-            },
-          ],
-        });
+      const newQuiz = await createLessonAndQuiz({
+        title: 'Missing Answers Test Quiz',
+        questions: [
+          {
+            text: 'Question 1',
+            type: QuestionType.MULTIPLE_CHOICE,
+            options: ['A', 'B'],
+            correctAnswer: 'A',
+          },
+          {
+            text: 'Question 2',
+            type: QuestionType.MULTIPLE_CHOICE,
+            options: ['A', 'B'],
+            correctAnswer: 'A',
+          },
+        ],
+      });
 
-      const newQuizId = newQuizResponse.body.id;
-      const newQuestion1Id = newQuizResponse.body.questions[0].id;
+      const newQuizId = newQuiz.id;
+      const newQuestion1Id = newQuiz.questions[0].id;
 
       await request(app.getHttpServer())
-        .post(`/quizzes/${newQuizId}/submit`)
+        .post(`${PREFIX}/quizzes/${newQuizId}/submit`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           answers: {
@@ -231,41 +337,33 @@ describe('QuizzesController (e2e)', () => {
           },
         })
         .expect(400);
-
-      // Cleanup
-      await dataSource.getRepository(Quiz).delete({ id: newQuizId });
     });
 
     it('should calculate score correctly with wrong answers', async () => {
-      const newQuizResponse = await request(app.getHttpServer())
-        .post('/quizzes')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({
-          title: 'Wrong Answers Test Quiz',
-          description: 'Test',
-          lessonId: lessonId,
-          questions: [
-            {
-              text: 'Question 1',
-              type: QuestionType.MULTIPLE_CHOICE,
-              options: ['A', 'B'],
-              correctAnswer: 'A',
-            },
-            {
-              text: 'Question 2',
-              type: QuestionType.MULTIPLE_CHOICE,
-              options: ['A', 'B'],
-              correctAnswer: 'A',
-            },
-          ],
-        });
+      const newQuiz = await createLessonAndQuiz({
+        title: 'Wrong Answers Test Quiz',
+        questions: [
+          {
+            text: 'Question 1',
+            type: QuestionType.MULTIPLE_CHOICE,
+            options: ['A', 'B'],
+            correctAnswer: 'A',
+          },
+          {
+            text: 'Question 2',
+            type: QuestionType.MULTIPLE_CHOICE,
+            options: ['A', 'B'],
+            correctAnswer: 'A',
+          },
+        ],
+      });
 
-      const newQuizId = newQuizResponse.body.id;
-      const newQuestion1Id = newQuizResponse.body.questions[0].id;
-      const newQuestion2Id = newQuizResponse.body.questions[1].id;
+      const newQuizId = newQuiz.id;
+      const newQuestion1Id = newQuiz.questions[0].id;
+      const newQuestion2Id = newQuiz.questions[1].id;
 
       const response = await request(app.getHttpServer())
-        .post(`/quizzes/${newQuizId}/submit`)
+        .post(`${PREFIX}/quizzes/${newQuizId}/submit`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           answers: {
@@ -278,44 +376,33 @@ describe('QuizzesController (e2e)', () => {
       expect(response.body.score).toBe(0);
       expect(response.body.correctAnswers).toBe(0);
       expect(response.body.passed).toBe(false);
-
-      // Cleanup
-      await dataSource
-        .getRepository(QuizSubmission)
-        .delete({ quizId: newQuizId });
-      await dataSource.getRepository(Quiz).delete({ id: newQuizId });
     });
 
     it('should calculate score correctly with partial answers (50%)', async () => {
-      const newQuizResponse = await request(app.getHttpServer())
-        .post('/quizzes')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({
-          title: 'Partial Answers Test Quiz',
-          description: 'Test',
-          lessonId: lessonId,
-          questions: [
-            {
-              text: 'Question 1',
-              type: QuestionType.MULTIPLE_CHOICE,
-              options: ['A', 'B'],
-              correctAnswer: 'A',
-            },
-            {
-              text: 'Question 2',
-              type: QuestionType.MULTIPLE_CHOICE,
-              options: ['A', 'B'],
-              correctAnswer: 'A',
-            },
-          ],
-        });
+      const newQuiz = await createLessonAndQuiz({
+        title: 'Partial Answers Test Quiz',
+        questions: [
+          {
+            text: 'Question 1',
+            type: QuestionType.MULTIPLE_CHOICE,
+            options: ['A', 'B'],
+            correctAnswer: 'A',
+          },
+          {
+            text: 'Question 2',
+            type: QuestionType.MULTIPLE_CHOICE,
+            options: ['A', 'B'],
+            correctAnswer: 'A',
+          },
+        ],
+      });
 
-      const newQuizId = newQuizResponse.body.id;
-      const newQuestion1Id = newQuizResponse.body.questions[0].id;
-      const newQuestion2Id = newQuizResponse.body.questions[1].id;
+      const newQuizId = newQuiz.id;
+      const newQuestion1Id = newQuiz.questions[0].id;
+      const newQuestion2Id = newQuiz.questions[1].id;
 
       const response = await request(app.getHttpServer())
-        .post(`/quizzes/${newQuizId}/submit`)
+        .post(`${PREFIX}/quizzes/${newQuizId}/submit`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           answers: {
@@ -328,40 +415,29 @@ describe('QuizzesController (e2e)', () => {
       expect(response.body.score).toBe(50);
       expect(response.body.correctAnswers).toBe(1);
       expect(response.body.passed).toBe(false); // Below 70% threshold
-
-      // Cleanup
-      await dataSource
-        .getRepository(QuizSubmission)
-        .delete({ quizId: newQuizId });
-      await dataSource.getRepository(Quiz).delete({ id: newQuizId });
     });
   });
 
   describe('GET /quizzes/:id/submission', () => {
     it('should return user submission for a quiz', async () => {
       // First submit a quiz
-      const newQuizResponse = await request(app.getHttpServer())
-        .post('/quizzes')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({
-          title: 'Get Submission Test Quiz',
-          description: 'Test',
-          lessonId: lessonId,
-          questions: [
-            {
-              text: 'Question 1',
-              type: QuestionType.MULTIPLE_CHOICE,
-              options: ['A', 'B'],
-              correctAnswer: 'A',
-            },
-          ],
-        });
+      const newQuiz = await createLessonAndQuiz({
+        title: 'Get Submission Test Quiz',
+        questions: [
+          {
+            text: 'Question 1',
+            type: QuestionType.MULTIPLE_CHOICE,
+            options: ['A', 'B'],
+            correctAnswer: 'A',
+          },
+        ],
+      });
 
-      const newQuizId = newQuizResponse.body.id;
-      const newQuestionId = newQuizResponse.body.questions[0].id;
+      const newQuizId = newQuiz.id;
+      const newQuestionId = newQuiz.questions[0].id;
 
       await request(app.getHttpServer())
-        .post(`/quizzes/${newQuizId}/submit`)
+        .post(`${PREFIX}/quizzes/${newQuizId}/submit`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           answers: {
@@ -371,7 +447,7 @@ describe('QuizzesController (e2e)', () => {
 
       // Get the submission
       const response = await request(app.getHttpServer())
-        .get(`/quizzes/${newQuizId}/submission`)
+        .get(`${PREFIX}/quizzes/${newQuizId}/submission`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
@@ -380,71 +456,53 @@ describe('QuizzesController (e2e)', () => {
       expect(response.body).toHaveProperty('quizId', newQuizId);
       expect(response.body).toHaveProperty('score');
       expect(response.body).toHaveProperty('submittedAt');
-
-      // Cleanup
-      await dataSource
-        .getRepository(QuizSubmission)
-        .delete({ quizId: newQuizId });
-      await dataSource.getRepository(Quiz).delete({ id: newQuizId });
+      expect(response.body).toHaveProperty('completedAt');
     });
 
     it('should return null if no submission exists', async () => {
-      const newQuizResponse = await request(app.getHttpServer())
-        .post('/quizzes')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({
-          title: 'No Submission Test Quiz',
-          description: 'Test',
-          lessonId: lessonId,
-          questions: [
-            {
-              text: 'Question 1',
-              type: QuestionType.MULTIPLE_CHOICE,
-              options: ['A', 'B'],
-              correctAnswer: 'A',
-            },
-          ],
-        });
+      const newQuiz = await createLessonAndQuiz({
+        title: 'No Submission Test Quiz',
+        questions: [
+          {
+            text: 'Question 1',
+            type: QuestionType.MULTIPLE_CHOICE,
+            options: ['A', 'B'],
+            correctAnswer: 'A',
+          },
+        ],
+      });
 
-      const newQuizId = newQuizResponse.body.id;
+      const newQuizId = newQuiz.id;
 
       const response = await request(app.getHttpServer())
-        .get(`/quizzes/${newQuizId}/submission`)
+        .get(`${PREFIX}/quizzes/${newQuizId}/submission`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
       expect(response.body).toBeNull();
-
-      // Cleanup
-      await dataSource.getRepository(Quiz).delete({ id: newQuizId });
     });
   });
 
   describe('GET /quizzes/submissions/my', () => {
     it('should return all user submissions', async () => {
       // Create and submit multiple quizzes
-      const quiz1Response = await request(app.getHttpServer())
-        .post('/quizzes')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({
-          title: 'My Submissions Quiz 1',
-          description: 'Test',
-          lessonId: lessonId,
-          questions: [
-            {
-              text: 'Question 1',
-              type: QuestionType.MULTIPLE_CHOICE,
-              options: ['A', 'B'],
-              correctAnswer: 'A',
-            },
-          ],
-        });
+      const quiz1 = await createLessonAndQuiz({
+        title: 'My Submissions Quiz 1',
+        questions: [
+          {
+            text: 'Question 1',
+            type: QuestionType.MULTIPLE_CHOICE,
+            options: ['A', 'B'],
+            correctAnswer: 'A',
+          },
+        ],
+      });
 
-      const quiz1Id = quiz1Response.body.id;
-      const quiz1QuestionId = quiz1Response.body.questions[0].id;
+      const quiz1Id = quiz1.id;
+      const quiz1QuestionId = quiz1.questions[0].id;
 
       await request(app.getHttpServer())
-        .post(`/quizzes/${quiz1Id}/submit`)
+        .post(`${PREFIX}/quizzes/${quiz1Id}/submit`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           answers: {
@@ -453,7 +511,7 @@ describe('QuizzesController (e2e)', () => {
         });
 
       const response = await request(app.getHttpServer())
-        .get('/quizzes/submissions/my')
+        .get(`${PREFIX}/quizzes/submissions/my`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
@@ -462,12 +520,6 @@ describe('QuizzesController (e2e)', () => {
       expect(response.body[0]).toHaveProperty('id');
       expect(response.body[0]).toHaveProperty('userId', userId);
       expect(response.body[0]).toHaveProperty('score');
-
-      // Cleanup
-      await dataSource
-        .getRepository(QuizSubmission)
-        .delete({ quizId: quiz1Id });
-      await dataSource.getRepository(Quiz).delete({ id: quiz1Id });
     });
   });
 });

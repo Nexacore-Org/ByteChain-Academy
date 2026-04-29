@@ -118,9 +118,9 @@ describe('UserService', () => {
     };
 
     it('throws BadRequestException when file is undefined', async () => {
-      await expect(
-        service.uploadAvatar('user-1', undefined),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.uploadAvatar('user-1', undefined)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('throws BadRequestException when file size exceeds limit', async () => {

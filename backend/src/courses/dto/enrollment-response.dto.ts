@@ -16,7 +16,11 @@ export class EnrollmentStatusResponseDto {
   @IsBoolean()
   enrolled: boolean;
 
-  @ApiProperty({ example: '2026-04-22T00:00:00.000Z', description: 'enrolledAt field', required: false })
+  @ApiProperty({
+    example: '2026-04-22T00:00:00.000Z',
+    description: 'enrolledAt field',
+    required: false,
+  })
   @IsOptional()
   @IsDate()
   enrolledAt?: Date;
@@ -24,29 +28,44 @@ export class EnrollmentStatusResponseDto {
 
 /** POST /courses/:id/enroll — returned registration */
 export class CourseRegistrationResponseDto {
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'id field' })
+  @ApiProperty({
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'id field',
+  })
   @IsString()
   @IsNotEmpty()
   id: string;
 
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'userId field' })
+  @ApiProperty({
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'userId field',
+  })
   @IsString()
   @IsNotEmpty()
   userId: string;
 
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'courseId field' })
+  @ApiProperty({
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'courseId field',
+  })
   @IsString()
   @IsNotEmpty()
   courseId: string;
 
-  @ApiProperty({ example: '2026-04-22T00:00:00.000Z', description: 'enrolledAt field' })
+  @ApiProperty({
+    example: '2026-04-22T00:00:00.000Z',
+    description: 'enrolledAt field',
+  })
   @IsDate()
   enrolledAt: Date;
 }
 
 /** GET /courses/enrolled — one row per enrolment */
 export class EnrolledCourseResponseDto {
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'id field' })
+  @ApiProperty({
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'id field',
+  })
   @IsString()
   @IsNotEmpty()
   id: string;
@@ -56,7 +75,10 @@ export class EnrolledCourseResponseDto {
   @IsNotEmpty()
   title: string;
 
-  @ApiProperty({ example: 'A concise description of the resource.', description: 'description field' })
+  @ApiProperty({
+    example: 'A concise description of the resource.',
+    description: 'description field',
+  })
   @IsString()
   @IsNotEmpty()
   description: string;
@@ -65,11 +87,17 @@ export class EnrolledCourseResponseDto {
   @IsBoolean()
   published: boolean;
 
-  @ApiProperty({ example: '2026-04-22T00:00:00.000Z', description: 'createdAt field' })
+  @ApiProperty({
+    example: '2026-04-22T00:00:00.000Z',
+    description: 'createdAt field',
+  })
   @IsDate()
   createdAt: Date;
 
-  @ApiProperty({ example: '2026-04-22T00:00:00.000Z', description: 'updatedAt field' })
+  @ApiProperty({
+    example: '2026-04-22T00:00:00.000Z',
+    description: 'updatedAt field',
+  })
   @IsDate()
   updatedAt: Date;
 
@@ -79,8 +107,10 @@ export class EnrolledCourseResponseDto {
   @Max(100)
   progressPercent: number;
 
-  @ApiProperty({ example: '2026-04-22T00:00:00.000Z', description: 'enrolledAt field' })
+  @ApiProperty({
+    example: '2026-04-22T00:00:00.000Z',
+    description: 'enrolledAt field',
+  })
   @IsDate()
   enrolledAt: Date;
 }
-
