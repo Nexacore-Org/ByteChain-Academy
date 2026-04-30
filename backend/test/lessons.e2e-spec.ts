@@ -1,12 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { DataSource } from 'typeorm';
-import { User } from '../src/entities/user.entity';
-import { Course } from '../src/entities/course.entity';
-import { Lesson } from '../src/entities/lesson.entity';
+import { User } from '../src/users/entities/user.entity';
+import { Course } from '../src/courses/entities/course.entity';
+import { CourseRegistration } from '../src/courses/entities/course-registration.entity';
+import { Lesson } from '../src/lessons/entities/lesson.entity';
+import { HttpExceptionFilter } from '../src/common/filters/http-exception.filter';
+import { UserRole } from '../src/users/entities/user.entity';
+import { RefreshToken } from '../src/auth/entities/refresh-token.entity';
+
+const PREFIX = '/api/v1';
+const MISSING_UUID = '00000000-0000-4000-8000-000000000000';
 
 describe('LessonsController (e2e)', () => {
   let app: INestApplication<App>;
@@ -22,23 +29,35 @@ describe('LessonsController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.setGlobalPrefix('api/v1');
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        transform: true,
+        forbidNonWhitelisted: true,
+      }),
+    );
+    app.useGlobalFilters(new HttpExceptionFilter());
     dataSource = moduleFixture.get<DataSource>(DataSource);
     await app.init();
 
     // Create test user and get auth token
     const registerResponse = await request(app.getHttpServer())
-      .post('/auth/register')
+      .post(`${PREFIX}/auth/register`)
       .send({
         email: `test-${Date.now()}@example.com`,
-        password: 'password123',
+        password: 'Password@123',
       });
 
-    authToken = registerResponse.body.token;
+    authToken = registerResponse.body.accessToken;
     userId = registerResponse.body.user.id;
+    await dataSource
+      .getRepository(User)
+      .update(userId, { role: UserRole.ADMIN });
 
     // Create test course
     const courseResponse = await request(app.getHttpServer())
-      .post('/courses')
+      .post(`${PREFIX}/courses`)
       .set('Authorization', `Bearer ${authToken}`)
       .send({
         title: 'Test Course',
@@ -46,26 +65,30 @@ describe('LessonsController (e2e)', () => {
       });
 
     courseId = courseResponse.body.id;
-  });
+  }, 30_000);
 
   afterAll(async () => {
     // Clean up test data
     if (dataSource) {
       const lessonRepo = dataSource.getRepository(Lesson);
       const courseRepo = dataSource.getRepository(Course);
+      const registrationRepo = dataSource.getRepository(CourseRegistration);
+      const refreshTokenRepo = dataSource.getRepository(RefreshToken);
       const userRepo = dataSource.getRepository(User);
 
       await lessonRepo.delete({ courseId });
+      await registrationRepo.delete({ courseId });
       await courseRepo.delete({ id: courseId });
+      await refreshTokenRepo.delete({ userId });
       await userRepo.delete({ id: userId });
     }
     await app.close();
-  });
+  }, 15_000);
 
   describe('POST /lessons', () => {
     it('should create a lesson with all fields (admin only)', async () => {
       const response = await request(app.getHttpServer())
-        .post('/lessons')
+        .post(`${PREFIX}/lessons`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           title: 'Test Lesson',
@@ -90,7 +113,7 @@ describe('LessonsController (e2e)', () => {
 
     it('should create a lesson without optional video fields', async () => {
       const response = await request(app.getHttpServer())
-        .post('/lessons')
+        .post(`${PREFIX}/lessons`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           title: 'Lesson Without Video',
@@ -105,7 +128,7 @@ describe('LessonsController (e2e)', () => {
 
     it('should reject creation without authentication', async () => {
       await request(app.getHttpServer())
-        .post('/lessons')
+        .post(`${PREFIX}/lessons`)
         .send({
           title: 'Test Lesson',
           content: 'Test content',
@@ -116,19 +139,19 @@ describe('LessonsController (e2e)', () => {
 
     it('should reject creation with invalid course ID', async () => {
       await request(app.getHttpServer())
-        .post('/lessons')
+        .post(`${PREFIX}/lessons`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           title: 'Test Lesson',
           content: 'Test content',
-          courseId: 'non-existent-course-id',
+          courseId: MISSING_UUID,
         })
         .expect(404);
     });
 
     it('should reject creation with invalid video URL', async () => {
       await request(app.getHttpServer())
-        .post('/lessons')
+        .post(`${PREFIX}/lessons`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           title: 'Test Lesson',
@@ -141,7 +164,7 @@ describe('LessonsController (e2e)', () => {
 
     it('should reject creation with negative video start timestamp', async () => {
       await request(app.getHttpServer())
-        .post('/lessons')
+        .post(`${PREFIX}/lessons`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           title: 'Test Lesson',
@@ -158,7 +181,7 @@ describe('LessonsController (e2e)', () => {
     it('should return all lessons for a course (public endpoint)', async () => {
       // Create additional lessons
       await request(app.getHttpServer())
-        .post('/lessons')
+        .post(`${PREFIX}/lessons`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           title: 'Lesson 2',
@@ -168,7 +191,7 @@ describe('LessonsController (e2e)', () => {
         });
 
       await request(app.getHttpServer())
-        .post('/lessons')
+        .post(`${PREFIX}/lessons`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           title: 'Lesson 3',
@@ -178,25 +201,25 @@ describe('LessonsController (e2e)', () => {
         });
 
       const response = await request(app.getHttpServer())
-        .get(`/lessons/course/${courseId}`)
+        .get(`${PREFIX}/lessons/course/${courseId}`)
         .expect(200);
 
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body.length).toBeGreaterThanOrEqual(3);
+      const lessons = response.body.data;
+
+      expect(Array.isArray(lessons)).toBe(true);
+      expect(lessons.length).toBeGreaterThanOrEqual(3);
       // Should be ordered by order ASC
-      expect(response.body[0].order).toBeLessThanOrEqual(
-        response.body[1].order,
-      );
-      expect(response.body[0]).toHaveProperty('id');
-      expect(response.body[0]).toHaveProperty('title');
-      expect(response.body[0]).toHaveProperty('content');
-      expect(response.body[0]).toHaveProperty('courseId', courseId);
+      expect(lessons[0].order).toBeLessThanOrEqual(lessons[1].order);
+      expect(lessons[0]).toHaveProperty('id');
+      expect(lessons[0]).toHaveProperty('title');
+      expect(lessons[0]).toHaveProperty('content');
+      expect(lessons[0]).toHaveProperty('courseId', courseId);
     });
 
     it('should return empty array for course with no lessons', async () => {
       // Create a new course
       const newCourseResponse = await request(app.getHttpServer())
-        .post('/courses')
+        .post(`${PREFIX}/courses`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           title: 'Empty Course',
@@ -206,11 +229,11 @@ describe('LessonsController (e2e)', () => {
       const newCourseId = newCourseResponse.body.id;
 
       const response = await request(app.getHttpServer())
-        .get(`/lessons/course/${newCourseId}`)
+        .get(`${PREFIX}/lessons/course/${newCourseId}`)
         .expect(200);
 
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body.length).toBe(0);
+      expect(Array.isArray(response.body.data)).toBe(true);
+      expect(response.body.data).toHaveLength(0);
 
       // Cleanup
       await dataSource.getRepository(Course).delete({ id: newCourseId });
@@ -218,7 +241,7 @@ describe('LessonsController (e2e)', () => {
 
     it('should return 404 for non-existent course', async () => {
       await request(app.getHttpServer())
-        .get('/lessons/course/non-existent-course-id')
+        .get(`${PREFIX}/lessons/course/${MISSING_UUID}`)
         .expect(404);
     });
   });
@@ -226,7 +249,7 @@ describe('LessonsController (e2e)', () => {
   describe('GET /lessons/:id', () => {
     it('should return a single lesson (public endpoint)', async () => {
       const response = await request(app.getHttpServer())
-        .get(`/lessons/${lessonId}`)
+        .get(`${PREFIX}/lessons/${lessonId}`)
         .expect(200);
 
       expect(response.body).toHaveProperty('id', lessonId);
@@ -237,7 +260,7 @@ describe('LessonsController (e2e)', () => {
 
     it('should return 404 for non-existent lesson', async () => {
       await request(app.getHttpServer())
-        .get('/lessons/non-existent-lesson-id')
+        .get(`${PREFIX}/lessons/non-existent-lesson-id`)
         .expect(404);
     });
   });
@@ -245,7 +268,7 @@ describe('LessonsController (e2e)', () => {
   describe('PATCH /lessons/:id', () => {
     it('should update lesson (admin only)', async () => {
       const response = await request(app.getHttpServer())
-        .patch(`/lessons/${lessonId}`)
+        .patch(`${PREFIX}/lessons/${lessonId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           title: 'Updated Lesson Title',
@@ -263,7 +286,7 @@ describe('LessonsController (e2e)', () => {
 
     it('should update only provided fields', async () => {
       const response = await request(app.getHttpServer())
-        .patch(`/lessons/${lessonId}`)
+        .patch(`${PREFIX}/lessons/${lessonId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           title: 'Partially Updated Title',
@@ -278,7 +301,7 @@ describe('LessonsController (e2e)', () => {
 
     it('should reject update without authentication', async () => {
       await request(app.getHttpServer())
-        .patch(`/lessons/${lessonId}`)
+        .patch(`${PREFIX}/lessons/${lessonId}`)
         .send({
           title: 'Updated Title',
         })
@@ -287,7 +310,7 @@ describe('LessonsController (e2e)', () => {
 
     it('should return 404 for non-existent lesson', async () => {
       await request(app.getHttpServer())
-        .patch('/lessons/non-existent-lesson-id')
+        .patch(`${PREFIX}/lessons/non-existent-lesson-id`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           title: 'Updated Title',
@@ -300,7 +323,7 @@ describe('LessonsController (e2e)', () => {
     it('should delete lesson (admin only)', async () => {
       // Create a lesson to delete
       const createResponse = await request(app.getHttpServer())
-        .post('/lessons')
+        .post(`${PREFIX}/lessons`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           title: 'Lesson to Delete',
@@ -311,25 +334,25 @@ describe('LessonsController (e2e)', () => {
       const deleteLessonId = createResponse.body.id;
 
       await request(app.getHttpServer())
-        .delete(`/lessons/${deleteLessonId}`)
+        .delete(`${PREFIX}/lessons/${deleteLessonId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(204);
 
       // Verify it's deleted
       await request(app.getHttpServer())
-        .get(`/lessons/${deleteLessonId}`)
+        .get(`${PREFIX}/lessons/${deleteLessonId}`)
         .expect(404);
     });
 
     it('should reject deletion without authentication', async () => {
       await request(app.getHttpServer())
-        .delete(`/lessons/${lessonId}`)
+        .delete(`${PREFIX}/lessons/${lessonId}`)
         .expect(401);
     });
 
     it('should return 404 for non-existent lesson', async () => {
       await request(app.getHttpServer())
-        .delete('/lessons/non-existent-lesson-id')
+        .delete(`${PREFIX}/lessons/non-existent-lesson-id`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(404);
     });

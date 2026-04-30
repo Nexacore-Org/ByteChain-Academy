@@ -11,6 +11,7 @@ import { Lesson } from '../src/lessons/entities/lesson.entity';
 import { Quiz } from '../src/quizzes/entities/quiz.entity';
 import { QuizSubmission } from '../src/quizzes/entities/quiz-submission.entity';
 import { QuestionType } from '../src/quizzes/entities/question.entity';
+import { RefreshToken } from '../src/auth/entities/refresh-token.entity';
 
 const PREFIX = '/api/v1';
 
@@ -88,10 +89,10 @@ describe('QuizzesController (e2e)', () => {
       .post(`${PREFIX}/auth/register`)
       .send({
         email: `test-${Date.now()}@example.com`,
-        password: 'password123',
+        password: 'Password@123',
       });
 
-    authToken = registerResponse.body.token;
+    authToken = registerResponse.body.accessToken;
     userId = registerResponse.body.user.id;
     await dataSource
       .getRepository(User)
@@ -148,7 +149,7 @@ describe('QuizzesController (e2e)', () => {
     createdQuizIds.push(quizId);
     question1Id = quizResponse.body.questions[0].id;
     question2Id = quizResponse.body.questions[1].id;
-  });
+  }, 30_000);
 
   afterAll(async () => {
     // Clean up test data
@@ -157,6 +158,7 @@ describe('QuizzesController (e2e)', () => {
       const quizRepo = dataSource.getRepository(Quiz);
       const lessonRepo = dataSource.getRepository(Lesson);
       const courseRepo = dataSource.getRepository(Course);
+      const refreshTokenRepo = dataSource.getRepository(RefreshToken);
       const userRepo = dataSource.getRepository(User);
 
       await quizSubmissionRepo.delete({ userId });
@@ -168,10 +170,11 @@ describe('QuizzesController (e2e)', () => {
       }
       await lessonRepo.delete({ id: lessonId });
       await courseRepo.delete({ id: courseId });
+      await refreshTokenRepo.delete({ userId });
       await userRepo.delete({ id: userId });
     }
     await app.close();
-  });
+  }, 15_000);
 
   describe('POST /quizzes/:id/submit', () => {
     it('should successfully submit a quiz with correct answers', async () => {
@@ -479,7 +482,7 @@ describe('QuizzesController (e2e)', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
-      expect(response.body).toBeNull();
+      expect(response.body).toEqual({});
     });
   });
 

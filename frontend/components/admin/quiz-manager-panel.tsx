@@ -102,21 +102,9 @@ export function QuizManagerPanel({
 
   const isEditMode = !!quiz;
 
-  useEffect(() => {
-    setMaxAttempts(quiz?.maxAttempts ?? 1);
-    setQuestions(
-      quiz?.questions?.map((q) => ({
-        id: q.id,
-        text: q.text,
-        options: q.options || [],
-        correctAnswer: q.correctAnswer || "",
-        _sortId: q.id || nextSortId(),
-      })) ?? [],
-    );
-  }, [quiz]);
-
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
+    setMaxAttempts(quiz?.maxAttempts ?? 1);
     if (quiz?.questions?.length) {
       setQuestions(
         quiz.questions.map((q) => ({
@@ -125,12 +113,12 @@ export function QuizManagerPanel({
           options: q.options || [],
           correctAnswer: q.correctAnswer || "",
           _sortId: q.id || nextSortId(),
-        }))
-      )
+        })),
+      );
     } else if (!quiz && open) {
-      setQuestions([])
+      setQuestions([]);
     }
-  }, [quiz, open])
+  }, [quiz, open]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const addQuestion = () => {

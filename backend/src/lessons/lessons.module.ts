@@ -12,7 +12,7 @@ import { AuthModule } from '../auth/auth.module';
   imports: [
     TypeOrmModule.forFeature([Lesson, Course, Quiz]),
     PassportModule,
-    AuthModule,
+    forwardRef(() => AuthModule),
   ],
   controllers: [LessonsController],
   providers: [LessonsService],

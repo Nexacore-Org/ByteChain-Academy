@@ -27,7 +27,7 @@ export class Badge {
   @Column({ type: 'int' })
   xpThreshold: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   iconUrl?: string;
 
   @CreateDateColumn()

@@ -20,7 +20,6 @@ export default function MyCertificatesPage() {
       router.push("/");
     }
   }, [isAuthenticated, authLoading, router]);
-  }, [isAuthenticated, authLoading, router]);
 
   if (authLoading || !isAuthenticated) {
     return (

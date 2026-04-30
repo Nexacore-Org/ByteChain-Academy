@@ -13,6 +13,8 @@ import { UserBadge } from '../rewards/entities/user-badge.entity';
 import { CourseRegistration } from '../courses/entities/course-registration.entity';
 import { StreakService } from './streak.service';
 import { AdminUsersController } from './admin-users.controller';
+import { RewardsModule } from '../rewards/rewards.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { AdminUsersController } from './admin-users.controller';
     }),
     CertificatesModule,
     forwardRef(() => CoursesModule),
+    RewardsModule,
+    NotificationsModule,
   ],
   controllers: [UsersController, AdminUsersController],
   providers: [UserService, WalletService, StreakService],
