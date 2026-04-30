@@ -6,6 +6,7 @@ import {
   IsNumber,
   Min,
   IsUrl,
+  IsBoolean,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -36,6 +37,15 @@ export class LessonResponseDto {
     description: 'courseId field',
   })
   courseId: string;
+  @ApiProperty({ example: true, description: 'Whether this lesson has a quiz' })
+  hasQuiz: boolean;
+  @ApiProperty({
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'Quiz id for this lesson',
+    required: false,
+    nullable: true,
+  })
+  quizId: string | null;
   @ApiProperty({
     example: '2026-04-22T00:00:00.000Z',
     description: 'createdAt field',

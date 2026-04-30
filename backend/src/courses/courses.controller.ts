@@ -138,7 +138,11 @@ export class CoursesController {
 
   @Get('tags')
   @ApiOperation({ summary: 'Get unique tags from published courses' })
-  @ApiResponse({ status: 200, description: 'List of unique tags', type: [String] })
+  @ApiResponse({
+    status: 200,
+    description: 'List of unique tags',
+    type: [String],
+  })
   async getTags(): Promise<string[]> {
     return this.coursesService.getUniqueTags();
   }

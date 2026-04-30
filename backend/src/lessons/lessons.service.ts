@@ -7,6 +7,7 @@ import { PaginationService } from '../common/services/pagination.service';
 import { PaginatedResult } from '../common/services/pagination.service';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
+import { Quiz } from '../quizzes/entities/quiz.entity';
 
 @Injectable()
 export class LessonsService {
@@ -78,7 +79,9 @@ export class LessonsService {
     courseId: string,
     page: number,
     limit: number,
-  ): Promise<PaginatedResult<Lesson & { hasQuiz: boolean; quizId: string | null }>> {
+  ): Promise<
+    PaginatedResult<Lesson & { hasQuiz: boolean; quizId: string | null }>
+  > {
     const course = await this.courseRepository.findOne({
       where: { id: courseId },
     });
@@ -98,7 +101,10 @@ export class LessonsService {
 
     const lessonIds = result.data.map((l) => l.id);
     const quizzes = lessonIds.length
-      ? await this.quizRepository.find({ where: { lessonId: In(lessonIds) }, select: ['id', 'lessonId'] })
+      ? await this.quizRepository.find({
+          where: { lessonId: In(lessonIds) },
+          select: ['id', 'lessonId'],
+        })
       : [];
     const quizMap = new Map(quizzes.map((q) => [q.lessonId, q.id]));
 
@@ -125,7 +131,9 @@ export class LessonsService {
     return lesson;
   }
 
-  async findOneWithQuizFlag(id: string): Promise<Lesson & { hasQuiz: boolean; quizId: string | null }> {
+  async findOneWithQuizFlag(
+    id: string,
+  ): Promise<Lesson & { hasQuiz: boolean; quizId: string | null }> {
     const lesson = await this.lessonRepository.findOne({
       where: { id },
       relations: ['course'],
@@ -135,7 +143,10 @@ export class LessonsService {
       throw new NotFoundException(`Lesson with ID ${id} not found`);
     }
 
-    const quiz = await this.quizRepository.findOne({ where: { lessonId: id }, select: ['id'] });
+    const quiz = await this.quizRepository.findOne({
+      where: { lessonId: id },
+      select: ['id'],
+    });
 
     return { ...lesson, hasQuiz: !!quiz, quizId: quiz?.id ?? null };
   }

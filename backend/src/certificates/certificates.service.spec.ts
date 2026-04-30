@@ -47,6 +47,14 @@ const makeCertRepo = () => ({
   save: jest.fn(),
 });
 
+const makeUserRepo = () => ({
+  findOneBy: jest.fn(),
+});
+
+const makeCourseRepo = () => ({
+  findOneBy: jest.fn(),
+});
+
 describe('CertificateService', () => {
   let service: CertificateService;
   let certRepo: ReturnType<typeof makeCertRepo>;

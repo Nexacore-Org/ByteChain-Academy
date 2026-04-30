@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -135,7 +139,7 @@ export class AuthService {
   private async generateRefreshToken(userId: string): Promise<string> {
     const rawToken = crypto.randomBytes(40).toString('hex');
     const hashedToken = this.hashToken(rawToken);
-    
+
     const expiresInDays = parseInt(
       this.configService.get<string>('REFRESH_TOKEN_EXPIRES_IN') || '30',
       10,

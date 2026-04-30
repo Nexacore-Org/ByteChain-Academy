@@ -16,6 +16,9 @@ const mockCourse = {
   title: 'Intro to Web3',
   description: 'Learn blockchain basics',
   published: true,
+  difficulty: null,
+  tags: [],
+  thumbnailUrl: null,
   createdAt: now,
   updatedAt: now,
 };
@@ -36,6 +39,7 @@ const makeCourseRepo = () => ({
   remove: jest.fn(),
   softRemove: jest.fn(),
   restore: jest.fn(),
+  createQueryBuilder: jest.fn(),
 });
 
 const makeRegRepo = () => ({
@@ -43,6 +47,38 @@ const makeRegRepo = () => ({
   find: jest.fn(),
   create: jest.fn(),
   save: jest.fn(),
+  createQueryBuilder: jest.fn(),
+});
+
+const makeLessonRepo = () => ({
+  count: jest.fn(),
+});
+
+const makeProgressRepo = () => ({
+  count: jest.fn(),
+});
+
+const makeCourseQueryBuilder = (
+  courses = [mockCourse],
+  total = courses.length,
+) => ({
+  leftJoin: jest.fn().mockReturnThis(),
+  addSelect: jest.fn().mockReturnThis(),
+  where: jest.fn().mockReturnThis(),
+  groupBy: jest.fn().mockReturnThis(),
+  skip: jest.fn().mockReturnThis(),
+  take: jest.fn().mockReturnThis(),
+  andWhere: jest.fn().mockReturnThis(),
+  orderBy: jest.fn().mockReturnThis(),
+  getManyAndCount: jest.fn().mockResolvedValue([courses, total]),
+});
+
+const makeCountQueryBuilder = () => ({
+  select: jest.fn().mockReturnThis(),
+  addSelect: jest.fn().mockReturnThis(),
+  where: jest.fn().mockReturnThis(),
+  groupBy: jest.fn().mockReturnThis(),
+  getRawMany: jest.fn().mockResolvedValue([]),
 });
 
 describe('CoursesService', () => {
@@ -69,22 +105,26 @@ describe('CoursesService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CoursesService,
-        { provide: getRepositoryToken(Course), useValue: mockRepo() },
+        { provide: getRepositoryToken(Course), useValue: courseRepo },
         {
           provide: getRepositoryToken(CourseRegistration),
-          useValue: mockRepo(),
+          useValue: regRepo,
+        },
+        {
+          provide: getRepositoryToken(Lesson),
+          useValue: lessonRepo,
+        },
+        {
+          provide: getRepositoryToken(Progress),
+          useValue: progressRepo,
         },
         {
           provide: PaginationService,
-          useValue: {
-            paginate: jest.fn().mockResolvedValue({
-              data: [],
-              total: 0,
-              page: 1,
-              limit: 10,
-              totalPages: 0,
-            }),
-          },
+          useValue: paginationService,
+        },
+        {
+          provide: NotificationsService,
+          useValue: notificationsService,
         },
       ],
     }).compile();
@@ -128,33 +168,26 @@ describe('CoursesService', () => {
 
   describe('findAll', () => {
     it('should return a paginated list of published courses', async () => {
-      const paginated = {
-        data: [mockCourse],
-        total: 1,
-        page: 1,
-        limit: 10,
-        totalPages: 1,
-      };
-      paginationService.paginate.mockResolvedValue(paginated);
+      const qb = makeCourseQueryBuilder();
+      courseRepo.createQueryBuilder.mockReturnValue(qb);
+      regRepo.createQueryBuilder.mockReturnValue(makeCountQueryBuilder());
 
       const result = await service.findAll(1, 10);
 
-      expect(paginationService.paginate).toHaveBeenCalledWith(
-        courseRepo,
-        { page: 1, limit: 10 },
-        { where: { published: true }, order: { createdAt: 'DESC' } },
-      );
+      expect(courseRepo.createQueryBuilder).toHaveBeenCalledWith('course');
+      expect(qb.where).toHaveBeenCalledWith('course.published = :published', {
+        published: true,
+      });
       expect(result.data).toHaveLength(1);
       expect(result.total).toBe(1);
     });
 
     it('should use default page=1 limit=10 when not provided', async () => {
+      const qb = makeCourseQueryBuilder([], 0);
+      courseRepo.createQueryBuilder.mockReturnValue(qb);
       await service.findAll();
-      expect(paginationService.paginate).toHaveBeenCalledWith(
-        courseRepo,
-        { page: 1, limit: 10 },
-        expect.any(Object),
-      );
+      expect(qb.skip).toHaveBeenCalledWith(0);
+      expect(qb.take).toHaveBeenCalledWith(10);
     });
   });
 
