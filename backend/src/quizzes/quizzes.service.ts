@@ -240,8 +240,8 @@ export class QuizzesService {
       await this.notificationsService.createNotification(
         userId,
         NotificationType.QUIZ_PASSED,
-        `You passed the quiz "${quiz.title}".`,
-        `/courses/lessons/${quiz.lessonId}`,
+        'You passed a quiz!',
+        '/rewards',
       );
       await this.streakService.updateStreak(userId);
     }

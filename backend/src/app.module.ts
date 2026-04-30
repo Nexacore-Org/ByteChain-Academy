@@ -44,7 +44,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
         DB_HOST: Joi.string().default('localhost'),
         DB_PORT: Joi.number().default(5432),
         DB_USERNAME: Joi.string().default('postgres'),
-        DB_PASSWORD: Joi.string().default(''),
+        DB_PASSWORD: Joi.string().allow('').default(''),
         DB_NAME: Joi.string().default('bytechain'),
 
         FRONTEND_URL: Joi.string().uri().default('http://localhost:3000'),

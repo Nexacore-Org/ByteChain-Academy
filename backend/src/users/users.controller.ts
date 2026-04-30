@@ -21,7 +21,6 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { UserProfileResponseDto } from '../users/dto/user-profile-response.dto';
 import { VerifyWalletDto } from '../users/dto/verify-wallet.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -31,6 +30,13 @@ import { UserService } from './users.service';
 import { WalletService } from './wallet.service';
 import { DeleteAccountDto } from './dto/delete-account.dto';
 import { RolesGuard } from '../common/guards/roles.guard';
+
+type UploadedAvatarFile = {
+  size: number;
+  mimetype: string;
+  originalname: string;
+  buffer: Buffer;
+};
 
 @ApiTags('Users')
 @ApiBearerAuth('access-token')
@@ -65,7 +71,6 @@ export class UsersController {
     status: 403,
     description: 'Forbidden - admin access required',
   })
-  @ApiResponse({ status: 403, description: 'Forbidden - admin access required' })
   async getAdminData(@Request() req) {
     return { message: 'Admin data access' };
   }
@@ -74,7 +79,10 @@ export class UsersController {
   @UseInterceptors(FileInterceptor('avatar'))
   @ApiOperation({ summary: 'Upload user avatar' })
   @ApiResponse({ status: 200, description: 'Avatar uploaded successfully' })
-  async uploadMyAvatar(@Request() req, @UploadedFile() file: Express.Multer.File) {
+  async uploadMyAvatar(
+    @Request() req,
+    @UploadedFile() file: UploadedAvatarFile,
+  ) {
     return this.userService.uploadAvatar(req.user.id as string, file);
   }
 
@@ -127,7 +135,11 @@ export class UsersController {
 
   @Patch('me')
   @ApiOperation({ summary: 'Update user profile' })
-  @ApiResponse({ status: 200, description: 'Profile updated successfully', type: UserProfileResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Profile updated successfully',
+    type: UserProfileResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Bad request - validation error' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async updateProfile(

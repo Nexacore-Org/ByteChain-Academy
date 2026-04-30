@@ -39,13 +39,13 @@ export class CurrencyEntry {
   @Column({ type: 'text' })
   description: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   logoUrl: string;
 
   @Column({ type: 'simple-json', nullable: true })
   historicalData: HistoricalPrice[];
 
-  @Column({ nullable: true })
+  @Column({ type: 'int', nullable: true })
   launchYear: number;
 
   @CreateDateColumn()

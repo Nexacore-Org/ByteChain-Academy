@@ -24,13 +24,13 @@ export class Course {
   @Column({ default: false })
   published: boolean;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   difficulty: string | null;
 
   @Column({ type: 'simple-json', default: '[]' })
   tags: string[];
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   thumbnailUrl: string | null;
 
   @OneToMany(() => CourseRegistration, (registration) => registration.course)

@@ -1,23 +1,11 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Header, Res, UseGuards } from '@nestjs/common';
+import { Response } from 'express';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import {
-  Controller,
-  Get,
-  Header,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
-import { Response } from 'express';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/common/guards/roles.guard';
-import { UserRole } from 'src/common/enums/user-role.enum';
 import { Roles } from '../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -115,7 +103,6 @@ export class AnalyticsController {
     const rows = await this.analyticsService.getCoursePerformanceForExport();
 
     const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-    const filename = `analytics-${date}.csv`;
 
     // Build CSV string — no external libraries
     const header = 'Course Name,Enrollments,Completions,Completion Rate\n';

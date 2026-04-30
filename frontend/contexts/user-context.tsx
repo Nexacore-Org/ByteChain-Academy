@@ -117,7 +117,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     if (token && !user) {
       setUser(getLocalFallbackUser());
     }
-  }, [createDefaultUser]);
   }, [getLocalFallbackUser, user]);
 
   type RawUser = {

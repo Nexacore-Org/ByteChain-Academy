@@ -54,7 +54,10 @@ describe('UserService', () => {
         { provide: getRepositoryToken(User), useValue: userRepo },
         { provide: getRepositoryToken(Certificate), useValue: certificateRepo },
         { provide: getRepositoryToken(UserBadge), useValue: userBadgeRepo },
-        { provide: getRepositoryToken(CourseRegistration), useValue: makeRepo() },
+        {
+          provide: getRepositoryToken(CourseRegistration),
+          useValue: makeRepo(),
+        },
       ],
     }).compile();
 
@@ -84,7 +87,9 @@ describe('UserService', () => {
       userRepo.findOne.mockResolvedValue({ ...mockUser, bio: 'original bio' });
       userRepo.save.mockImplementation((u: User) => Promise.resolve(u));
 
-      const result = await service.updateProfile('user-1', { username: 'onlyname' });
+      const result = await service.updateProfile('user-1', {
+        username: 'onlyname',
+      });
 
       expect(result.username).toBe('onlyname');
       expect(result.bio).toBe('original bio');
@@ -156,7 +161,9 @@ describe('UserService', () => {
     it('throws NotFoundException for unknown user', async () => {
       userRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.getMyProfile('bad-id')).rejects.toThrow(NotFoundException);
+      await expect(service.getMyProfile('bad-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

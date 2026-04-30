@@ -21,10 +21,10 @@ export class Lesson {
   @Column('text')
   content: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   videoUrl: string; // External video URL
 
-  @Column({ nullable: true })
+  @Column({ type: 'int', nullable: true })
   videoStartTimestamp: number; // Optional start timestamp in seconds
 
   @Column({ default: 0 })

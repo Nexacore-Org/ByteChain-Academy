@@ -27,7 +27,6 @@ import { NotificationsService } from './notifications.service';
 @Controller('notifications')
 @UseGuards(JwtAuthGuard)
 @UseInterceptors(ClassSerializerInterceptor)
-@ApiBearerAuth('access-token')
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
@@ -39,11 +38,19 @@ export class NotificationsController {
     type: [NotificationResponseDto],
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getMyNotifications(@Request() req): Promise<NotificationResponseDto[]> {
-    const notifications = await this.notificationsService.getMyNotifications(
+  async getMyNotifications(
+    @Request() req,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ): Promise<{
+    data: NotificationResponseDto[];
+    total: number;
+    unreadCount: number;
+  }> {
+    const result = await this.notificationsService.getMyNotifications(
       req.user.id as string,
-      page,
-      limit,
+      Number(page),
+      Number(limit),
     );
     return {
       data: plainToInstance(NotificationResponseDto, result.data),

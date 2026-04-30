@@ -59,7 +59,13 @@ export class CoursesService {
     userId?: string,
     filters?: CourseFilterDto,
   ): Promise<PaginatedResult<CourseResponseDto>> {
-    const { search, difficulty, tags, sortBy = 'createdAt', sortOrder = 'desc' } = filters ?? {};
+    const {
+      search,
+      difficulty,
+      tags,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+    } = filters ?? {};
 
     const qb = this.courseRepository
       .createQueryBuilder('course')
@@ -84,13 +90,18 @@ export class CoursesService {
     }
 
     if (tags) {
-      const tagList = tags.split(',').map((t) => t.trim()).filter(Boolean);
+      const tagList = tags
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean);
       tagList.forEach((tag, i) => {
         qb.andWhere(`course.tags LIKE :tag${i}`, { [`tag${i}`]: `%${tag}%` });
       });
     }
 
-    const orderCol = ['title', 'difficulty'].includes(sortBy) ? sortBy : 'createdAt';
+    const orderCol = ['title', 'difficulty'].includes(sortBy)
+      ? sortBy
+      : 'createdAt';
     qb.orderBy(`course.${orderCol}`, sortOrder.toUpperCase() as 'ASC' | 'DESC');
 
     const [courses, total] = await qb.getManyAndCount();
@@ -123,7 +134,8 @@ export class CoursesService {
       data: courses.map(
         (course) =>
           new CourseResponseDto(course, {
-            isEnrolled: userId !== undefined ? enrolledIds.has(course.id) : undefined,
+            isEnrolled:
+              userId !== undefined ? enrolledIds.has(course.id) : undefined,
             enrollmentCount: countMap.get(course.id) ?? 0,
           }),
       ),

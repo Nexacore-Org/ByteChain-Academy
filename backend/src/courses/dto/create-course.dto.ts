@@ -1,4 +1,11 @@
-import { IsString, IsNotEmpty, IsBoolean, IsOptional, IsArray, IsUrl } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsBoolean,
+  IsOptional,
+  IsArray,
+  IsUrl,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateCourseDto {
@@ -29,7 +36,11 @@ export class CreateCourseDto {
   @IsOptional()
   difficulty?: string;
 
-  @ApiProperty({ example: ['bitcoin', 'defi'], required: false, type: [String] })
+  @ApiProperty({
+    example: ['bitcoin', 'defi'],
+    required: false,
+    type: [String],
+  })
   @IsArray()
   @IsString({ each: true })
   @IsOptional()

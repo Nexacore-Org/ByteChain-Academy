@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { useCertificateVerification } from "@/hooks/use-certificates";
 import { 
   ShieldCheck, 
@@ -19,8 +19,9 @@ import { VerificationResultView } from "@/components/certificates/verification-r
 
 function VerifyCertificateContent() {
   const searchParams = useSearchParams();
-  const [inputValue, setInputValue] = useState(searchParams.get("hash") || "");
-  const [activeHash, setActiveHash] = useState(searchParams.get("hash") || "");
+  const initialHash = searchParams.get("hash") || "";
+  const [inputValue, setInputValue] = useState(initialHash);
+  const [activeHash, setActiveHash] = useState(initialHash);
   
   const { data: result, isLoading: loading, isError, refetch } = useCertificateVerification(activeHash);
 
@@ -29,14 +30,6 @@ function VerifyCertificateContent() {
     if (!inputValue.trim()) return;
     setActiveHash(inputValue.trim());
   };
-
-  useEffect(() => {
-    const autoHash = searchParams.get("hash");
-    if (autoHash) {
-      setInputValue(autoHash);
-      setActiveHash(autoHash);
-    }
-  }, [searchParams]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-12">

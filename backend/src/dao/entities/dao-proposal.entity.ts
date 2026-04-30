@@ -56,13 +56,13 @@ export class DAOProposal {
   @CreateDateColumn()
   createdAt: Date;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   moderationReason: string | null;
 
   @Column({ type: 'datetime', nullable: true })
   moderatedAt: Date | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   moderatorId: string | null;
 
   @ManyToOne(() => User)

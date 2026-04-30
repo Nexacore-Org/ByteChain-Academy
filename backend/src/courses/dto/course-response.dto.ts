@@ -1,4 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsArray,
+  IsBoolean,
+  IsDate,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUrl,
+} from 'class-validator';
 
 export class CourseResponseDto {
   @ApiProperty({
@@ -10,6 +20,8 @@ export class CourseResponseDto {
   id: string;
 
   @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
   title: string;
 
   @ApiProperty({
@@ -21,7 +33,31 @@ export class CourseResponseDto {
   description: string;
 
   @ApiProperty()
+  @IsBoolean()
   published: boolean;
+
+  @ApiProperty({ example: 'Beginner', required: false, nullable: true })
+  @IsOptional()
+  @IsString()
+  difficulty: string | null;
+
+  @ApiProperty({ example: ['bitcoin', 'defi'], type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  tags: string[];
+
+  @ApiProperty({
+    example: 'https://example.com/thumb.jpg',
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsUrl()
+  thumbnailUrl: string | null;
+
+  @ApiProperty({ example: 42, description: 'Number of enrolled users' })
+  @IsInt()
+  enrollmentCount: number;
 
   @ApiProperty({
     example: '2026-04-22T00:00:00.000Z',
@@ -69,7 +105,8 @@ export class CourseResponseDto {
     this.difficulty = course.difficulty ?? null;
     this.tags = course.tags ?? [];
     this.thumbnailUrl = course.thumbnailUrl ?? null;
-    this.enrollmentCount = options?.enrollmentCount ?? course.registrations?.length ?? 0;
+    this.enrollmentCount =
+      options?.enrollmentCount ?? course.registrations?.length ?? 0;
     this.createdAt = course.createdAt;
     this.updatedAt = course.updatedAt;
     if (options?.isEnrolled !== undefined) {

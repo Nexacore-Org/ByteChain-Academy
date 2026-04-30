@@ -9,11 +9,20 @@ export interface Certificate {
   status: "active" | "revoked";
 }
 
+interface CertificateApiResponse {
+  id: string;
+  courseOrProgram?: string | null;
+  issuedAt?: string | null;
+  createdAt?: string | null;
+  certificateHash?: string | null;
+  isValid?: boolean | null;
+}
+
 export function useCertificates() {
   return useQuery({
     queryKey: ["certificates", "my"],
     queryFn: async () => {
-      const data = await api.get<any[]>("/certificates/my");
+      const data = await api.get<CertificateApiResponse[]>("/certificates/my");
       if (!Array.isArray(data)) throw new Error("Invalid response format");
       
       return data.map((cert) => ({
@@ -36,20 +45,30 @@ export interface VerificationResult {
   revoked?: boolean;
 }
 
+interface CertificateVerificationApiResponse {
+  isValid: boolean;
+  certificate?: {
+    recipientName?: string | null;
+    courseOrProgram?: string | null;
+    issuedAt?: string | null;
+    status?: string | null;
+  } | null;
+}
+
 export function useCertificateVerification(hash: string) {
   return useQuery({
     queryKey: ["certificates", "verify", hash],
     queryFn: async () => {
       if (!hash) return null;
       try {
-        const res = await api.get<any>(`/certificates/verify/${hash}`);
+        const res = await api.get<CertificateVerificationApiResponse>(`/certificates/verify/${hash}`);
         // Map backend CertificateVerificationResultDto to our VerificationResult
         return {
           valid: res.isValid,
           recipientName: res.certificate?.recipientName,
           courseOrProgram: res.certificate?.courseOrProgram,
           issuedAt: res.certificate?.issuedAt,
-          revoked: res.certificate?.status === 'revoked'
+          revoked: res.certificate?.status === "revoked",
         } as VerificationResult;
       } catch (err) {
         console.error("Verification error:", err);

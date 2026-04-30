@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import {
   NotFoundException,
   ConflictException,
@@ -15,9 +16,19 @@ import { SubmitQuizDto } from './dto/submit-quiz.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { RewardsService } from '../rewards/rewards.service';
 import { StreakService } from '../users/streak.service';
+import { XpRewardReason } from '../rewards/entities/reward-history.entity';
+import { NotificationType } from '../notifications/entities/notification.entity';
 
 describe('QuizzesService', () => {
   let service: QuizzesService;
+  let quizRepository: Repository<Quiz>;
+  let questionRepository: Repository<Question>;
+  let lessonRepository: Repository<Lesson>;
+  let quizSubmissionRepository: Repository<QuizSubmission>;
+  let notificationsService: jest.Mocked<NotificationsService>;
+  let rewardsService: jest.Mocked<RewardsService>;
+  let streakService: jest.Mocked<StreakService>;
+
   const mockQuizRepository = {
     findOne: jest.fn(),
     create: jest.fn(),
@@ -78,6 +89,19 @@ describe('QuizzesService', () => {
     }).compile();
 
     service = module.get<QuizzesService>(QuizzesService);
+    quizRepository = module.get<Repository<Quiz>>(getRepositoryToken(Quiz));
+    questionRepository = module.get<Repository<Question>>(
+      getRepositoryToken(Question),
+    );
+    lessonRepository = module.get<Repository<Lesson>>(
+      getRepositoryToken(Lesson),
+    );
+    quizSubmissionRepository = module.get<Repository<QuizSubmission>>(
+      getRepositoryToken(QuizSubmission),
+    );
+    notificationsService = module.get(NotificationsService);
+    rewardsService = module.get(RewardsService);
+    streakService = module.get(StreakService);
   });
 
   afterEach(() => {
@@ -172,6 +196,18 @@ describe('QuizzesService', () => {
       expect(mockQuizSubmissionRepository.count).toHaveBeenCalledWith({
         where: { userId, quizId },
       });
+      expect(rewardsService.awardXP).toHaveBeenCalledWith(
+        userId,
+        25,
+        XpRewardReason.QUIZ_PASS,
+      );
+      expect(notificationsService.createNotification).toHaveBeenCalledWith(
+        userId,
+        NotificationType.QUIZ_PASSED,
+        'You passed a quiz!',
+        '/rewards',
+      );
+      expect(streakService.updateStreak).toHaveBeenCalledWith(userId);
     });
 
     it('should throw NotFoundException if quiz does not exist', async () => {
@@ -322,6 +358,9 @@ describe('QuizzesService', () => {
       expect(result.score).toBe(0);
       expect(result.correctAnswers).toBe(0);
       expect(result.passed).toBe(false);
+      expect(rewardsService.awardXP).not.toHaveBeenCalled();
+      expect(notificationsService.createNotification).not.toHaveBeenCalled();
+      expect(streakService.updateStreak).not.toHaveBeenCalled();
     });
 
     it('should calculate score correctly with partial answers (50%)', async () => {
@@ -363,6 +402,9 @@ describe('QuizzesService', () => {
       expect(result.score).toBe(50);
       expect(result.correctAnswers).toBe(1);
       expect(result.passed).toBe(false); // Below 70% threshold
+      expect(rewardsService.awardXP).not.toHaveBeenCalled();
+      expect(notificationsService.createNotification).not.toHaveBeenCalled();
+      expect(streakService.updateStreak).not.toHaveBeenCalled();
     });
 
     it('should mark as passed when score is exactly 70%', async () => {
