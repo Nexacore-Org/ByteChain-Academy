@@ -129,6 +129,11 @@ export function LoginModal({ open, onOpenChange, onSwitchToSignup }: LoginModalP
           </Button>
         </form>
         <div className="text-center text-sm text-gray-400">
+          <Link href="/forgot-password" className="text-[#02c177] hover:underline">
+            Forgot password?
+          </Link>
+        </div>
+        <div className="text-center text-sm text-gray-400">
           Don&apos;t have an account?{" "}
           <button
             onClick={onSwitchToSignup}

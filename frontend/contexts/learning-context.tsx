@@ -502,6 +502,7 @@ export function LearningProvider({ children }: { children: React.ReactNode }) {
         quizResults,
         isSubmittingQuiz,
         isCompletingLesson,
+        enrollInCourse,
         markLessonComplete,
         submitQuiz,
         getCourseProgress,

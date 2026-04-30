@@ -1,10 +1,3 @@
-import {
-  IsString,
-  IsNotEmpty,
-  IsBoolean,
-  IsDate,
-  IsOptional,
-} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CourseResponseDto {
@@ -16,9 +9,7 @@ export class CourseResponseDto {
   @IsNotEmpty()
   id: string;
 
-  @ApiProperty({ example: 'Intro to Blockchain', description: 'title field' })
-  @IsString()
-  @IsNotEmpty()
+  @ApiProperty()
   title: string;
 
   @ApiProperty({
@@ -29,8 +20,7 @@ export class CourseResponseDto {
   @IsNotEmpty()
   description: string;
 
-  @ApiProperty({ example: true, description: 'published field' })
-  @IsBoolean()
+  @ApiProperty()
   published: boolean;
 
   @ApiProperty({
@@ -63,15 +53,23 @@ export class CourseResponseDto {
       title: string;
       description: string;
       published: boolean;
+      difficulty?: string | null;
+      tags?: string[];
+      thumbnailUrl?: string | null;
+      registrations?: { id: string }[];
       createdAt: Date;
       updatedAt: Date;
     },
-    options?: { isEnrolled?: boolean },
+    options?: { isEnrolled?: boolean; enrollmentCount?: number },
   ) {
     this.id = course.id;
     this.title = course.title;
     this.description = course.description;
     this.published = course.published;
+    this.difficulty = course.difficulty ?? null;
+    this.tags = course.tags ?? [];
+    this.thumbnailUrl = course.thumbnailUrl ?? null;
+    this.enrollmentCount = options?.enrollmentCount ?? course.registrations?.length ?? 0;
     this.createdAt = course.createdAt;
     this.updatedAt = course.updatedAt;
     if (options?.isEnrolled !== undefined) {

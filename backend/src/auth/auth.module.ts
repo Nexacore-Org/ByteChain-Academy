@@ -9,9 +9,11 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { UsersModule } from '../users/users.module';
 import { EmailModule } from '../email/email.module';
+import { RefreshToken } from './entities/refresh-token.entity';
 
 @Module({
   imports: [
+    TypeOrmModule.forFeature([RefreshToken]),
     forwardRef(() => UsersModule),
     PassportModule,
     EmailModule,
@@ -19,7 +21,9 @@ import { EmailModule } from '../email/email.module';
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
         secret: config.getOrThrow<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '24h' },
+        signOptions: { 
+          expiresIn: config.get<string>('JWT_EXPIRES_IN') || '24h',
+        },
       }),
       inject: [ConfigService],
     }),

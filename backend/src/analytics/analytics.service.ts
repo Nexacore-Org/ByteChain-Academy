@@ -1,8 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { Repository } from 'typeorm';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { Certificate } from '../certificates/entities/certificate.entity';
 import { CourseRegistration } from '../courses/entities/course-registration.entity';
 import { Course } from '../courses/entities/course.entity';
@@ -18,9 +19,12 @@ import {
 } from './dto/analytics-response.dto';
 
 const CACHE_TTL_SECONDS = 300;
+const PRECOMPUTE_TTL_SECONDS = 26 * 60 * 60; // 26 hours
 
 @Injectable()
 export class AnalyticsService {
+  private readonly logger = new Logger(AnalyticsService.name);
+
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
@@ -40,11 +44,111 @@ export class AnalyticsService {
     private readonly cacheManager: Cache,
   ) {}
 
+  // ---------------------------------------------------------------------------
+  // Cron: nightly pre-computation at 02:00 AM
+  // ---------------------------------------------------------------------------
+
+  @Cron(CronExpression.EVERY_DAY_AT_2AM)
+  async precomputeDailyStats(): Promise<void> {
+    this.logger.log('Starting nightly analytics pre-computation…');
+
+    const [overview, coursePerf, learnerActivity, topLearners] =
+      await Promise.all([
+        this._fetchOverview(),
+        this._fetchCoursePerformance(),
+        this._fetchLearnerActivity(),
+        this._fetchTopLearners(),
+      ]);
+
+    await Promise.all([
+      this.cacheManager.set(
+        'analytics:overview',
+        overview,
+        PRECOMPUTE_TTL_SECONDS,
+      ),
+      this.cacheManager.set(
+        'analytics:course-performance',
+        coursePerf,
+        PRECOMPUTE_TTL_SECONDS,
+      ),
+      this.cacheManager.set(
+        'analytics:learner-activity',
+        learnerActivity,
+        PRECOMPUTE_TTL_SECONDS,
+      ),
+      this.cacheManager.set(
+        'analytics:top-learners',
+        topLearners,
+        PRECOMPUTE_TTL_SECONDS,
+      ),
+    ]);
+
+    this.logger.log(
+      `Nightly pre-computation complete — courses processed: ${coursePerf.length}, ` +
+        `top-learners processed: ${topLearners.length}, ` +
+        `learner-activity days processed: ${learnerActivity.length}`,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Public service methods (cache-first)
+  // ---------------------------------------------------------------------------
+
   async getOverview(): Promise<AnalyticsOverviewDto> {
     const cacheKey = 'analytics:overview';
     const cached = await this.cacheManager.get<AnalyticsOverviewDto>(cacheKey);
     if (cached) return cached;
 
+    const payload = await this._fetchOverview();
+    await this.cacheManager.set(cacheKey, payload, CACHE_TTL_SECONDS);
+    return payload;
+  }
+
+  async getCoursePerformance(): Promise<CoursePerformanceDto[]> {
+    const cacheKey = 'analytics:course-performance';
+    const cached =
+      await this.cacheManager.get<CoursePerformanceDto[]>(cacheKey);
+    if (cached) return cached;
+
+    const payload = await this._fetchCoursePerformance();
+    await this.cacheManager.set(cacheKey, payload, CACHE_TTL_SECONDS);
+    return payload;
+  }
+
+  async getLearnerActivity(): Promise<LearnerActivityPointDto[]> {
+    const cacheKey = 'analytics:learner-activity';
+    const cached =
+      await this.cacheManager.get<LearnerActivityPointDto[]>(cacheKey);
+    if (cached) return cached;
+
+    const payload = await this._fetchLearnerActivity();
+    await this.cacheManager.set(cacheKey, payload, CACHE_TTL_SECONDS);
+    return payload;
+  }
+
+  async getTopLearners(): Promise<TopLearnerDto[]> {
+    const cacheKey = 'analytics:top-learners';
+    const cached = await this.cacheManager.get<TopLearnerDto[]>(cacheKey);
+    if (cached) return cached;
+
+    const payload = await this._fetchTopLearners();
+    await this.cacheManager.set(cacheKey, payload, CACHE_TTL_SECONDS);
+    return payload;
+  }
+
+  /**
+   * Returns course-performance data specifically for CSV export.
+   * Always reads from the cache when available; otherwise runs the DB query.
+   */
+  async getCoursePerformanceForExport(): Promise<CoursePerformanceDto[]> {
+    return this.getCoursePerformance();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Private DB fetch helpers (no cache logic — cache managed by callers)
+  // ---------------------------------------------------------------------------
+
+  private async _fetchOverview(): Promise<AnalyticsOverviewDto> {
     const [
       totalUsers,
       totalCourses,
@@ -61,7 +165,7 @@ export class AnalyticsService {
       this.quizSubmissionRepository.count(),
     ]);
 
-    const payload: AnalyticsOverviewDto = {
+    return {
       totalUsers,
       totalCourses,
       totalLessons,
@@ -69,16 +173,9 @@ export class AnalyticsService {
       totalCertificatesIssued,
       totalQuizSubmissions,
     };
-    await this.cacheManager.set(cacheKey, payload, CACHE_TTL_SECONDS);
-    return payload;
   }
 
-  async getCoursePerformance(): Promise<CoursePerformanceDto[]> {
-    const cacheKey = 'analytics:course-performance';
-    const cached =
-      await this.cacheManager.get<CoursePerformanceDto[]>(cacheKey);
-    if (cached) return cached;
-
+  private async _fetchCoursePerformance(): Promise<CoursePerformanceDto[]> {
     const rows = await this.courseRepository
       .createQueryBuilder('c')
       .leftJoin(CourseRegistration, 'cr', 'cr.courseId = c.id')
@@ -102,7 +199,7 @@ export class AnalyticsService {
         averageQuizScore: string;
       }>();
 
-    const payload = rows.map((row) => {
+    return rows.map((row) => {
       const enrollmentCount = Number(row.enrollmentCount ?? 0);
       const completionCount = Number(row.completionCount ?? 0);
       const completionRate =
@@ -118,17 +215,9 @@ export class AnalyticsService {
         averageQuizScore: Number(Number(row.averageQuizScore ?? 0).toFixed(2)),
       };
     });
-
-    await this.cacheManager.set(cacheKey, payload, CACHE_TTL_SECONDS);
-    return payload;
   }
 
-  async getLearnerActivity(): Promise<LearnerActivityPointDto[]> {
-    const cacheKey = 'analytics:learner-activity';
-    const cached =
-      await this.cacheManager.get<LearnerActivityPointDto[]>(cacheKey);
-    if (cached) return cached;
-
+  private async _fetchLearnerActivity(): Promise<LearnerActivityPointDto[]> {
     const end = new Date();
     end.setHours(23, 59, 59, 999);
     const start = new Date();
@@ -159,15 +248,10 @@ export class AnalyticsService {
       });
     }
 
-    await this.cacheManager.set(cacheKey, payload, CACHE_TTL_SECONDS);
     return payload;
   }
 
-  async getTopLearners(): Promise<TopLearnerDto[]> {
-    const cacheKey = 'analytics:top-learners';
-    const cached = await this.cacheManager.get<TopLearnerDto[]>(cacheKey);
-    if (cached) return cached;
-
+  private async _fetchTopLearners(): Promise<TopLearnerDto[]> {
     const rows = await this.userRepository
       .createQueryBuilder('u')
       .leftJoin(Certificate, 'cert', 'cert.userId = u.id')
@@ -197,7 +281,7 @@ export class AnalyticsService {
         certificatesEarned: string;
       }>();
 
-    const payload = rows.map((row) => {
+    return rows.map((row) => {
       const resolvedXp =
         Number(row.xp ?? 0) > 0 ? Number(row.xp) : Number(row.points ?? 0);
       return {
@@ -208,8 +292,5 @@ export class AnalyticsService {
         certificatesEarned: Number(row.certificatesEarned ?? 0),
       };
     });
-
-    await this.cacheManager.set(cacheKey, payload, CACHE_TTL_SECONDS);
-    return payload;
   }
 }

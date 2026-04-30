@@ -9,8 +9,8 @@ import {
     Loader2,
     X,
 } from "lucide-react";
-import { useCopyVerificationCode } from "@/hooks/useCopyVerificationCode";
-import { useCertificateDownload } from "@/hooks/useCertificateDownload";
+import { useCopyVerificationCode } from "@/components/MyCertificatesPage/Usecopyverificationcode";
+import { useCertificateDownload } from "@/components/MyCertificatesPage/Usecertificatedownload";
 
 export interface Certificate {
     id: string;
@@ -83,7 +83,7 @@ export function CertificateCard({ certificate, token }: CertificateCardProps) {
 
                 {/* Verification code row */}
                 <div className="flex items-center gap-2 mt-1">
-                <span className="font-mono text-xs text-green-400/80 truncate max-w-[200px]">
+                <span className="font-mono text-xs text-green-400/80 truncate max-w-50">
                     {truncateCode(certificate.verificationCode)}
                 </span>
 

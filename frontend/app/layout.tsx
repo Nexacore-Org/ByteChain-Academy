@@ -6,6 +6,7 @@ import { AuthProvider } from "@/contexts/auth-context";
 import { LearningProvider } from "@/contexts/learning-context";
 import { Providers } from "@/components/providers";
 import { UserProvider } from "@/contexts/user-context";
+import { ReactQueryProvider } from "@/lib/query-client";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,16 +34,17 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
-          <UserProvider>
-            <Providers>
+        <ReactQueryProvider>
+          <AuthProvider>
+            <UserProvider>
               <LearningProvider>
                 {children}
                 <Toaster theme="dark" position="top-center" richColors />
               </LearningProvider>
-            </Providers>
-          </UserProvider>
-        </AuthProvider>
+            </UserProvider>
+          </AuthProvider>
+        </ReactQueryProvider>
+        <Toaster theme="dark" position="top-center" richColors />
       </body>
     </html>
   );

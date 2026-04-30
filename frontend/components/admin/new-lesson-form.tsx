@@ -17,7 +17,7 @@ interface NewLessonFormProps {
   courseId: string
   open: boolean
   onClose: () => void
-  onSaved: () => void
+  onSaved: (lessonId?: string) => void
   onQuizClick: (lessonId: string, title: string) => void
 }
 
@@ -55,7 +55,7 @@ export function NewLessonForm({
 
   const handleClose = () => {
     if (savedLessonId) {
-      onSaved(savedLessonId)
+      onSaved()
     }
     setTitle("")
     setContent("")
@@ -66,7 +66,7 @@ export function NewLessonForm({
 
   const handleFinalSave = () => {
     if (savedLessonId) {
-      onSaved(savedLessonId)
+      onSaved()
       handleClose()
     }
   }

@@ -1,9 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import Link from "next/link"
+import { useQuery } from "@tanstack/react-query"
 import { api } from "@/lib/api"
 import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { ErrorCard } from "@/components/ui/error-card"
 
 interface Course {
   id: string
@@ -13,26 +15,33 @@ interface Course {
 }
 
 export default function AdminPage() {
-  const [courses, setCourses] = useState<Course[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["admin-courses-list"],
+    queryFn: async () => {
+      const res = await api.get<{ data?: Course[] } | Course[]>("/courses?limit=100")
+      return Array.isArray(res) ? res : (res?.data ?? [])
+    },
+  })
 
-  useEffect(() => {
-    api
-      .get<{ data: Course[] } | Course[]>("/courses?limit=100")
-      .then((res: unknown) => {
-        const r = res as { data?: Course[] } | Course[]
-        const list = Array.isArray(r) ? r : r?.data ?? []
-        setCourses(list)
-      })
-      .catch(() => setCourses([]))
-      .finally(() => setLoading(false))
-  }, [])
+  const courses = data ?? []
 
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">Admin — Courses</h1>
-      {loading ? (
-        <p className="text-gray-400">Loading courses…</p>
+
+      {isLoading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Card key={i} className="border-white/10">
+              <CardContent className="p-4 flex justify-between items-center">
+                <Skeleton className="h-5 w-1/3" />
+                <Skeleton className="h-4 w-28" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : isError ? (
+        <ErrorCard message="Failed to load courses. Please try again." onRetry={refetch} />
       ) : courses.length === 0 ? (
         <p className="text-gray-400">No courses found.</p>
       ) : (

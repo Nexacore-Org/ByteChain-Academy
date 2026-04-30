@@ -35,7 +35,7 @@ export function SignUpModal({ open, onOpenChange, onSwitchToLogin }: SignUpModal
       setName("")
       setEmail("")
       setPassword("")
-      router.push("/dashboard")
+      router.push("/onboarding")
     } catch (error: unknown) {
       console.error("Signup error:", error)
       const err = error instanceof Error ? error : new Error(String(error))
