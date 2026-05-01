@@ -95,6 +95,7 @@ export class LessonsController {
       courseId,
       page,
       limit,
+      true,
     );
     return {
       ...result,

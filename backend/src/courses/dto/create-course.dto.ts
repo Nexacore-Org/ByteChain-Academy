@@ -14,10 +14,7 @@ export class CreateCourseDto {
   @IsNotEmpty()
   title: string;
 
-  @ApiProperty({
-    example: 'A concise description of the resource.',
-    description: 'description field',
-  })
+  @ApiProperty({ example: 'A concise description of the course.' })
   @IsString()
   @IsNotEmpty()
   description: string;

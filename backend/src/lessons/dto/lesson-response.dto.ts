@@ -20,13 +20,15 @@ export class LessonResponseDto {
   title: string;
   @ApiProperty({ example: 'example', description: 'content field' })
   content: string;
+  @ApiProperty({ example: true, description: 'published field' })
+  published: boolean;
   @ApiProperty({
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: 'https://example.com/video.mp4',
     description: 'videoUrl field',
   })
   videoUrl: string | null;
   @ApiProperty({
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: 0,
     description: 'videoStartTimestamp field',
   })
   videoStartTimestamp: number | null;
@@ -61,6 +63,7 @@ export class LessonResponseDto {
     this.id = lesson.id;
     this.title = lesson.title;
     this.content = lesson.content;
+    this.published = lesson.published !== undefined ? lesson.published : true;
     this.videoUrl = lesson.videoUrl || null;
     this.videoStartTimestamp = lesson.videoStartTimestamp || null;
     this.order = lesson.order;

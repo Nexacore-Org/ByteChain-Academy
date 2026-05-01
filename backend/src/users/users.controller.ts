@@ -85,7 +85,6 @@ export class UsersController {
   ) {
     return this.userService.uploadAvatar(req.user.id as string, file);
   }
-
   @Post('me/wallet/challenge')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Generate wallet verification challenge' })

@@ -23,7 +23,7 @@ function VerifyCertificateContent() {
   const [inputValue, setInputValue] = useState(initialHash);
   const [activeHash, setActiveHash] = useState(initialHash);
   
-  const { data: result, isLoading: loading, isError, refetch } = useCertificateVerification(activeHash);
+  const { data: result, isLoading: loading } = useCertificateVerification(activeHash);
 
   const handleVerify = (e?: React.FormEvent) => {
     if (e) e.preventDefault();

@@ -178,7 +178,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.error("Failed to load user data:", err);
       // Ensure we have at least a fallback user if token exists
-      setUser((prev) => prev ?? getLocalFallbackUser());
+      setUser((prev: UserProfile | null) => prev ?? getLocalFallbackUser());
     }
   }, [getLocalFallbackUser, mapUser]);
 
@@ -205,7 +205,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         updates.email === undefined &&
         updates.bio === undefined
       ) {
-        setUser((prev) => (prev ? { ...prev, avatar: updates.avatar } : prev));
+        setUser((prev: UserProfile | null) => (prev ? { ...prev, avatar: updates.avatar } : prev));
         return;
       }
 
@@ -253,7 +253,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         ...defaultNotificationPreferences,
         ...(updated.notificationPreferences ?? updatedPrefs),
       });
-      setUser((prev) => {
+      setUser((prev: UserProfile | null) => {
         if (!prev) return prev;
         return mapUser({
           ...updated,

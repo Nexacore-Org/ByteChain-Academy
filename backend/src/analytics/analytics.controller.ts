@@ -6,10 +6,6 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { Roles } from '../common/decorators/roles.decorator';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../common/guards/roles.guard';
-import { UserRole } from '../common/enums/user-role.enum';
 import { AnalyticsService } from './analytics.service';
 import {
   AnalyticsOverviewDto,
@@ -17,6 +13,10 @@ import {
   LearnerActivityPointDto,
   TopLearnerDto,
 } from './dto/analytics-response.dto';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { UserRole } from '../common/enums/user-role.enum';
 
 @ApiTags('Analytics')
 @ApiBearerAuth('access-token')

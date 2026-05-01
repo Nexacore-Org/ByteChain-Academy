@@ -54,7 +54,6 @@ const makeUserRepo = () => ({
 const makeCourseRepo = () => ({
   findOneBy: jest.fn(),
 });
-
 describe('CertificateService', () => {
   let service: CertificateService;
   let certRepo: ReturnType<typeof makeCertRepo>;

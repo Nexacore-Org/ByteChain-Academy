@@ -24,7 +24,6 @@ import { AuthGuard } from '@nestjs/passport';
 
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
-import { PaginationDto } from '../common/dto/pagination.dto';
 import { CourseFilterDto } from './dto/course-filter.dto';
 import { CoursesService } from './courses.service';
 import { UserRole } from '../common/enums/user-role.enum';

@@ -19,35 +19,46 @@ export class CourseResponseDto {
   @IsNotEmpty()
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: 'Intro to Blockchain', description: 'title field' })
   @IsString()
   @IsNotEmpty()
   title: string;
 
   @ApiProperty({
-    example: 'A concise description of the resource.',
+    example: 'A concise description of the course.',
     description: 'description field',
   })
   @IsString()
   @IsNotEmpty()
   description: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: true, required: false })
   @IsBoolean()
-  published: boolean;
+  @IsOptional()
+  published?: boolean;
 
-  @ApiProperty({ example: 'Beginner', required: false, nullable: true })
+  @ApiProperty({
+    example: 'Beginner',
+    description: 'difficulty field',
+    required: false,
+    nullable: true,
+  })
   @IsOptional()
   @IsString()
   difficulty: string | null;
 
-  @ApiProperty({ example: ['bitcoin', 'defi'], type: [String] })
+  @ApiProperty({
+    example: ['blockchain', 'tech'],
+    description: 'tags field',
+    type: [String],
+  })
   @IsArray()
   @IsString({ each: true })
   tags: string[];
 
   @ApiProperty({
     example: 'https://example.com/thumb.jpg',
+    description: 'thumbnailUrl field',
     required: false,
     nullable: true,
   })
@@ -55,7 +66,7 @@ export class CourseResponseDto {
   @IsUrl()
   thumbnailUrl: string | null;
 
-  @ApiProperty({ example: 42, description: 'Number of enrolled users' })
+  @ApiProperty({ example: 120, description: 'enrollmentCount field' })
   @IsInt()
   enrollmentCount: number;
 
@@ -73,7 +84,6 @@ export class CourseResponseDto {
   @IsDate()
   updatedAt: Date;
 
-  /** Present on GET /courses when the request includes a valid JWT */
   @ApiProperty({
     example: true,
     description: 'isEnrolled field',

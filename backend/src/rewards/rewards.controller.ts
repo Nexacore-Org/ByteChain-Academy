@@ -26,9 +26,6 @@ export class RewardsController {
   @Get('my')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Get my rewards' })
-  @ApiResponse({ status: 200, description: 'Rewards retrieved successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiOperation({
     summary: 'Get my rewards',
     description:

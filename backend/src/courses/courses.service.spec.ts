@@ -5,9 +5,6 @@ import { CoursesService } from './courses.service';
 import { Course } from './entities/course.entity';
 import { CourseRegistration } from './entities/course-registration.entity';
 import { PaginationService } from '../common/services/pagination.service';
-import { Lesson } from '../lessons/entities/lesson.entity';
-import { Progress } from '../progress/entities/progress.entity';
-import { NotificationsService } from '../notifications/notifications.service';
 
 const now = new Date();
 

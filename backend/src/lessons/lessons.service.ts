@@ -41,12 +41,19 @@ export class LessonsService {
       videoStartTimestamp: createLessonDto.videoStartTimestamp,
       order: createLessonDto.order ?? 0,
       courseId: createLessonDto.courseId,
+      published:
+        createLessonDto.published !== undefined
+          ? createLessonDto.published
+          : true,
     });
 
     return this.lessonRepository.save(lesson);
   }
 
-  async findAllByCourse(courseId: string): Promise<Lesson[]> {
+  async findAllByCourse(
+    courseId: string,
+    publishedOnly: boolean = false,
+  ): Promise<Lesson[]> {
     // Verify course exists
     const course = await this.courseRepository.findOne({
       where: { id: courseId },
@@ -56,8 +63,13 @@ export class LessonsService {
       throw new NotFoundException(`Course with ID ${courseId} not found`);
     }
 
+    const whereCondition: any = { courseId };
+    if (publishedOnly) {
+      whereCondition.published = true;
+    }
+
     return this.lessonRepository.find({
-      where: { courseId },
+      where: whereCondition,
       order: { order: 'ASC', createdAt: 'ASC' },
     });
   }
@@ -79,6 +91,7 @@ export class LessonsService {
     courseId: string,
     page: number,
     limit: number,
+    publishedOnly: boolean = false,
   ): Promise<
     PaginatedResult<Lesson & { hasQuiz: boolean; quizId: string | null }>
   > {
@@ -90,11 +103,16 @@ export class LessonsService {
       throw new NotFoundException(`Course with ID ${courseId} not found`);
     }
 
+    const whereCondition: any = { courseId };
+    if (publishedOnly) {
+      whereCondition.published = true;
+    }
+
     const result = await this.paginationService.paginate(
       this.lessonRepository,
       { page, limit },
       {
-        where: { courseId },
+        where: whereCondition,
         order: { order: 'ASC', createdAt: 'ASC' },
       },
     );
@@ -176,6 +194,9 @@ export class LessonsService {
     if (updateLessonDto.order !== undefined) {
       lesson.order = updateLessonDto.order;
     }
+    if (updateLessonDto.published !== undefined) {
+      lesson.published = updateLessonDto.published;
+    }
 
     return this.lessonRepository.save(lesson);
   }
@@ -206,5 +227,18 @@ export class LessonsService {
         this.lessonRepository.update({ id, courseId }, { order: index }),
       ),
     );
+  }
+
+  async setPublished(id: string, published: boolean): Promise<Lesson> {
+    const lesson = await this.lessonRepository.findOne({
+      where: { id },
+    });
+
+    if (!lesson) {
+      throw new NotFoundException(`Lesson with ID ${id} not found`);
+    }
+
+    lesson.published = published;
+    return this.lessonRepository.save(lesson);
   }
 }

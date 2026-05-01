@@ -27,6 +27,7 @@ import { UserRole } from '../users/entities/user.entity';
 import { CreateCourseDto } from '../courses/dto/create-course.dto';
 import { UpdateCourseDto } from '../courses/dto/update-course.dto';
 import { CourseResponseDto } from '../courses/dto/course-response.dto';
+import { LessonResponseDto } from '../lessons/dto/lesson-response.dto';
 import { ReorderLessonsDto } from './dto/reorder-lessons.dto';
 import { PaginatedResult } from '../common/services/pagination.service';
 
@@ -142,5 +143,44 @@ export class AdminCoursesController {
   @ApiResponse({ status: 404, description: 'Course not found' })
   async unpublish(@Param('id') id: string): Promise<CourseResponseDto> {
     return this.coursesService.unpublishCourse(id);
+  }
+
+  @Get(':id/lessons')
+  @ApiOperation({ summary: 'List all lessons for a course (admin)' })
+  async findAllLessons(
+    @Param('id') courseId: string,
+    @Query('page') page = 1,
+    @Query('limit') limit = 10,
+  ): Promise<PaginatedResult<LessonResponseDto>> {
+    const result = await this.lessonsService.findAllByCoursePaginated(
+      courseId,
+      Number(page),
+      Number(limit),
+      false, // Fetch all regardless of published status
+    );
+    return {
+      ...result,
+      data: result.data.map((lesson) => new LessonResponseDto(lesson)),
+    };
+  }
+
+  @Patch(':id/lessons/:lessonId/publish')
+  @ApiOperation({ summary: 'Publish a lesson (admin)' })
+  async publishLesson(
+    @Param('id') courseId: string,
+    @Param('lessonId') lessonId: string,
+  ): Promise<LessonResponseDto> {
+    const lesson = await this.lessonsService.setPublished(lessonId, true);
+    return new LessonResponseDto(lesson);
+  }
+
+  @Patch(':id/lessons/:lessonId/unpublish')
+  @ApiOperation({ summary: 'Unpublish a lesson (admin)' })
+  async unpublishLesson(
+    @Param('id') courseId: string,
+    @Param('lessonId') lessonId: string,
+  ): Promise<LessonResponseDto> {
+    const lesson = await this.lessonsService.setPublished(lessonId, false);
+    return new LessonResponseDto(lesson);
   }
 }

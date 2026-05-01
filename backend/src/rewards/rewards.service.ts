@@ -10,6 +10,11 @@ import {
 } from './entities/reward-history.entity';
 import { UserBadge } from './entities/user-badge.entity';
 
+import { NotificationsService } from '../notifications/notifications.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
+import { WebhookEvent } from '../webhooks/dto/create-webhook.dto';
+import { NotificationType } from '../notifications/entities/notification.entity';
+
 export const XP_LESSON_COMPLETE = 10;
 export const XP_QUIZ_PASS = 25;
 export const XP_COURSE_COMPLETE = 100;
@@ -34,6 +39,8 @@ export class RewardsService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(RewardHistory)
     private readonly rewardHistoryRepository: Repository<RewardHistory>,
+    private readonly notificationsService: NotificationsService,
+    private readonly webhooksService: WebhooksService,
   ) {}
 
   async awardXP(
@@ -103,10 +110,29 @@ export class RewardsService {
         continue;
       }
 
-      await this.userBadgeRepository.save(
-        this.userBadgeRepository.create({ userId, badgeId: badge.id }),
-      );
-      newlyEarned.push(badge);
+      try {
+        await this.userBadgeRepository.save(
+          this.userBadgeRepository.create({ userId, badgeId: badge.id }),
+        );
+        newlyEarned.push(badge);
+
+        await this.notificationsService.createNotification(
+          userId,
+          NotificationType.BADGE_EARNED,
+          `You earned a new badge: ${badge.name}.`,
+          '/rewards',
+        );
+
+        // Dispatch webhook event
+        await this.webhooksService.dispatchEvent(WebhookEvent.BADGE_EARNED, {
+          userId,
+          badgeId: badge.id,
+          badgeName: badge.name,
+          awardedAt: new Date(),
+        });
+      } catch {
+        // Unique constraint race: ignore
+      }
     }
 
     return newlyEarned;

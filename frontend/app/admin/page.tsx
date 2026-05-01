@@ -15,7 +15,7 @@ interface Course {
 }
 
 export default function AdminPage() {
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery<Course[]>({
     queryKey: ["admin-courses-list"],
     queryFn: async () => {
       const res = await api.get<{ data?: Course[] } | Course[]>("/courses?limit=100")

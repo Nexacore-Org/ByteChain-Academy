@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+
 import { Header } from "@/components/header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,16 +11,12 @@ import { useEffect } from "react";
 import { AvatarUpload } from "@/components/profile/avatar-upload";
 import { StatsSummary } from "@/components/profile/stats-summary";
 import { ProfileTabs } from "@/components/profile/profile-tabs";
-import {
   ArrowLeft,
   Mail,
   Shield,
   Settings,
-  User as UserIcon,
   Loader2,
-  ExternalLink,
   Calendar,
-  MapPin,
   Sparkles
 } from "lucide-react";
 import Link from "next/link";
@@ -142,7 +138,6 @@ export default function ProfilePage() {
               streak={stats.streakDays}
               badgesCount={stats.badgesCount}
               certificatesCount={stats.certificatesCount}
-              completedCourses={userStats?.completedCourseCount ?? 0}
             />
 
             <div className="relative group">

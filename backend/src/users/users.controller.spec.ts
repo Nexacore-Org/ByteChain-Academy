@@ -116,4 +116,49 @@ describe('UsersController', () => {
       expect(result).toBeUndefined();
     });
   });
+
+  describe('POST /me/avatar', () => {
+    const validFile = {
+      size: 1024,
+      mimetype: 'image/png',
+      originalname: 'avatar.png',
+      buffer: Buffer.from('fake-image'),
+    };
+
+    it('returns avatarUrl on successful upload', async () => {
+      userService.uploadAvatar = jest.fn().mockResolvedValue({
+        avatarUrl: '/uploads/avatars/uuid.png',
+      });
+
+      const result = await controller.uploadMyAvatar(mockRequest, validFile as any);
+
+      expect(userService.uploadAvatar).toHaveBeenCalledWith(
+        'user-1',
+        validFile,
+      );
+      expect(result).toEqual({ avatarUrl: '/uploads/avatars/uuid.png' });
+    });
+
+    it('propagates BadRequestException from service for non-image files', async () => {
+      userService.uploadAvatar = jest.fn().mockRejectedValue(
+        new BadRequestException('Only image files are allowed'),
+      );
+      const nonImageFile = { ...validFile, mimetype: 'application/pdf' };
+
+      await expect(
+        controller.uploadMyAvatar(mockRequest, nonImageFile as any),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('propagates BadRequestException from service for oversized files', async () => {
+      userService.uploadAvatar = jest.fn().mockRejectedValue(
+        new BadRequestException('Avatar file size must be <= 2MB'),
+      );
+      const largeFile = { ...validFile, size: 999 * 1024 * 1024 };
+
+      await expect(
+        controller.uploadMyAvatar(mockRequest, largeFile as any),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
 });

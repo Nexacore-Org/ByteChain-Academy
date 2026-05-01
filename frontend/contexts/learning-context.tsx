@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { PLACEHOLDER_VIDEO_URL } from "@/lib/constants";
@@ -61,6 +61,7 @@ interface LearningContextType {
   quizResults: Record<string, QuizResult>;
   isSubmittingQuiz: boolean;
   isCompletingLesson: boolean;
+  enrollInCourse: (courseId: string) => Promise<void>;
   markLessonComplete: (courseId: string, lessonId: string) => Promise<boolean>;
   submitQuiz: (
     quizId: string,
@@ -358,6 +359,41 @@ export function LearningProvider({ children }: { children: React.ReactNode }) {
   const [isSubmittingQuiz, setIsSubmittingQuiz] = useState(false);
   const [isCompletingLesson, setIsCompletingLesson] = useState(false);
 
+  const fetchCourses = useCallback(async () => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+    if (!token) return;
+    try {
+      interface RawCourseResponse {
+        id: string;
+        title: string;
+        description: string;
+        progressPercent?: number;
+        isEnrolled?: boolean;
+      }
+      const data = await api.get<RawCourseResponse[] | { data: RawCourseResponse[] }>("/courses");
+      const list = Array.isArray(data) ? data : (data as { data: RawCourseResponse[] }).data ?? [];
+      setCourses(
+        list.map((c) => ({
+          id: c.id,
+          title: c.title,
+          description: c.description,
+          difficulty: "Beginner" as const,
+          rating: 0,
+          duration: 0,
+          lessons: [],
+          progress: c.progressPercent ?? 0,
+          enrolled: c.isEnrolled ?? false,
+        }))
+      );
+    } catch {
+      // silently fail — courses stay as is (mock or cached)
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchCourses();
+  }, [fetchCourses]);
+
   // Save to localStorage whenever courses or quizResults change
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -373,6 +409,16 @@ export function LearningProvider({ children }: { children: React.ReactNode }) {
       );
     }
   }, [quizResults]);
+
+  const enrollInCourse = async (courseId: string) => {
+    try {
+      await api.post(`/courses/${courseId}/enroll`, {});
+      await fetchCourses();
+      toast.success("Enrolled successfully!");
+    } catch {
+      toast.error("Failed to enroll in course.");
+    }
+  };
 
   const markLessonComplete = async (
     courseId: string,
@@ -398,17 +444,17 @@ export function LearningProvider({ children }: { children: React.ReactNode }) {
         progressRows.map((row) => [row.lessonId, row.completed]),
       );
 
-      setCourses((prev) =>
-        prev.map((course) => {
+      setCourses((prev: Course[]) =>
+        prev.map((course: Course) => {
           if (course.id !== courseId) {
             return course;
           }
-          const updatedLessons = course.lessons.map((lesson) => ({
+          const updatedLessons = course.lessons.map((lesson: Lesson) => ({
             ...lesson,
             completed: completedByLessonId.get(lesson.id) ?? lesson.completed,
           }));
           const completedCount = updatedLessons.filter(
-            (l) => l.completed,
+            (l: Lesson) => l.completed,
           ).length;
           const progress = updatedLessons.length
             ? (completedCount / updatedLessons.length) * 100
@@ -469,7 +515,7 @@ export function LearningProvider({ children }: { children: React.ReactNode }) {
         submittedAt: submission.submittedAt,
       };
 
-      setQuizResults((prev) => ({ ...prev, [quizId]: result }));
+      setQuizResults((prev: Record<string, QuizResult>) => ({ ...prev, [quizId]: result }));
       return result;
     } catch (error) {
       const status = (error as { status?: number }).status;
@@ -487,7 +533,7 @@ export function LearningProvider({ children }: { children: React.ReactNode }) {
   };
 
   const getCourseProgress = (courseId: string): number => {
-    const course = courses.find((c) => c.id === courseId);
+    const course = courses.find((c: Course) => c.id === courseId);
     return course?.progress || 0;
   };
 

@@ -4,7 +4,7 @@ test.describe.serial('Learning Flow', () => {
   const testEmail = `learner_${Date.now()}@example.com`;
   const testPassword = 'Password123!';
 
-  test.beforeAll(async ({ request }) => {
+  test.beforeAll(async () => {
     // Optionally create a user here via API if needed, 
     // but the test can also just register via UI
   });
