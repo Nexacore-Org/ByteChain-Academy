@@ -29,6 +29,8 @@ import { Progress } from '../src/progress/entities/progress.entity';
 import { QuizSubmission } from '../src/quizzes/entities/quiz-submission.entity';
 import { Certificate } from '../src/certificates/entities/certificate.entity';
 import { UserRole } from '../src/users/entities/user.entity';
+import { CourseRegistration } from '../src/courses/entities/course-registration.entity';
+import { RefreshToken } from '../src/auth/entities/refresh-token.entity';
 
 const PREFIX = '/api/v1';
 
@@ -82,13 +84,25 @@ describe('Critical User Journey (e2e)', () => {
   afterAll(async () => {
     // Delete in dependency order to respect FK constraints
     if (dataSource) {
-      await dataSource
-        .getRepository(Certificate)
-        .delete({ user: { id: studentId } });
+      if (studentId || courseId) {
+        await dataSource
+          .getRepository(Certificate)
+          .createQueryBuilder()
+          .delete()
+          .where('userId = :studentId', { studentId })
+          .orWhere('courseId = :courseId', { courseId })
+          .execute();
+      }
       await dataSource
         .getRepository(QuizSubmission)
         .delete({ userId: studentId });
       await dataSource.getRepository(Progress).delete({ userId: studentId });
+      await dataSource
+        .getRepository(CourseRegistration)
+        .delete({ userId: studentId });
+      await dataSource
+        .getRepository(RefreshToken)
+        .delete([{ userId: studentId }, { userId: adminId }]);
       if (quizId) {
         await dataSource.getRepository(Question).delete({ quizId });
         await dataSource.getRepository(Quiz).delete({ id: quizId });
@@ -114,11 +128,11 @@ describe('Critical User Journey (e2e)', () => {
       .send({ email: adminEmail, password, name: 'Journey Admin' })
       .expect(201);
 
-    expect(res.body.token).toBeDefined();
+    expect(res.body.accessToken).toBeDefined();
     expect(res.body.user.email).toBe(adminEmail);
 
     adminId = res.body.user.id;
-    adminToken = res.body.token;
+    adminToken = res.body.accessToken;
 
     // Promote to admin directly in the DB
     await dataSource
@@ -136,8 +150,8 @@ describe('Critical User Journey (e2e)', () => {
       .send({ email: adminEmail, password })
       .expect(200);
 
-    expect(res.body.token).toBeDefined();
-    adminToken = res.body.token; // refresh token so role claim is correct
+    expect(res.body.accessToken).toBeDefined();
+    adminToken = res.body.accessToken; // refresh token so role claim is correct
   });
 
   /* ---------------------------------------------------------------------- */
@@ -220,9 +234,9 @@ describe('Critical User Journey (e2e)', () => {
       .send({ email: studentEmail, password, name: 'Journey Student' })
       .expect(201);
 
-    expect(res.body.token).toBeDefined();
+    expect(res.body.accessToken).toBeDefined();
     studentId = res.body.user.id;
-    studentToken = res.body.token;
+    studentToken = res.body.accessToken;
   });
 
   /* ---------------------------------------------------------------------- */
@@ -235,7 +249,9 @@ describe('Critical User Journey (e2e)', () => {
       .set('Authorization', `Bearer ${studentToken}`)
       .expect(201);
 
-    expect(res.body.message).toMatch(/enrolled/i);
+    expect(res.body.userId).toBe(studentId);
+    expect(res.body.courseId).toBe(courseId);
+    expect(res.body.enrolledAt).toBeDefined();
   });
 
   /* ---------------------------------------------------------------------- */
@@ -244,7 +260,7 @@ describe('Critical User Journey (e2e)', () => {
 
   it('8. student marks the lesson as complete', async () => {
     const res = await request(app.getHttpServer())
-      .post(`${PREFIX}/progress/lesson`)
+      .post(`${PREFIX}/progress/complete`)
       .set('Authorization', `Bearer ${studentToken}`)
       .send({ courseId, lessonId })
       .expect(201);
@@ -284,8 +300,7 @@ describe('Critical User Journey (e2e)', () => {
 
     const cert = res.body[0];
     expect(cert.certificateHash).toBeDefined();
-    expect(cert.isValid).toBe(true);
-    expect(cert.recipientEmail).toBe(studentEmail);
+    expect(cert.courseOrProgram).toBe('E2E Journey Course');
   });
 
   /* ---------------------------------------------------------------------- */
@@ -305,7 +320,7 @@ describe('Critical User Journey (e2e)', () => {
     const verifyRes = await request(app.getHttpServer())
       .post(`${PREFIX}/certificates/verify`)
       .send({ certificateHash: certHash })
-      .expect(201);
+      .expect(200);
 
     expect(verifyRes.body.isValid).toBe(true);
     expect(verifyRes.body.certificate.recipientEmail).toBe(studentEmail);

@@ -123,6 +123,7 @@ export class QuizzesController {
     type: QuizSubmissionResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Bad request - invalid answers' })
+  @ApiResponse({ status: 409, description: 'Attempt limit reached' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Quiz not found' })
   async submitQuiz(
@@ -135,6 +136,26 @@ export class QuizzesController {
       answers: submitQuizBodyDto.answers,
     });
     return new QuizSubmissionResponseDto(submission);
+  }
+
+  @Get(':id/attempts')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get current user attempt history for a quiz' })
+  @ApiResponse({
+    status: 200,
+    description: 'Attempt history retrieved successfully',
+    type: [QuizSubmissionResponseDto],
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getUserQuizAttempts(
+    @Param('id') quizId: string,
+    @Req() req,
+  ): Promise<QuizSubmissionResponseDto[]> {
+    const submissions = await this.quizzesService.getUserQuizAttempts(
+      req.user.id,
+      quizId,
+    );
+    return submissions.map((sub) => new QuizSubmissionResponseDto(sub));
   }
 
   @Get(':id/submission')

@@ -22,6 +22,9 @@ export class Quiz {
   @Column('text', { nullable: true })
   description: string;
 
+  @Column({ default: 1 })
+  maxAttempts: number;
+
   @Column()
   lessonId: string;
 

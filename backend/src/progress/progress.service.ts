@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CertificateService } from '../certificates/certificates.service';
 import { Progress } from './entities/progress.entity';
-import { Lesson } from 'src/lessons/entities/lesson.entity';
-import { NotificationType } from 'src/notifications/entities/notification.entity';
-import { NotificationsService } from 'src/notifications/notifications.service';
-import { RewardsService } from 'src/rewards/rewards.service';
+import { Lesson } from '../lessons/entities/lesson.entity';
+import { NotificationType } from '../notifications/entities/notification.entity';
+import { NotificationsService } from '../notifications/notifications.service';
+import { RewardsService } from '../rewards/rewards.service';
 import {
   XP_COURSE_COMPLETE,
   XP_LESSON_COMPLETE,

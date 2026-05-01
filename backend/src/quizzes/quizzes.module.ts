@@ -7,6 +7,10 @@ import { QuizSubmission } from '../quizzes/entities/quiz-submission.entity';
 import { Lesson } from '../lessons/entities/lesson.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { RewardsModule } from '../rewards/rewards.module';
+import { AuthModule } from '../auth/auth.module';
+import { UsersModule } from '../users/users.module';
+import { QuizzesController } from './quizzes.controller';
+import { QuizzesService } from './quizzes.service';
 
 @Module({
   imports: [
@@ -15,6 +19,7 @@ import { RewardsModule } from '../rewards/rewards.module';
     AuthModule,
     NotificationsModule,
     RewardsModule,
+    UsersModule,
   ],
   controllers: [QuizzesController],
   providers: [QuizzesService],

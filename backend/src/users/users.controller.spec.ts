@@ -3,6 +3,7 @@ import { BadRequestException } from '@nestjs/common';
 import { UsersController } from './users.controller';
 import { UserService } from './users.service';
 import { UserRole } from './entities/user.entity';
+import { WalletService } from './wallet.service';
 
 const mockProfileResponse = {
   id: 'user-1',
@@ -27,15 +28,23 @@ describe('UsersController', () => {
     const mockUserService = {
       getMyProfile: jest.fn(),
       updateProfile: jest.fn(),
-      uploadAvatar: jest.fn(),
       getMyStats: jest.fn(),
       getPublicProfile: jest.fn(),
       deleteProfile: jest.fn(),
     };
+    const mockWalletService = {
+      generateChallenge: jest.fn(),
+      verifyAndLink: jest.fn(),
+      getStatus: jest.fn(),
+      unlink: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
-      providers: [{ provide: UserService, useValue: mockUserService }],
+      providers: [
+        { provide: UserService, useValue: mockUserService },
+        { provide: WalletService, useValue: mockWalletService },
+      ],
     }).compile();
 
     controller = module.get<UsersController>(UsersController);
@@ -65,10 +74,9 @@ describe('UsersController', () => {
         username: 'newname',
         bio: 'new bio',
       };
-      userService.updateProfile.mockResolvedValue(undefined as any);
-      userService.getMyProfile.mockResolvedValue(updated);
+      userService.updateProfile.mockResolvedValue(updated as any);
 
-      const result = await controller.updateMyProfile(mockRequest, {
+      const result = await controller.updateProfile(mockRequest, {
         username: 'newname',
         bio: 'new bio',
       });
@@ -77,38 +85,35 @@ describe('UsersController', () => {
         username: 'newname',
         bio: 'new bio',
       });
-      expect(result.username).toBe('newname');
-      expect(result.bio).toBe('new bio');
+      expect(result).toBeUndefined();
     });
 
     it('partial update with only username leaves other fields unchanged', async () => {
       const updated = { ...mockProfileResponse, username: 'onlyname' };
-      userService.updateProfile.mockResolvedValue(undefined as any);
-      userService.getMyProfile.mockResolvedValue(updated);
+      userService.updateProfile.mockResolvedValue(updated as any);
 
-      const result = await controller.updateMyProfile(mockRequest, {
+      const result = await controller.updateProfile(mockRequest, {
         username: 'onlyname',
       });
 
       expect(userService.updateProfile).toHaveBeenCalledWith('user-1', {
         username: 'onlyname',
       });
-      expect(result.username).toBe('onlyname');
+      expect(result).toBeUndefined();
     });
 
     it('partial update with only bio leaves other fields unchanged', async () => {
       const updated = { ...mockProfileResponse, bio: 'only bio' };
-      userService.updateProfile.mockResolvedValue(undefined as any);
-      userService.getMyProfile.mockResolvedValue(updated);
+      userService.updateProfile.mockResolvedValue(updated as any);
 
-      const result = await controller.updateMyProfile(mockRequest, {
+      const result = await controller.updateProfile(mockRequest, {
         bio: 'only bio',
       });
 
       expect(userService.updateProfile).toHaveBeenCalledWith('user-1', {
         bio: 'only bio',
       });
-      expect(result.bio).toBe('only bio');
+      expect(result).toBeUndefined();
     });
   });
 
@@ -121,11 +126,11 @@ describe('UsersController', () => {
     };
 
     it('returns avatarUrl on successful upload', async () => {
-      userService.uploadAvatar.mockResolvedValue({
+      userService.uploadAvatar = jest.fn().mockResolvedValue({
         avatarUrl: '/uploads/avatars/uuid.png',
       });
 
-      const result = await controller.uploadMyAvatar(mockRequest, validFile);
+      const result = await controller.uploadMyAvatar(mockRequest, validFile as any);
 
       expect(userService.uploadAvatar).toHaveBeenCalledWith(
         'user-1',
@@ -135,24 +140,24 @@ describe('UsersController', () => {
     });
 
     it('propagates BadRequestException from service for non-image files', async () => {
-      userService.uploadAvatar.mockRejectedValue(
+      userService.uploadAvatar = jest.fn().mockRejectedValue(
         new BadRequestException('Only image files are allowed'),
       );
       const nonImageFile = { ...validFile, mimetype: 'application/pdf' };
 
       await expect(
-        controller.uploadMyAvatar(mockRequest, nonImageFile),
+        controller.uploadMyAvatar(mockRequest, nonImageFile as any),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('propagates BadRequestException from service for oversized files', async () => {
-      userService.uploadAvatar.mockRejectedValue(
+      userService.uploadAvatar = jest.fn().mockRejectedValue(
         new BadRequestException('Avatar file size must be <= 2MB'),
       );
       const largeFile = { ...validFile, size: 999 * 1024 * 1024 };
 
       await expect(
-        controller.uploadMyAvatar(mockRequest, largeFile),
+        controller.uploadMyAvatar(mockRequest, largeFile as any),
       ).rejects.toThrow(BadRequestException);
     });
   });

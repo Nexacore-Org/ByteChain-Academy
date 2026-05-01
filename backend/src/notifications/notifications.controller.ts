@@ -2,8 +2,11 @@ import {
   ClassSerializerInterceptor,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
+  Query,
   Request,
   UseGuards,
   UseInterceptors,
@@ -35,11 +38,25 @@ export class NotificationsController {
     type: [NotificationResponseDto],
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getMyNotifications(@Request() req): Promise<NotificationResponseDto[]> {
-    const notifications = await this.notificationsService.getMyNotifications(
+  async getMyNotifications(
+    @Request() req,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ): Promise<{
+    data: NotificationResponseDto[];
+    total: number;
+    unreadCount: number;
+  }> {
+    const result = await this.notificationsService.getMyNotifications(
       req.user.id as string,
+      Number(page),
+      Number(limit),
     );
-    return plainToInstance(NotificationResponseDto, notifications);
+    return {
+      data: plainToInstance(NotificationResponseDto, result.data),
+      total: result.total,
+      unreadCount: result.unreadCount,
+    };
   }
 
   @Get('unread-count')

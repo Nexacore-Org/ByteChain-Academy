@@ -10,6 +10,7 @@ import {
 } from './entities/reward-history.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { BADGE_MILESTONES } from './badge-milestones';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 describe('RewardsService', () => {
   let service: RewardsService;

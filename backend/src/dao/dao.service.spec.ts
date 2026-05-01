@@ -11,6 +11,7 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 describe('DAOService', () => {
   let service: DAOService;
@@ -64,6 +65,10 @@ describe('DAOService', () => {
         {
           provide: DataSource,
           useValue: dataSource,
+        },
+        {
+          provide: WebhooksService,
+          useValue: { dispatchEvent: jest.fn().mockResolvedValue(undefined) },
         },
       ],
     }).compile();

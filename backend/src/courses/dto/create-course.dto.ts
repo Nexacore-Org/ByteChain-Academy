@@ -19,7 +19,11 @@ export class CreateCourseDto {
   @IsNotEmpty()
   description: string;
 
-  @ApiProperty({ example: true, required: false })
+  @ApiProperty({
+    example: true,
+    description: 'published field',
+    required: false,
+  })
   @IsBoolean()
   @IsOptional()
   published?: boolean;

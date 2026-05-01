@@ -6,6 +6,8 @@ import {
   IsUUID,
   IsOptional,
   IsEnum,
+  IsInt,
+  Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { QuestionType } from '../entities/question.entity';
@@ -55,6 +57,18 @@ export class CreateQuizDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @ApiProperty({
+    example: 3,
+    description: 'Maximum allowed attempts per student',
+    required: false,
+    default: 1,
+  })
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  @Type(() => Number)
+  maxAttempts?: number;
 
   @ApiProperty({
     example: '123e4567-e89b-12d3-a456-426614174000',

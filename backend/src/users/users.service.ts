@@ -164,11 +164,6 @@ export class UserService {
     return this.userRepository.save(user);
   }
 
-  async deleteProfile(userId: string): Promise<void> {
-    const user = await this.getProfile(userId);
-    await this.userRepository.remove(user);
-  }
-
   async getStats(
     userId: string,
     courseCount: number,

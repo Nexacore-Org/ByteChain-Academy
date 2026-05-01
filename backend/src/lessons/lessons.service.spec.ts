@@ -7,6 +7,7 @@ import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 import { Lesson } from './entities/lesson.entity';
 import { PaginationService } from '../common/services/pagination.service';
+import { Quiz } from '../quizzes/entities/quiz.entity';
 
 describe('LessonsService', () => {
   let service: LessonsService;
@@ -23,6 +24,11 @@ describe('LessonsService', () => {
     findOne: jest.fn(),
   };
 
+  const mockQuizRepository = {
+    find: jest.fn(),
+    findOne: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -34,6 +40,10 @@ describe('LessonsService', () => {
         {
           provide: getRepositoryToken(Course),
           useValue: mockCourseRepository,
+        },
+        {
+          provide: getRepositoryToken(Quiz),
+          useValue: mockQuizRepository,
         },
         {
           provide: PaginationService,

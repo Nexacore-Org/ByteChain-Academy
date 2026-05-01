@@ -7,6 +7,7 @@ import { CertificateService } from '../certificates/certificates.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { RewardsService } from '../rewards/rewards.service';
 import { StreakService } from '../users/streak.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 const makeProgressRepo = () => ({
   findOne: jest.fn(),
@@ -28,6 +29,7 @@ describe('ProgressService', () => {
   let notificationsService: { createNotification: jest.Mock };
   let rewardsService: { awardXP: jest.Mock };
   let streakService: { updateStreak: jest.Mock };
+  let webhooksService: { dispatchEvent: jest.Mock };
 
   beforeEach(async () => {
     progressRepo = makeProgressRepo();
@@ -42,6 +44,7 @@ describe('ProgressService', () => {
       awardXP: jest.fn().mockResolvedValue({ xp: 10, newlyAwardedBadges: [] }),
     };
     streakService = { updateStreak: jest.fn().mockResolvedValue(undefined) };
+    webhooksService = { dispatchEvent: jest.fn().mockResolvedValue(undefined) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -52,6 +55,7 @@ describe('ProgressService', () => {
         { provide: NotificationsService, useValue: notificationsService },
         { provide: RewardsService, useValue: rewardsService },
         { provide: StreakService, useValue: streakService },
+        { provide: WebhooksService, useValue: webhooksService },
       ],
     }).compile();
 

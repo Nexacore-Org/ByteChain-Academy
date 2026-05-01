@@ -17,6 +17,8 @@ export class QuizSubmissionResponseDto {
     description: 'quizId field',
   })
   quizId: string;
+  @ApiProperty({ example: 1, description: 'attemptNumber field' })
+  attemptNumber: number;
   @ApiProperty({ example: 1, description: 'score field' })
   score: number;
   @ApiProperty({ example: 1, description: 'totalQuestions field' })
@@ -30,16 +32,23 @@ export class QuizSubmissionResponseDto {
     description: 'submittedAt field',
   })
   submittedAt: Date;
+  @ApiProperty({
+    example: '2026-04-22T00:00:00.000Z',
+    description: 'completedAt field',
+  })
+  completedAt: Date;
 
   constructor(submission: any) {
     this.id = submission.id;
     this.userId = submission.userId;
     this.quizId = submission.quizId;
+    this.attemptNumber = submission.attemptNumber;
     this.score = submission.score;
     this.totalQuestions = submission.totalQuestions;
     this.correctAnswers = submission.correctAnswers;
     this.passed = submission.passed;
     this.submittedAt = submission.submittedAt;
+    this.completedAt = submission.completedAt ?? submission.submittedAt;
   }
 }
 
@@ -74,6 +83,11 @@ export class QuizResponseDto {
   })
   description: string;
   @ApiProperty({
+    example: 3,
+    description: 'Maximum allowed attempts per student',
+  })
+  maxAttempts: number;
+  @ApiProperty({
     example: '123e4567-e89b-12d3-a456-426614174000',
     description: 'lessonId field',
   })
@@ -95,6 +109,7 @@ export class QuizResponseDto {
     this.id = quiz.id;
     this.title = quiz.title;
     this.description = quiz.description;
+    this.maxAttempts = quiz.maxAttempts;
     this.lessonId = quiz.lessonId;
     this.questions =
       quiz.questions?.map((q) => ({

@@ -8,7 +8,52 @@ import { Course } from '../courses/entities/course.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { ConfigService } from '@nestjs/config';
 import { EmailService } from '../email/email.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
+const now = new Date();
+
+const mockUser = {
+  id: 'user-uuid-1',
+  name: 'Alice',
+  email: 'alice@example.com',
+};
+
+const mockCourse = {
+  id: 'course-uuid-1',
+  title: 'Intro to Web3',
+};
+
+const mockCertificate = {
+  id: 'cert-uuid-1',
+  certificateHash: 'abc123hash',
+  recipientName: mockUser.name,
+  recipientEmail: mockUser.email,
+  courseOrProgram: mockCourse.title,
+  certificateData: JSON.stringify({
+    userId: mockUser.id,
+    courseId: mockCourse.id,
+  }),
+  issuedAt: now,
+  expiresAt: null,
+  isValid: true,
+  user: mockUser,
+  course: mockCourse,
+};
+
+const makeCertRepo = () => ({
+  findOne: jest.fn(),
+  find: jest.fn(),
+  create: jest.fn(),
+  save: jest.fn(),
+});
+
+const makeUserRepo = () => ({
+  findOneBy: jest.fn(),
+});
+
+const makeCourseRepo = () => ({
+  findOneBy: jest.fn(),
+});
 describe('CertificateService', () => {
   let service: CertificateService;
   let certRepo: ReturnType<typeof makeCertRepo>;
@@ -40,6 +85,10 @@ describe('CertificateService', () => {
         {
           provide: ConfigService,
           useValue: { get: jest.fn().mockReturnValue('http://localhost:3000') },
+        },
+        {
+          provide: WebhooksService,
+          useValue: { dispatchEvent: jest.fn().mockResolvedValue(undefined) },
         },
       ],
     }).compile();
@@ -128,6 +177,10 @@ describe('CertificateService', () => {
             useValue: {
               get: jest.fn().mockReturnValue('http://localhost:3000'),
             },
+          },
+          {
+            provide: WebhooksService,
+            useValue: { dispatchEvent: jest.fn().mockResolvedValue(undefined) },
           },
         ],
       }).compile();

@@ -1,13 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import {
   ConflictException,
   UnauthorizedException,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { UserService } from '../users/users.service';
 import { UserRole } from '../users/entities/user.entity';
+import { EmailService } from '../email/email.service';
+import { RefreshToken } from './entities/refresh-token.entity';
 
 const mockUser = {
   id: 'user-uuid-1',
@@ -29,6 +33,15 @@ describe('AuthService', () => {
     resetFailedLoginAttempts: jest.Mock;
   };
   let jwtService: { sign: jest.Mock };
+  let configService: { get: jest.Mock };
+  let emailService: {
+    sendWelcomeEmail: jest.Mock;
+    sendPasswordResetEmail: jest.Mock;
+  };
+  let refreshTokenRepository: {
+    save: jest.Mock;
+    findOne: jest.Mock;
+  };
 
   beforeEach(async () => {
     userService = {
@@ -41,17 +54,44 @@ describe('AuthService', () => {
       resetFailedLoginAttempts: jest.fn(),
     };
     jwtService = { sign: jest.fn().mockReturnValue('signed-jwt-token') };
+    configService = {
+      get: jest.fn().mockImplementation((key: string) => {
+        if (key === 'REFRESH_TOKEN_EXPIRES_IN') return '30';
+        if (key === 'CLIENT_URL') return 'http://localhost:3000';
+        return undefined;
+      }),
+    };
+    emailService = {
+      sendWelcomeEmail: jest.fn().mockResolvedValue(undefined),
+      sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
+    };
+    refreshTokenRepository = {
+      save: jest.fn().mockResolvedValue(undefined),
+      findOne: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         {
           provide: UserService,
-          useValue: { create: jest.fn(), findByEmail: jest.fn() },
+          useValue: userService,
         },
         {
           provide: JwtService,
-          useValue: { sign: jest.fn(), verify: jest.fn() },
+          useValue: jwtService,
+        },
+        {
+          provide: ConfigService,
+          useValue: configService,
+        },
+        {
+          provide: EmailService,
+          useValue: emailService,
+        },
+        {
+          provide: getRepositoryToken(RefreshToken),
+          useValue: refreshTokenRepository,
         },
       ],
     }).compile();
@@ -91,7 +131,8 @@ describe('AuthService', () => {
       });
       expect(result).toEqual({
         user: { id: mockUser.id, email: mockUser.email, role: mockUser.role },
-        token: 'signed-jwt-token',
+        accessToken: 'signed-jwt-token',
+        refreshToken: expect.any(String),
       });
     });
 
@@ -132,7 +173,8 @@ describe('AuthService', () => {
       });
       expect(result).toEqual({
         user: { id: mockUser.id, email: mockUser.email, role: mockUser.role },
-        token: 'signed-jwt-token',
+        accessToken: 'signed-jwt-token',
+        refreshToken: expect.any(String),
       });
     });
 

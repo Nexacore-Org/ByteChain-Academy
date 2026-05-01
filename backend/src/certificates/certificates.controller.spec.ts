@@ -15,6 +15,7 @@ describe('CertificateController', () => {
           useValue: {
             verifyCertificate: jest.fn(),
             getAllCertificates: jest.fn(),
+            getMyCertificates: jest.fn(),
             getCertificatesByUser: jest.fn(),
             revokeCertificate: jest.fn(),
           },
@@ -36,13 +37,13 @@ describe('CertificateController', () => {
       const mockReq = { user: { id: 'user-123' } };
       const mockCertificates = [{ id: 'cert-1' }];
       const service = testingModule.get<CertificateService>(CertificateService);
-      (service.getCertificatesByUser as jest.Mock).mockResolvedValue(
+      (service.getMyCertificates as jest.Mock).mockResolvedValue(
         mockCertificates,
       );
 
       const result = await controller.getMyCertificates(mockReq);
 
-      expect(service.getCertificatesByUser).toHaveBeenCalledWith('user-123');
+      expect(service.getMyCertificates).toHaveBeenCalledWith('user-123');
       expect(result).toBe(mockCertificates);
     });
   });
