@@ -2,7 +2,7 @@
 
 import { AlertTriangle, Award } from "lucide-react";
 import { CertificateCard } from "@/components/certificates/certificate-card";
-import { useCertificates } from "@/hooks/use-certificates";
+import { useCertificates, Certificate } from "@/hooks/use-certificates";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
@@ -57,7 +57,7 @@ export function MyCertificatesContent() {
 
   return (
     <div className="flex flex-col gap-4">
-      {certificates.map((cert) => (
+      {certificates.map((cert: Certificate) => (
         <CertificateCard key={cert.id} certificate={cert} />
       ))}
     </div>
