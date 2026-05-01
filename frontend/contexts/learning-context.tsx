@@ -363,10 +363,17 @@ export function LearningProvider({ children }: { children: React.ReactNode }) {
     const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
     if (!token) return;
     try {
-      const data = await api.get<any[]>("/courses");
-      const list = Array.isArray(data) ? data : (data as any).data ?? [];
+      interface RawCourseResponse {
+        id: string;
+        title: string;
+        description: string;
+        progressPercent?: number;
+        isEnrolled?: boolean;
+      }
+      const data = await api.get<RawCourseResponse[] | { data: RawCourseResponse[] }>("/courses");
+      const list = Array.isArray(data) ? data : (data as { data: RawCourseResponse[] }).data ?? [];
       setCourses(
-        list.map((c: any) => ({
+        list.map((c) => ({
           id: c.id,
           title: c.title,
           description: c.description,
@@ -437,17 +444,17 @@ export function LearningProvider({ children }: { children: React.ReactNode }) {
         progressRows.map((row) => [row.lessonId, row.completed]),
       );
 
-      setCourses((prev) =>
-        prev.map((course) => {
+      setCourses((prev: Course[]) =>
+        prev.map((course: Course) => {
           if (course.id !== courseId) {
             return course;
           }
-          const updatedLessons = course.lessons.map((lesson) => ({
+          const updatedLessons = course.lessons.map((lesson: Lesson) => ({
             ...lesson,
             completed: completedByLessonId.get(lesson.id) ?? lesson.completed,
           }));
           const completedCount = updatedLessons.filter(
-            (l) => l.completed,
+            (l: Lesson) => l.completed,
           ).length;
           const progress = updatedLessons.length
             ? (completedCount / updatedLessons.length) * 100
@@ -508,7 +515,7 @@ export function LearningProvider({ children }: { children: React.ReactNode }) {
         submittedAt: submission.submittedAt,
       };
 
-      setQuizResults((prev) => ({ ...prev, [quizId]: result }));
+      setQuizResults((prev: Record<string, QuizResult>) => ({ ...prev, [quizId]: result }));
       return result;
     } catch (error) {
       const status = (error as { status?: number }).status;
@@ -526,7 +533,7 @@ export function LearningProvider({ children }: { children: React.ReactNode }) {
   };
 
   const getCourseProgress = (courseId: string): number => {
-    const course = courses.find((c) => c.id === courseId);
+    const course = courses.find((c: Course) => c.id === courseId);
     return course?.progress || 0;
   };
 

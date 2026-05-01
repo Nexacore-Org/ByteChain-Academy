@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Loader2, Award } from "lucide-react";
+import { AlertTriangle, Award } from "lucide-react";
 import { CertificateCard } from "@/components/certificates/certificate-card";
 import { useCertificates } from "@/hooks/use-certificates";
 import { Button } from "@/components/ui/button";

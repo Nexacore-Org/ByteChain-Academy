@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Bell, LogOut, Save, Settings, User, CheckCircle, Sparkles, Shield, Mail } from "lucide-react";
+import { ArrowLeft, Bell, LogOut, Save, Settings, User, CheckCircle, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";

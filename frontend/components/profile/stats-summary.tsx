@@ -1,14 +1,13 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Award, Flame, GraduationCap, Trophy, Zap, Sparkles } from "lucide-react";
+import { Award, Flame, GraduationCap, Zap } from "lucide-react";
 
 interface StatsSummaryProps {
   xp: number;
   streak: number;
   badgesCount: number;
   certificatesCount: number;
-  completedCourses: number;
 }
 
 export function StatsSummary({
@@ -16,7 +15,6 @@ export function StatsSummary({
   streak,
   badgesCount,
   certificatesCount,
-  completedCourses,
 }: StatsSummaryProps) {
   const cards = [
     {

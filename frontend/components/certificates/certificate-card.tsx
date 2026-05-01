@@ -6,7 +6,6 @@ import {
   Download, 
   Share2, 
   Check, 
-  ExternalLink,
   Loader2,
   Calendar,
   Award
@@ -15,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Certificate } from "@/hooks/use-certificates";
-import { api } from "@/lib/api";
+
 
 interface CertificateCardProps {
   certificate: Certificate;

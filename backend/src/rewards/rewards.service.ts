@@ -12,8 +12,8 @@ import { UserBadge } from './entities/user-badge.entity';
 
 import { NotificationsService } from '../notifications/notifications.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
+import { WebhookEvent } from '../webhooks/dto/create-webhook.dto';
 import { NotificationType } from '../notifications/entities/notification.entity';
-import { WebhookEvent } from '../webhooks/webhooks.service';
 
 export const XP_LESSON_COMPLETE = 10;
 export const XP_QUIZ_PASS = 25;
